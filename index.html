@@ -104,7 +104,7 @@
                 <button onclick="openPostModal()" class="w-full py-4 bg-stone-800 text-white rounded-2xl text-sm font-bold shadow-lg">📝 投稿を追加</button>
             </div>
             <div class="mt-auto pt-10 space-y-4">
-                <button onclick="requestNewGallery()" class="w-full py-3 bg-cyan-50 text-cyan-500 rounded-xl text-xs font-bold border border-cyan-100 shadow-sm">🆕 新規ギャラリー作成</button>
+                <a href="https://github.com/nijisora-hub/uchhnoko-gallery" target="_blank" class="block w-full py-3 bg-cyan-50 text-cyan-500 rounded-xl text-xs font-bold border border-cyan-100 shadow-sm text-center">📖 自分もこれを作る（無料）</a>
                 <button onclick="requestClearAll()" class="w-full py-3 bg-red-50 text-red-400 rounded-xl text-xs font-bold border border-red-100 shadow-sm admin-only">⚠️ データを完全削除</button>
             </div>
         </div>
@@ -375,7 +375,6 @@
             const track = document.getElementById('top-film-roll'); track.innerHTML = '';
             const items = dolls.filter(d => d.image), container = document.getElementById('film-container');
             
-            // ループをリセット
             if (loopInterval) { cancelAnimationFrame(loopInterval); loopInterval = null; }
             
             if (items.length > 0) {
@@ -384,14 +383,12 @@
                     const tripleItems = [...items, ...items, ...items];
                     tripleItems.forEach((d, i) => { const img = document.createElement('img'); img.src = d.image; img.className = "film-frame"; img.onclick = () => showDetail(i % items.length); track.appendChild(img); });
                     
-                    // 初期位置を2番目のセットに飛ばす
                     setTimeout(() => { 
                         const singleWidth = items.length * (80 + 12);
                         container.scrollLeft = singleWidth; 
                         
-                        // 自動スクロール（iPad/iOS対応: requestAnimationFrameを使用）
                         const scrollStep = () => {
-                            container.scrollLeft += 0.5; // スピード調整
+                            container.scrollLeft += 0.5;
                             loopInterval = requestAnimationFrame(scrollStep);
                         };
                         loopInterval = requestAnimationFrame(scrollStep);
@@ -569,7 +566,6 @@
                 if (items.length < 5) return; 
                 
                 const singleWidth = items.length * (80 + 12); 
-                // ループ境界の判定をiOSの慣性スクロールに合わせて調整
                 if (container.scrollLeft < singleWidth * 0.5) {
                     container.scrollLeft += singleWidth;
                 } else if (container.scrollLeft > singleWidth * 1.5) {
@@ -590,7 +586,6 @@
         function openOwnerModal() { document.getElementById('o-name').value = owner.name; document.getElementById('o-bio').value = owner.bio; document.getElementById('sns-inputs-container').innerHTML = ''; (owner.sns || []).forEach(s => addSnsInput(s)); if(owner.image) { const p = document.getElementById('owner-preview'); p.src = owner.image; p.classList.remove('hidden'); document.getElementById('owner-hint').classList.add('hidden'); } document.getElementById('owner-modal').style.display='flex'; toggleMenu('side-menu'); }
         function addSnsInput(v = {type:'X(旧Twitter)', val:''}) { const div = document.createElement('div'); div.className = "sns-input-row flex gap-2 items-center"; div.innerHTML = `<select class="sns-type text-sm border p-2 rounded-lg bg-white h-10 outline-none">${['X(旧Twitter)','Instagram','mixi2','Bluesky','Misskey','その他URL'].map(t => `<option ${v.type===t?'selected':''}>${t}</option>`).join('')}</select><input type="text" class="sns-val flex-1 text-sm border p-2 rounded-lg h-10 outline-none" placeholder="ID or URL" value="${v.val}"><button onclick="this.parentElement.remove()" class="p-2 text-stone-400">✕</button>`; document.getElementById('sns-inputs-container').appendChild(div); }
         function addAnniversaryInput(v = {name:'', date:''}) { const id = Date.now() + Math.random(), div = document.createElement('div'); div.className = "p-4 bg-stone-100/50 rounded-2xl space-y-2 border border-stone-100"; div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; document.getElementById('anniversary-inputs').appendChild(div); if(v.date) setDateValue(v.date, `date-${id}`, `m-${id}`, `d-${id}`); }
-        function requestNewGallery() { showConfirm("新しいギャラリーを作成しますか？", () => window.open(window.location.origin + window.location.pathname + '?mode=new', '_blank'), "作成する"); }
         async function requestClearAll() { showConfirm("全てのデータを完全に削除しますか？\nこの操作は取り消せません。", async () => { await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [] }, { merge: true }); location.reload(); }, "削除する"); }
         function shareSNS(type) { const url = window.location.href; if(type === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank'); else if(type === 'x') window.open(`https://twitter.com/intent/tweet?text=Doll Uchinoko Gallery&url=${encodeURIComponent(url)}`, '_blank'); }
         function copyURL() { navigator.clipboard.writeText(window.location.href).then(() => { showAlert("URLをコピーしました"); }); }
