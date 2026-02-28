@@ -371,8 +371,13 @@
             checkLoginSession();
             initDateSelectors();
             initColorPalettes();
+            
+            // ログイン情報の確認
+            const auth = await dbGet("auth");
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('mode') === 'new') {
+            
+            // 直リンクで訪問し、かつIDパスワードが未設定の場合
+            if (!auth || urlParams.get('mode') === 'new') {
                 dolls = []; owner = { name: "Owner Name", bio: "", sns: [], image:"" }; posts = [];
                 openAuthModal('set', true);
             } else {
@@ -467,6 +472,11 @@
                     });
                 };
                 buttons.appendChild(btn);
+                
+                // 初回（isNew）時はキャンセルボタンを表示しない
+                if (!isNew) {
+                    const cancel = document.createElement('button'); cancel.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; cancel.innerText = "キャンセル"; cancel.onclick = closeDialog; buttons.appendChild(cancel);
+                }
             } else {
                 msg.innerText = "ログイン";
                 const btn = document.createElement('button'); btn.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold shadow-lg"; btn.innerText = "ログイン";
@@ -475,8 +485,9 @@
                     if(auth && auth.id === idInput.value && auth.pw === pwInput.value) { isLoggedIn = true; localStorage.setItem('uchinoko_session', 'true'); updateLoginSession(); renderAll(); closeDialog(); toggleMenu('side-menu'); } else showAlert("情報が正しくありません");
                 };
                 buttons.appendChild(btn);
+                const cancel = document.createElement('button'); cancel.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; cancel.innerText = "キャンセル"; cancel.onclick = closeDialog; buttons.appendChild(cancel);
             }
-            const cancel = document.createElement('button'); cancel.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; cancel.innerText = "キャンセル"; cancel.onclick = closeDialog; buttons.appendChild(cancel); dialog.style.display = 'flex';
+            dialog.style.display = 'flex';
         }
 
         async function openRecoveryModal() {
@@ -655,14 +666,13 @@
         function deletePostDirectly(idx) { showConfirm("この投稿を削除しますか？", async () => { posts.splice(idx, 1); await dbSet("posts", posts); renderAll(); }); }
         function editPost(idx) { const p = posts[idx]; document.getElementById('edit-post-id').value = idx; document.getElementById('post-modal-title').innerText = "投稿編集"; document.getElementById('p-title').value = p.title; document.getElementById('post-blocks-container').innerHTML = ''; p.blocks.forEach(b => addPostBlock(b)); document.querySelector(`input[name="p-pos"][value="${p.pos}"]`).checked = true; document.getElementById('post-modal').style.display = 'flex'; }
         
-        // --- 投稿追加（初期化して開く） ---
         function openPostModal() { 
             document.getElementById('edit-post-id').value = ""; 
             document.getElementById('post-modal-title').innerText = "投稿作成"; 
-            document.getElementById('p-title').value = ""; // タイトルをクリア
+            document.getElementById('p-title').value = ""; 
             document.getElementById('post-blocks-container').innerHTML = ''; 
-            addPostBlock(); // 空のブロックを1つ追加
-            document.querySelector(`input[name="p-pos"][value="home"]`).checked = true; // 配置をデフォルトに戻す
+            addPostBlock(); 
+            document.querySelector(`input[name="p-pos"][value="home"]`).checked = true; 
             document.getElementById('post-modal').style.display='flex'; 
             toggleMenu('side-menu'); 
         }
