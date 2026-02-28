@@ -119,6 +119,7 @@
             <p id="owner-bio" class="text-sm text-stone-500 px-4 mb-6"></p>
             <div id="owner-sns-links" class="flex flex-col items-center gap-3"></div>
         </section>
+
         <section class="p-6 bg-stone-50">
             <div id="happy-anniversary" class="mb-8 hidden">
                 <h3 class="text-[10px] font-bold text-pink-500 uppercase mb-4 tracking-widest border-b border-pink-100 pb-2">Happy Anniversary!</h3>
@@ -127,6 +128,7 @@
             <h3 class="text-[10px] font-bold text-stone-400 uppercase mb-4 tracking-widest border-b pb-2">Next Anniversary</h3>
             <div id="closest-anniversary"></div>
         </section>
+
         <section class="p-8 bg-white mt-4 border-t">
             <div class="flex justify-between items-center mb-6">
                 <button onclick="changeMonth(-1)" class="p-2">◀</button>
@@ -175,7 +177,11 @@
             <div class="space-y-6">
                 <input type="file" id="doll-file" accept="image/*" class="hidden" onchange="loadImg(event, 'doll')">
                 <input type="hidden" id="edit-id"><input type="text" id="f-name" class="w-full border-b p-2 font-bold text-lg outline-none" placeholder="お名前"><input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none" placeholder="ふりがな">
-                <div class="p-4 bg-stone-50 rounded-2xl space-y-4"><input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE (例: 1/6, 20cmなど)"><input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="BODY (例: オビツ22, ピュアニーモ)"><input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="HEAD"></div>
+                <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
+                    <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE (例: 1/6, 20cmなど)">
+                    <input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="BODY (例: オビツ22, ピュアニーモ)">
+                    <input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="HEAD">
+                </div>
                 <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
                     <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">カラー設定</p>
                     <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('bg')"><span class="text-xs text-stone-500 font-bold">背景色</span><div id="bg-select-icon" class="color-select-btn"></div></div>
@@ -280,7 +286,6 @@
     </script>
 
     <script>
-        // グローバル変数の初期値（galleryIdがない場合でも空データで上書きされないよう注意）
         let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"" }, posts = [], calOffset = 0;
         let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null }, loopInterval;
         let isLoggedIn = false;
@@ -300,11 +305,9 @@
                     clearInterval(checkFirebase);
                     initDateSelectors();
                     initColorPalettes();
-                    // 先に galleryId をチェック
                     if (!galleryId || urlParams.get('mode') === 'new') { 
                         openAuthModal('set', true); 
                     } else { 
-                        // 既存のデータをロードしてからログインセッションを確認
                         await loadGalleryData(); 
                         checkLoginSession();
                         renderAll(); 
@@ -321,7 +324,6 @@
                 const snap = await window.fb.getDoc(docRef);
                 if(snap.exists()) {
                     const data = snap.data();
-                    // 取得したデータを変数に格納。存在しないキーはデフォルト値を維持。
                     dolls = data.dolls || []; 
                     owner = data.owner || owner; 
                     posts = data.posts || [];
@@ -333,7 +335,6 @@
 
         async function syncFirebase() {
             if(!galleryId) return;
-            // データを上書き保存。authデータが消えないよう updateDoc を使用。
             const docRef = window.fb.doc(window.fb.db, "galleries", galleryId);
             await window.fb.updateDoc(docRef, { dolls, owner, posts });
         }
@@ -360,11 +361,9 @@
                     if(!idInput.value || !pwInput.value) return showAlert("ユーザー名とパスワードを入力してください");
                     const finalGid = isNew ? gIdInput.value.trim() : galleryId, authData = { adminUser: idInput.value, adminPw: pwInput.value };
                     if(isNew) {
-                        // 新規作成時のみ setDoc
                         await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", finalGid), { auth: authData, dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [] });
                         galleryId = finalGid;
                     } else { 
-                        // 更新時は updateDoc
                         await window.fb.updateDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { auth: authData }); 
                     }
                     closeDialog(); showAlert("保存されました", () => { if(isNew) { isLoggedIn = true; localStorage.setItem('uchinoko_session', 'true'); localStorage.setItem('uchinoko_gallery_id', galleryId); updateLoginSession(); window.location.search = `?id=${galleryId}`; } });
@@ -383,7 +382,6 @@
             dialog.style.display = 'flex';
         }
 
-        // --- その他UI表示関数 --- (renderAll, renderCalendarなどはそのまま保持)
         function renderAll() {
             document.body.classList.toggle('is-admin', isLoggedIn);
             document.getElementById('login-btn').style.display = isLoggedIn ? 'none' : 'block';
@@ -431,7 +429,6 @@
             renderCalendar(); renderAnni();
         }
 
-        // --- データの保存/同期 ---
         async function saveData() {
             const id = document.getElementById('edit-id').value, h = document.getElementById('crop-h').value, v = document.getElementById('crop-v').value;
             let imgData = (id !== "" && dolls[id]) ? dolls[id].image : "";
@@ -467,7 +464,6 @@
             await syncFirebase(); location.reload();
         }
 
-        // --- 削除ダイアログ (ご指定の改行) ---
         async function requestClearAll() { 
             showConfirm("全てのデータを\n完全に削除しますか？\nこの操作は取り消せません。", async () => { 
                 await window.fb.updateDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { 
@@ -479,7 +475,6 @@
             }, "削除する"); 
         }
 
-        // 補助関数・UI制御
         function handleLogout() { isLoggedIn = false; localStorage.removeItem('uchinoko_session'); localStorage.removeItem('uchinoko_last_active'); localStorage.removeItem('uchinoko_gallery_id'); renderAll(); toggleMenu('side-menu'); }
         function openRecoveryModal() {
             const dialog = document.getElementById('custom-dialog'), msg = document.getElementById('dialog-message'), recArea = document.getElementById('recovery-inputs'), buttons = document.getElementById('dialog-buttons');
@@ -500,7 +495,6 @@
             const cancel = document.createElement('button'); cancel.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; cancel.innerText = "キャンセル"; cancel.onclick = closeDialog; buttons.append(btn, cancel); dialog.style.display = 'flex';
         }
 
-        // カレンダー・記念日ロジック
         function renderAnni() {
             const area = document.getElementById('closest-anniversary'), happyArea = document.getElementById('happy-anniversary'), happyListArea = document.getElementById('happy-anniversary-list');
             if(!area || !happyArea) return; area.innerHTML = ''; happyListArea.innerHTML = ''; happyArea.classList.add('hidden');
@@ -557,7 +551,6 @@
             }
         }
 
-        // --- その他共通関数 --- (省略せず全て保持)
         function showDetail(idx) {
             const d = dolls[idx], overlay = document.getElementById('profile-overlay'), bg = document.getElementById('profile-bg');
             bg.style.backgroundColor = d.bgColor || "#ffffff"; bg.style.color = d.textColor || "#000000";
@@ -576,6 +569,7 @@
             document.getElementById('detail-del-btn').onclick = () => showConfirm("削除しますか？", async () => { dolls.splice(idx, 1); await syncFirebase(); location.reload(); });
             overlay.classList.remove('hidden');
         }
+
         function initColorPalettes() { createPalette('bg-color-grid', palette100, 'bg', '#ffffff'); createPalette('text-color-grid', palette100, 'text', '#000000'); createPalette('cal-color-grid', palette100, 'cal', '#E11D48'); }
         function createPalette(gridId, colorList, type, defaultColor) { const grid = document.getElementById(gridId); colorList.forEach(c => { const chip = document.createElement('div'); chip.className = `color-chip ${type}-chip`; chip.style.backgroundColor = c; if(c.toLowerCase() === defaultColor.toLowerCase()) chip.classList.add('selected'); chip.onclick = e => { e.stopPropagation(); selectPaletteColor(type, c, chip); }; grid.appendChild(chip); }); document.getElementById(`${type}-select-icon`).style.backgroundColor = defaultColor; }
         function selectPaletteColor(type, color, el) { document.querySelectorAll(`.${type}-chip`).forEach(c => c.classList.remove('selected')); el.classList.add('selected'); document.getElementById(`f-${type}-color`).value = color; document.getElementById(`${type}-select-icon`).style.backgroundColor = color; document.getElementById(`${type}-color-grid`).classList.remove('grid-open'); }
