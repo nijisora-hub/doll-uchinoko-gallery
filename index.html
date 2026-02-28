@@ -384,17 +384,17 @@
                     const tripleItems = [...items, ...items, ...items];
                     tripleItems.forEach((d, i) => { const img = document.createElement('img'); img.src = d.image; img.className = "film-frame"; img.onclick = () => showDetail(i % items.length); track.appendChild(img); });
                     
-                    // 初期位置：真ん中のセットに飛ばす
+                    // 初期位置を2番目のセットに飛ばす
                     setTimeout(() => { 
                         const singleWidth = items.length * (80 + 12);
                         container.scrollLeft = singleWidth; 
                         
-                        // iPad/iOS対応：requestAnimationFrameを使用した滑らかな自動スクロール
-                        const step = () => {
-                            container.scrollLeft += 0.5;
-                            loopInterval = requestAnimationFrame(step);
+                        // 自動スクロール（iPad/iOS対応: requestAnimationFrameを使用）
+                        const scrollStep = () => {
+                            container.scrollLeft += 0.5; // スピード調整
+                            loopInterval = requestAnimationFrame(scrollStep);
                         };
-                        loopInterval = requestAnimationFrame(step);
+                        loopInterval = requestAnimationFrame(scrollStep);
                     }, 50);
                 } else { 
                     items.forEach((d, i) => { const img = document.createElement('img'); img.src = d.image; img.className = "film-frame"; img.onclick = () => showDetail(i); track.appendChild(img); }); 
@@ -569,7 +569,7 @@
                 if (items.length < 5) return; 
                 
                 const singleWidth = items.length * (80 + 12); 
-                // 左端または右端に近づいたら位置を中央（2セット目）へ補正する
+                // ループ境界の判定をiOSの慣性スクロールに合わせて調整
                 if (container.scrollLeft < singleWidth * 0.5) {
                     container.scrollLeft += singleWidth;
                 } else if (container.scrollLeft > singleWidth * 1.5) {
