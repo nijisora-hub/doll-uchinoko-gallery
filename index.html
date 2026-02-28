@@ -575,7 +575,38 @@
         function selectPaletteColor(type, color, el) { document.querySelectorAll(`.${type}-chip`).forEach(c => c.classList.remove('selected')); el.classList.add('selected'); document.getElementById(`f-${type}-color`).value = color; document.getElementById(`${type}-select-icon`).style.backgroundColor = color; document.getElementById(`${type}-color-grid`).classList.remove('grid-open'); }
         function updatePaletteSelection(type, color) { document.querySelectorAll(`.${type}-chip`).forEach(chip => { const t = document.createElement('div'); t.style.color = color; chip.classList.toggle('selected', chip.style.backgroundColor === t.style.color); }); document.getElementById(`${type}-select-icon`).style.backgroundColor = color; }
         function toggleColorGrid(type) { const grid = document.getElementById(`${type}-color-grid`), isOpen = grid.classList.contains('grid-open'); document.querySelectorAll('.color-grid').forEach(g => g.classList.remove('grid-open')); if(!isOpen) grid.classList.add('grid-open'); }
-        function editDoll(idx) { closeProfile(); const d = dolls[idx]; document.getElementById('edit-id').value = idx; document.getElementById('modal-title').innerText = "うちの子編集"; document.getElementById('f-name').value = d.name; document.getElementById('f-kana').value = d.kana || ""; document.getElementById('f-size-label').value = d.bodySize || ""; document.getElementById('f-body-make').value = d.bodyMake || ""; document.getElementById('f-head').value = d.head || ""; setDateValue(d.birthday, 'f-bday', 'f-bday-m', 'f-bday-d'); setDateValue(d.welcomeDay, 'f-welcome', 'f-welcome-m', 'f-welcome-d'); const area = document.getElementById('anniversary-inputs'); area.innerHTML = ''; (d.anniversaries || []).forEach(a => addAnniversaryInput(a)); document.getElementById('f-profile').value = d.profile || ""; updatePaletteSelection('bg', d.bgColor || '#ffffff'); updatePaletteSelection('text', d.textColor || '#000000'); updatePaletteSelection('cal', d.calColor || '#E11D48'); document.getElementById('modal').style.display = 'flex'; }
+        
+        function editDoll(idx) { 
+            closeProfile(); 
+            const d = dolls[idx]; 
+            document.getElementById('edit-id').value = idx; 
+            document.getElementById('modal-title').innerText = "うちの子編集"; 
+            document.getElementById('f-name').value = d.name; 
+            document.getElementById('f-kana').value = d.kana || ""; 
+            document.getElementById('f-size-label').value = d.bodySize || ""; 
+            document.getElementById('f-body-make').value = d.bodyMake || ""; 
+            document.getElementById('f-head').value = d.head || ""; 
+            setDateValue(d.birthday, 'f-bday', 'f-bday-m', 'f-bday-d'); 
+            setDateValue(d.welcomeDay, 'f-welcome', 'f-welcome-m', 'f-welcome-d'); 
+            const area = document.getElementById('anniversary-inputs'); 
+            area.innerHTML = ''; 
+            (d.anniversaries || []).forEach(a => addAnniversaryInput(a)); 
+            document.getElementById('f-profile').value = d.profile || ""; 
+            updatePaletteSelection('bg', d.bgColor || '#ffffff'); 
+            updatePaletteSelection('text', d.textColor || '#000000'); 
+            updatePaletteSelection('cal', d.calColor || '#E11D48'); 
+            
+            // 画像プレビューを表示
+            if(d.image) {
+                const p = document.getElementById('crop-preview');
+                p.src = d.image;
+                p.classList.remove('hidden');
+                document.getElementById('doll-hint').classList.add('hidden');
+            }
+            
+            document.getElementById('modal').style.display = 'flex'; 
+        }
+
         function showHome() { document.getElementById('home-content').classList.remove('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); closeArticle(); calOffset = 0; renderCalendar(); }
         function showDollList() { document.getElementById('home-content').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); document.getElementById('doll-list-page').classList.remove('hidden'); renderDollList(); toggleMenu('side-menu'); }
         function showPostListPage() { document.getElementById('home-content').classList.add('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.remove('hidden'); toggleMenu('side-menu'); }
