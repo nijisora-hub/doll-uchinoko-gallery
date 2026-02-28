@@ -244,7 +244,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // あなたのFirebase情報を埋め込みました
         const firebaseConfig = {
           apiKey: "AIzaSyCWzLwhTnOg58o4rdf-T8e0E57_dLGm2gk",
           authDomain: "doll-uchinoko-gallery.firebaseapp.com",
@@ -375,16 +374,33 @@
             document.getElementById('forgot-btn').style.display = isLoggedIn ? 'none' : 'block';
             const track = document.getElementById('top-film-roll'); track.innerHTML = '';
             const items = dolls.filter(d => d.image), container = document.getElementById('film-container');
-            clearInterval(loopInterval);
+            
+            // ループをリセット
+            if (loopInterval) { cancelAnimationFrame(loopInterval); loopInterval = null; }
+            
             if (items.length > 0) {
                 document.getElementById('empty-msg').style.display = 'none';
                 if (items.length >= 5) {
                     const tripleItems = [...items, ...items, ...items];
                     tripleItems.forEach((d, i) => { const img = document.createElement('img'); img.src = d.image; img.className = "film-frame"; img.onclick = () => showDetail(i % items.length); track.appendChild(img); });
-                    setTimeout(() => { container.scrollLeft = items.length * (80+12); }, 50);
-                    loopInterval = setInterval(() => { container.scrollLeft += 0.5; }, 16);
-                } else { items.forEach((d, i) => { const img = document.createElement('img'); img.src = d.image; img.className = "film-frame"; img.onclick = () => showDetail(i); track.appendChild(img); }); }
+                    
+                    // 初期位置：真ん中のセットに飛ばす
+                    setTimeout(() => { 
+                        const singleWidth = items.length * (80 + 12);
+                        container.scrollLeft = singleWidth; 
+                        
+                        // iPad/iOS対応：requestAnimationFrameを使用した滑らかな自動スクロール
+                        const step = () => {
+                            container.scrollLeft += 0.5;
+                            loopInterval = requestAnimationFrame(step);
+                        };
+                        loopInterval = requestAnimationFrame(step);
+                    }, 50);
+                } else { 
+                    items.forEach((d, i) => { const img = document.createElement('img'); img.src = d.image; img.className = "film-frame"; img.onclick = () => showDetail(i); track.appendChild(img); }); 
+                }
             } else { document.getElementById('empty-msg').style.display = 'flex'; }
+            
             const oImg = document.getElementById('display-owner-img');
             if(owner.image) { oImg.src = owner.image; oImg.classList.remove('hidden'); } else { oImg.classList.add('hidden'); }
             document.getElementById('owner-name').innerText = owner.name || "Owner Name"; document.getElementById('owner-bio').innerText = owner.bio || "";
@@ -545,7 +561,23 @@
         async function loadBlockImg(e, id) { const f = e.target.files[0]; if(!f) return; const rd = new FileReader(); rd.onload = (re) => { const img = new Image(); img.onload = () => { const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'), s = Math.min(1200/img.width, 1200/img.height, 1); cvs.width = img.width*s; cvs.height = img.height*s; ctx.drawImage(img, 0, 0, cvs.width, cvs.height); const t = document.getElementById('p-img-'+id); t.src = cvs.toDataURL('image/webp', 0.6); t.classList.remove('hidden'); document.getElementById('p-hint-'+id).classList.add('hidden'); }; img.src = re.target.result; }; rd.readAsDataURL(f); }
         function viewPost(idx) { const p = posts[idx]; document.getElementById('art-title').innerText = p.title; const container = document.getElementById('art-content'); container.innerHTML = ''; p.blocks.forEach(b => { if(b.img) { const img = document.createElement('img'); img.src = b.img; img.className = "w-full rounded-2xl mb-4"; container.appendChild(img); } if(b.text) { const txt = document.createElement('p'); txt.className = "text-stone-700 whitespace-pre-wrap leading-relaxed mb-6"; txt.innerText = b.text; container.appendChild(txt); } }); document.getElementById('art-edit-btn').onclick = () => { closeArticle(); editPost(idx); }; document.getElementById('art-del-btn').onclick = () => showConfirm("この投稿を削除しますか？", async () => { posts.splice(idx, 1); await syncFirebase(); location.reload(); }); document.getElementById('article-page').style.display = 'block'; }
         function closeArticle() { document.getElementById('article-page').style.display = 'none'; }
-        function setupInfiniteScroll() { const container = document.getElementById('film-container'); container.addEventListener('scroll', () => { const items = dolls.filter(d => d.image); if (items.length < 5) return; const w = items.length * (80 + 12); if (container.scrollLeft < w * 0.5) container.scrollLeft += w; if (container.scrollLeft > w * 1.5) container.scrollLeft -= w; }); }
+        
+        function setupInfiniteScroll() { 
+            const container = document.getElementById('film-container'); 
+            container.addEventListener('scroll', () => { 
+                const items = dolls.filter(d => d.image); 
+                if (items.length < 5) return; 
+                
+                const singleWidth = items.length * (80 + 12); 
+                // 左端または右端に近づいたら位置を中央（2セット目）へ補正する
+                if (container.scrollLeft < singleWidth * 0.5) {
+                    container.scrollLeft += singleWidth;
+                } else if (container.scrollLeft > singleWidth * 1.5) {
+                    container.scrollLeft -= singleWidth;
+                }
+            }, { passive: true }); 
+        }
+
         function initDateSelectors() { const bM = document.getElementById('f-bday-m'), bD = document.getElementById('f-bday-d'), wM = document.getElementById('f-welcome-m'), wD = document.getElementById('f-welcome-d'); for(let i=1; i<=12; i++) { bM.innerHTML += `<option value="${i}">${i}</option>`; wM.innerHTML += `<option value="${i}">${i}</option>`; } for(let i=1; i<=31; i++) { bD.innerHTML += `<option value="${i}">${i}</option>`; wD.innerHTML += `<option value="${i}">${i}</option>`; } }
         function updateCrop(imgId, hId, vId) { document.getElementById(imgId).style.objectPosition = `${document.getElementById(hId).value}% ${document.getElementById(vId).value}%`; }
         function changeMonth(d) { calOffset += d; document.getElementById('day-events').innerHTML = ''; renderCalendar(); }
