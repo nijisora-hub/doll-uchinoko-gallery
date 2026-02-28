@@ -86,12 +86,14 @@
             <div class="space-y-1">
                 <button onclick="showHome(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">🏠 ホーム</button>
                 <button onclick="openModalWithClear()" class="text-left py-4 font-bold border-b text-blue-600 w-full admin-only">✨ うちの子を登録する</button>
+                <button onclick="openPostModal()" class="text-left py-4 font-bold border-b text-emerald-600 w-full admin-only">📝 投稿する</button>
                 <button onclick="showDollList()" class="text-left py-4 font-bold border-b w-full text-stone-800">📸 うちの子一覧</button>
-                <button onclick="showPostListPage()" class="text-left py-4 font-bold border-b w-full text-stone-800">📝 投稿一覧</button>
+                <button onclick="showPostListPage()" class="text-left py-4 font-bold border-b w-full text-stone-800">📋 投稿一覧</button>
             </div>
             <div class="py-6 space-y-2 border-b">
                 <div id="admin-sub-menu" class="admin-only space-y-2 mb-4">
                     <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase mb-2">管理設定</p>
+                    <button onclick="openOwnerModal()" class="w-full py-3 bg-stone-100 rounded-xl text-xs font-bold text-stone-600 text-left px-4">👤 オーナー情報を編集</button>
                     <button onclick="openAuthModal('set')" class="w-full py-3 bg-stone-100 rounded-xl text-xs font-bold text-stone-600 text-left px-4">🔐 ログイン情報の変更</button>
                     <button onclick="openRecoveryModal()" class="w-full py-3 bg-stone-100 rounded-xl text-xs font-bold text-stone-600 text-left px-4">🔑 リカバリ設定</button>
                 </div>
@@ -99,16 +101,11 @@
                 <button id="forgot-btn" onclick="openForgotModal()" class="w-full py-2 text-[10px] text-stone-400 font-bold">ログインできない場合</button>
                 <button id="logout-btn" onclick="handleLogout()" class="w-full py-3 bg-red-50 rounded-xl text-xs font-bold text-red-400 hidden">ログアウト</button>
             </div>
-            
             <div class="mt-auto pt-10 space-y-4">
                 <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100">
                     <p class="text-[10px] font-bold text-blue-400 mb-1 uppercase tracking-widest">User Guide</p>
-                    <p class="text-[11px] text-blue-600 leading-relaxed mb-3">
-                        自分専用の「うちの子ギャラリー」を完全無料で作る方法はこちら
-                    </p>
-                    <a href="https://github.com/nijisora-hub/uchhnoko-gallery#readme" target="_blank" class="block w-full py-3 bg-blue-500 text-white rounded-xl text-[11px] font-bold text-center shadow-md">
-                        📖 ギャラリーの作り方ガイド
-                    </a>
+                    <p class="text-[11px] text-blue-600 leading-relaxed mb-3">自分専用の「うちの子ギャラリー」を完全無料で作る方法はこちら</p>
+                    <a href="https://github.com/nijisora-hub/uchhnoko-gallery#readme" target="_blank" class="block w-full py-3 bg-blue-500 text-white rounded-xl text-[11px] font-bold text-center shadow-md">📖 ギャラリーの作り方ガイド</a>
                 </div>
                 <button onclick="requestClearAll()" class="w-full py-3 bg-red-50 text-red-400 rounded-xl text-xs font-bold border border-red-100 shadow-sm admin-only">⚠️ データを完全削除</button>
             </div>
@@ -139,7 +136,9 @@
             <div id="cal-days" class="cal-grid mb-6"></div>
             <div id="day-events" class="space-y-3"></div>
         </section>
+
         <div id="home-posts" class="p-6 space-y-8"></div>
+
         <section class="p-10 bg-stone-100 mt-10 text-center border-t">
             <p class="text-[10px] font-bold text-stone-400 mb-8 tracking-widest uppercase">Share this gallery</p>
             <div class="flex flex-col gap-4 max-w-[280px] mx-auto">
@@ -198,6 +197,36 @@
         </div>
     </div>
 
+    <div id="post-modal" class="modal-base" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
+            <h3 id="post-modal-title" class="text-xl font-bold mb-4">投稿作成</h3>
+            <input type="hidden" id="edit-post-id">
+            <input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-6 outline-none text-lg" placeholder="タイトルを入力">
+            
+            <div id="post-blocks-container" class="space-y-6"></div>
+            
+            <button id="add-block-btn" onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4 flex flex-col items-center">
+                <span>+ 画像と文章を追加</span>
+                <span id="block-count-msg" class="text-[10px] mt-1 font-normal opacity-70">(最大10枚まで)</span>
+            </button>
+
+            <div class="p-6 bg-stone-50 rounded-3xl mt-8">
+                <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase mb-4">表示場所</p>
+                <div class="flex gap-6">
+                    <label class="flex items-center gap-2 cursor-pointer font-bold text-sm">
+                        <input type="radio" name="p-pos" value="home" checked class="w-4 h-4 accent-stone-800"> ホーム画面
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer font-bold text-sm">
+                        <input type="radio" name="p-pos" value="menu" class="w-4 h-4 accent-stone-800"> 投稿一覧(メニュー内)
+                    </label>
+                </div>
+            </div>
+
+            <button onclick="savePost()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg mt-8 shadow-xl">投稿を保存</button>
+        </div>
+    </div>
+
     <div id="profile-overlay" class="fixed inset-0 bg-white z-[10000] hidden overflow-y-auto">
         <div id="profile-bg" class="min-h-full p-6 pb-32">
             <button onclick="closeProfile()" class="bg-white shadow px-6 py-2 rounded-full text-xs font-bold mb-6">閉じる</button>
@@ -226,15 +255,6 @@
                 <input type="text" id="o-name" class="w-full border-b p-2 font-bold" placeholder="オーナー名"><textarea id="o-bio" class="w-full border p-3 rounded-xl h-32 text-sm" placeholder="自己紹介"></textarea>
                 <div id="sns-inputs-container" class="space-y-3"></div><button onclick="addSnsInput()" class="w-full py-2 bg-stone-100 rounded text-xs font-bold">+ SNSリンクを追加</button><button onclick="saveOwner()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">保存</button>
             </div>
-        </div>
-    </div>
-
-    <div id="post-modal" class="modal-base" onclick="closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
-            <h3 id="post-modal-title" class="text-xl font-bold mb-4">投稿作成</h3>
-            <input type="hidden" id="edit-post-id"><input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-4 outline-none" placeholder="タイトル"><div id="post-blocks-container" class="space-y-4"></div><button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ 追加</button>
-            <div class="flex gap-4 p-4 bg-stone-50 rounded-2xl text-xs mt-6 items-center"><label><input type="radio" name="p-pos" value="home" checked> ホーム</label><label><input type="radio" name="p-pos" value="menu"> メニュー</label></div><button onclick="savePost()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold mt-6">保存</button>
         </div>
     </div>
 
@@ -409,7 +429,7 @@
             posts.forEach((p, i) => {
                 if(p.pos === 'home') {
                     const card = document.createElement('div'); card.className = "relative bg-white rounded-[32px] p-6 pt-16 border shadow-sm";
-                    if(isLoggedIn) { card.innerHTML = `<div class="absolute top-4 left-4 flex gap-2"><button onclick="editPost(${i})" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-xs font-bold">編集</button><button onclick="deletePostDirectly(${i})" class="bg-red-50 text-red-400 px-4 py-2 rounded-lg text-xs font-bold border border-red-100">削除</button></div>`; }
+                    if(isLoggedIn) { card.innerHTML = `<div class=\"absolute top-4 left-4 flex gap-2\"><button onclick=\"editPost(${i})\" class=\"bg-stone-800 text-white px-4 py-2 rounded-lg text-xs font-bold\">編集</button><button onclick=\"deletePostDirectly(${i})\" class=\"bg-red-50 text-red-400 px-4 py-2 rounded-lg text-xs font-bold border border-red-100\">削除</button></div>`; }
                     const title = document.createElement('h4'); title.className="font-bold mb-4 text-lg border-b pb-2"; title.innerText = p.title; card.appendChild(title);
                     p.blocks.forEach(b => { if(b.img) { const img = document.createElement('img'); img.src = b.img; img.className="w-full rounded-2xl mb-4"; card.appendChild(img); } if(b.text) { const txt = document.createElement('p'); txt.className="text-sm text-stone-600 mb-6 whitespace-pre-wrap"; txt.innerText = b.text; card.appendChild(txt); } });
                     hp.appendChild(card);
@@ -447,6 +467,8 @@
         async function savePost() {
             const blocks = []; document.querySelectorAll('.post-block').forEach(el => { const imgEl = el.querySelector('img'), text = el.querySelector('textarea').value; if(!imgEl.classList.contains('hidden') || text) blocks.push({img: imgEl.classList.contains('hidden') ? '' : imgEl.src, text}); });
             const idx = document.getElementById('edit-post-id').value, data = { title: document.getElementById('p-title').value, blocks, pos: document.querySelector('input[name="p-pos"]:checked').value };
+            if(!data.title) return showAlert("タイトルを入力してください");
+            if(blocks.length === 0) return showAlert("画像または文章を入力してください");
             if(idx === "") posts.push(data); else posts[idx] = data;
             await syncFirebase(); location.reload();
         }
@@ -545,12 +567,94 @@
         function showAlert(msg, callback = null) { const dialog = document.getElementById('custom-dialog'); document.getElementById('dialog-message').innerText = msg; document.getElementById('dialog-inputs').classList.add('hidden'); document.getElementById('recovery-inputs').classList.add('hidden'); const buttons = document.getElementById('dialog-buttons'); buttons.innerHTML = ''; const btn = document.createElement('button'); btn.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold"; btn.innerText = "OK"; btn.onclick = () => { closeDialog(); if(callback) callback(); }; buttons.appendChild(btn); dialog.style.display = 'flex'; }
         function showConfirm(m, onY, yesText = "実行") { const d = document.getElementById('custom-dialog'); document.getElementById('dialog-message').innerText = m; document.getElementById('dialog-inputs').classList.add('hidden'); document.getElementById('recovery-inputs').classList.add('hidden'); const bA = document.getElementById('dialog-buttons'); bA.innerHTML = ''; const b1 = document.createElement('button'); b1.className = "w-full bg-red-400 text-white py-4 rounded-full font-bold shadow-lg"; b1.innerText = yesText; b1.onclick = () => { onY(); closeDialog(); }; const b2 = document.createElement('button'); b2.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; b2.innerText = "キャンセル"; b2.onclick = closeDialog; bA.append(b1, b2); d.style.display = 'flex'; }
         function closeDialog() { document.getElementById('custom-dialog').style.display = 'none'; }
+        
         function deletePostDirectly(idx) { showConfirm("この投稿を削除しますか？", async () => { posts.splice(idx, 1); await syncFirebase(); renderAll(); }); }
-        function editPost(idx) { const p = posts[idx]; document.getElementById('edit-post-id').value = idx; document.getElementById('post-modal-title').innerText = "投稿編集"; document.getElementById('p-title').value = p.title; document.getElementById('post-blocks-container').innerHTML = ''; p.blocks.forEach(b => addPostBlock(b)); document.querySelector(`input[name=\"p-pos\"][value=\"${p.pos}\"]`).checked = true; document.getElementById('post-modal').style.display = 'flex'; }
-        function openPostModal() { document.getElementById('edit-post-id').value = ""; document.getElementById('post-modal-title').innerText = "投稿作成"; document.getElementById('p-title').value = ""; document.getElementById('post-blocks-container').innerHTML = ''; addPostBlock(); document.querySelector(`input[name=\"p-pos\"][value=\"home\"]`).checked = true; document.getElementById('post-modal').style.display='flex'; toggleMenu('side-menu'); }
-        function addPostBlock(data = {img: '', text: ''}) { const id = Date.now() + Math.random(), div = document.createElement('div'); div.className = "post-block p-4 border rounded-xl mb-4 bg-stone-50"; div.innerHTML = `<div class=\"preview-sq mb-2\" onclick=\"document.getElementById('p-file-${id}').click()\"><img id=\"p-img-${id}\" src=\"${data.img}\" class=\"${data.img?'':'hidden'}\"><span id=\"p-hint-${id}\" class=\"text-xs text-stone-300 ${data.img?'hidden':''}\">画像選択</span></div><input type=\"file\" id=\"p-file-${id}\" accept=\"image/*\" class=\"hidden\" onchange=\"loadBlockImg(event, '${id}')\"><textarea class=\"w-full text-sm p-3 border rounded-xl h-24 mt-2 outline-none\" placeholder=\"文章を入力...\">${data.text || ''}</textarea><button onclick=\"this.parentElement.remove()\" class=\"text-xs text-red-400 mt-2\">削除</button>`; document.getElementById('post-blocks-container').appendChild(div); }
-        async function loadBlockImg(e, id) { const f = e.target.files[0]; if(!f) return; const rd = new FileReader(); rd.onload = (re) => { const img = new Image(); img.onload = () => { const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'), s = Math.min(1200/img.width, 1200/img.height, 1); cvs.width = img.width*s; cvs.height = img.height*s; ctx.drawImage(img, 0, 0, cvs.width, cvs.height); const t = document.getElementById('p-img-'+id); t.src = cvs.toDataURL('image/webp', 0.6); t.classList.remove('hidden'); document.getElementById('p-hint-'+id).classList.add('hidden'); }; img.src = re.target.result; }; rd.readAsDataURL(f); }
-        function viewPost(idx) { const p = posts[idx]; document.getElementById('art-title').innerText = p.title; const container = document.getElementById('art-content'); container.innerHTML = ''; p.blocks.forEach(b => { if(b.img) { const img = document.createElement('img'); img.src = b.img; img.className = "w-full rounded-2xl mb-4"; container.appendChild(img); } if(b.text) { const txt = document.createElement('p'); txt.className = "text-stone-700 whitespace-pre-wrap leading-relaxed mb-6"; txt.innerText = b.text; container.appendChild(txt); } }); document.getElementById('art-edit-btn').onclick = () => { closeArticle(); editPost(idx); }; document.getElementById('art-del-btn').onclick = () => showConfirm("この投稿を削除しますか？", async () => { posts.splice(idx, 1); await syncFirebase(); location.reload(); }); document.getElementById('article-page').style.display = 'block'; }
+        
+        function editPost(idx) { 
+            const p = posts[idx]; 
+            document.getElementById('edit-post-id').value = idx; 
+            document.getElementById('post-modal-title').innerText = "投稿編集"; 
+            document.getElementById('p-title').value = p.title; 
+            document.getElementById('post-blocks-container').innerHTML = ''; 
+            p.blocks.forEach(b => addPostBlock(b)); 
+            document.querySelector(`input[name="p-pos"][value="${p.pos}"]`).checked = true; 
+            document.getElementById('post-modal').style.display = 'flex'; 
+        }
+
+        function openPostModal() { 
+            document.getElementById('edit-post-id').value = ""; 
+            document.getElementById('post-modal-title').innerText = "投稿作成"; 
+            document.getElementById('p-title').value = ""; 
+            document.getElementById('post-blocks-container').innerHTML = ''; 
+            addPostBlock(); 
+            document.querySelector(`input[name="p-pos"][value="home"]`).checked = true; 
+            document.getElementById('post-modal').style.display='flex'; 
+            toggleMenu('side-menu'); 
+        }
+
+        function addPostBlock(data = {img: '', text: ''}) { 
+            const container = document.getElementById('post-blocks-container');
+            const currentCount = container.querySelectorAll('.post-block').length;
+            if (currentCount >= 10) {
+                return showAlert("一度に投稿できるのは10枚までです。");
+            }
+
+            const id = Date.now() + Math.random();
+            const div = document.createElement('div'); 
+            div.className = "post-block p-6 border rounded-[32px] mb-4 bg-stone-50 relative"; 
+            div.innerHTML = `
+                <div class=\"preview-sq mb-4\" onclick=\"document.getElementById('p-file-${id}').click()\">
+                    <img id=\"p-img-${id}\" src=\"${data.img}\" class=\"${data.img?'':'hidden'}\">
+                    <span id=\"p-hint-${id}\" class=\"text-xs text-stone-300 font-bold ${data.img?'hidden':''}\">画像を選択</span>
+                </div>
+                <input type=\"file\" id=\"p-file-${id}\" accept=\"image/*\" class=\"hidden\" onchange=\"loadBlockImg(event, '${id}')\">
+                <textarea class=\"w-full text-sm p-4 border rounded-2xl h-32 mt-2 outline-none focus:border-stone-400\" placeholder=\"文章を入力...\">${data.text || ''}</textarea>
+                <button onclick=\"this.parentElement.remove(); updateBlockBtn();\" class=\"absolute -top-2 -right-2 w-8 h-8 bg-white shadow-md border rounded-full text-red-400 font-bold text-xs flex items-center justify-center\">✕</button>
+            `; 
+            container.appendChild(div); 
+            updateBlockBtn();
+        }
+
+        function updateBlockBtn() {
+            const currentCount = document.querySelectorAll('.post-block').length;
+            document.getElementById('block-count-msg').innerText = `(${currentCount} / 10枚)`;
+            const btn = document.getElementById('add-block-btn');
+            if(currentCount >= 10) { btn.style.opacity = '0.5'; } else { btn.style.opacity = '1'; }
+        }
+
+        async function loadBlockImg(e, id) { 
+            const f = e.target.files[0]; if(!f) return; 
+            const rd = new FileReader(); 
+            rd.onload = (re) => { 
+                const img = new Image(); 
+                img.onload = () => { 
+                    const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'), s = Math.min(1200/img.width, 1200/img.height, 1); 
+                    cvs.width = img.width*s; cvs.height = img.height*s; 
+                    ctx.drawImage(img, 0, 0, cvs.width, cvs.height); 
+                    const t = document.getElementById('p-img-'+id); 
+                    t.src = cvs.toDataURL('image/webp', 0.6); 
+                    t.classList.remove('hidden'); 
+                    document.getElementById('p-hint-'+id).classList.add('hidden'); 
+                }; 
+                img.src = re.target.result; 
+            }; 
+            rd.readAsDataURL(f); 
+        }
+
+        function viewPost(idx) { 
+            const p = posts[idx]; 
+            document.getElementById('art-title').innerText = p.title; 
+            const container = document.getElementById('art-content'); 
+            container.innerHTML = ''; 
+            p.blocks.forEach(b => { 
+                if(b.img) { const img = document.createElement('img'); img.src = b.img; img.className = "w-full rounded-3xl mb-4 shadow-sm"; container.appendChild(img); } 
+                if(b.text) { const txt = document.createElement('p'); txt.className = "text-stone-700 whitespace-pre-wrap leading-relaxed mb-10 px-2"; txt.innerText = b.text; container.appendChild(txt); } 
+            }); 
+            document.getElementById('art-edit-btn').onclick = () => { closeArticle(); editPost(idx); }; 
+            document.getElementById('art-del-btn').onclick = () => showConfirm("この投稿を削除しますか？", async () => { posts.splice(idx, 1); await syncFirebase(); location.reload(); }); 
+            document.getElementById('article-page').style.display = 'block'; 
+        }
+
         function closeArticle() { document.getElementById('article-page').style.display = 'none'; }
         function setupInfiniteScroll() { const container = document.getElementById('film-container'); container.addEventListener('scroll', () => { const items = dolls.filter(d => d.image); if (items.length < 5) return; const singleWidth = items.length * (80 + 12); if (container.scrollLeft < singleWidth * 0.5) { container.scrollLeft += singleWidth; } else if (container.scrollLeft > singleWidth * 1.5) { container.scrollLeft -= singleWidth; } }, { passive: true }); }
         function initDateSelectors() { const bM = document.getElementById('f-bday-m'), bD = document.getElementById('f-bday-d'), wM = document.getElementById('f-welcome-m'), wD = document.getElementById('f-welcome-d'); for(let i=1; i<=12; i++) { bM.innerHTML += `<option value=\"${i}\">${i}</option>`; wM.innerHTML += `<option value=\"${i}\">${i}</option>`; } for(let i=1; i<=31; i++) { bD.innerHTML += `<option value=\"${i}\">${i}</option>`; wD.innerHTML += `<option value=\"${i}\">${i}</option>`; } }
@@ -565,7 +669,19 @@
         function openOwnerModal() { document.getElementById('o-name').value = owner.name; document.getElementById('o-bio').value = owner.bio; document.getElementById('sns-inputs-container').innerHTML = ''; (owner.sns || []).forEach(s => addSnsInput(s)); if(owner.image) { const p = document.getElementById('owner-preview'); p.src = owner.image; p.classList.remove('hidden'); document.getElementById('owner-hint').classList.add('hidden'); } document.getElementById('owner-modal').style.display='flex'; toggleMenu('side-menu'); }
         function addSnsInput(v = {type:'X(旧Twitter)', val:''}) { const div = document.createElement('div'); div.className = "sns-input-row flex gap-2 items-center"; div.innerHTML = `<select class=\"sns-type text-sm border p-2 rounded-lg bg-white h-10 outline-none\">${['X(旧Twitter)','Instagram','mixi2','Bluesky','Misskey','その他URL'].map(t => `<option ${v.type===t?'selected':''}>${t}</option>`).join('')}</select><input type=\"text\" class=\"sns-val flex-1 text-sm border p-2 rounded-lg h-10 outline-none\" placeholder=\"ID or URL\" value=\"${v.val}\"><button onclick=\"this.parentElement.remove()\" class=\"p-2 text-stone-400\">✕</button>`; document.getElementById('sns-inputs-container').appendChild(div); }
         function addAnniversaryInput(v = {name:'', date:''}) { const id = Date.now() + Math.random(), div = document.createElement('div'); div.className = "p-4 bg-stone-100/50 rounded-2xl space-y-2 border border-stone-100"; div.innerHTML = `<div class=\"flex justify-between items-center\"><span class=\"text-[10px] font-bold text-stone-400 uppercase tracking-widest\">記念日</span><button onclick=\"this.parentElement.parentElement.remove()\" class=\"text-stone-400 text-xs\">✕ 削除</button></div><input type=\"text\" class=\"f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none\" placeholder=\"記念日名\" value=\"${v.name}\"><div class=\"flex gap-2 items-center\"><select id=\"m-${id}\" class=\"f-anni-m border rounded p-2 text-xs flex-1 outline-none\"><option value=\"\">月</option>${Array.from({length:12},(_,i)=>`<option value=\"${i+1}\">${i+1}</option>`).join('')}</select><select id=\"d-${id}\" class=\"f-anni-d border rounded p-2 text-xs flex-1 outline-none\"><option value=\"\">日</option>${Array.from({length:31},(_,i)=>`<option value=\"${i+1}\">${i+1}</option>`).join('')}</select></div><input type=\"date\" id=\"date-${id}\" class=\"date-input f-anni-date\">`; document.getElementById('anniversary-inputs').appendChild(div); if(v.date) setDateValue(v.date, `date-${id}`, `m-${id}`, `d-${id}`); }
-        async function requestClearAll() { showConfirm("全てのデータを完全に削除しますか？\nこの操作は取り消せません。", async () => { await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [] }, { merge: true }); location.reload(); }, "削除する"); }
+
+        async function requestClearAll() { 
+            // 改行位置を修正しました
+            showConfirm("全てのデータを\n完全に削除しますか？\nこの操作は取り消せません。", async () => { 
+                await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { 
+                    dolls: [], 
+                    owner: { name: "Owner Name", bio: "", sns: [], image:"" }, 
+                    posts: [] 
+                }, { merge: true }); 
+                location.reload(); 
+            }, "削除する"); 
+        }
+
         function shareSNS(type) { const url = window.location.href; if(type === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank'); else if(type === 'x') window.open(`https://twitter.com/intent/tweet?text=Doll Uchinoko Gallery&url=${encodeURIComponent(url)}`, '_blank'); }
         function copyURL() { navigator.clipboard.writeText(window.location.href).then(() => { showAlert("URLをコピーしました"); }); }
     </script>
