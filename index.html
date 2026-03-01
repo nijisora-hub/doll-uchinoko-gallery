@@ -54,12 +54,10 @@
         .post-card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); transition: all 0.3s; border: 1px solid #f0f0f0; }
         .post-card:active { transform: scale(0.97); }
 
-        /* ローディング用 */
+        /* ローディング・自動収縮用の追加CSS */
         #loading-overlay { position: fixed; inset: 0; background: #fcfaf8; z-index: 200000; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
         .loader { width: 40px; height: 40px; border: 4px solid #eee; border-top-color: #1a1a1a; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* 自動収縮テキストエリア用 */
         textarea.auto-resize { resize: none; overflow: hidden; min-height: 48px; }
     </style>
 </head>
@@ -296,7 +294,14 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        const firebaseConfig = { apiKey: "AIzaSyCWzLwhTnOg58o4rdf-T8e0E57_dLGm2gk", authDomain: "doll-uchinoko-gallery.firebaseapp.com", projectId: "doll-uchinoko-gallery", storageBucket: "doll-uchinoko-gallery.firebasestorage.app", messagingSenderId: "78946857999", appId: "1:78946857999:web:d0ffcac3527334f66c5f7a" };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyCHfU_v-6z3_l0T0_K0A_f_0S0_S0_0", 
+            authDomain: "doll-uchinoko-gallery.firebaseapp.com", 
+            projectId: "doll-uchinoko-gallery", 
+            storageBucket: "doll-uchinoko-gallery.appspot.com", 
+            messagingSenderId: "1234567890", 
+            appId: "1:1234567890:web:abcdef1234567890" 
+        };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
         window.fb = { db, doc, setDoc, getDoc, updateDoc };
     </script>
@@ -329,7 +334,6 @@
                     adjust(e.target);
                 }
             });
-            // 初期表示用
             document.querySelectorAll('.auto-resize, .p-block-text').forEach(adjust);
         }
 
@@ -351,7 +355,7 @@
                         setupInfiniteScroll();
                         hideLoader();
                     }
-                } else if (attempts > 50) { // 5秒待ってもFirebaseが来ない場合の脱出
+                } else if (attempts > 50) { 
                     clearInterval(checkFirebase);
                     hideLoader();
                 }
@@ -365,7 +369,6 @@
                 setTimeout(() => { 
                     loader.style.display = 'none'; 
                     document.body.classList.add('opacity-100');
-                    // 読み込み後に再度サイズ調整
                     document.querySelectorAll('.auto-resize, .p-block-text').forEach(el => {
                         el.style.height = 'auto';
                         el.style.height = el.scrollHeight + 'px';
@@ -544,7 +547,6 @@
                     </div>`;
                 if(p.position === 'menu') { menuArea.insertAdjacentHTML('beforeend', cardHtml); } else { homeArea.insertAdjacentHTML('beforeend', cardHtml); }
             });
-            if(menuArea.children.length === 0) menuArea.innerHTML = '<p class="text-stone-400 text-center py-10 col-span-full">まだ投稿がありません</p>';
         }
 
         function toggleDollViewMode() { dollViewMode = dollViewMode === 'grid' ? 'list' : 'grid'; document.getElementById('toggle-list-view').innerText = dollViewMode === 'grid' ? '名前を表示' : '名前を隠す'; showDollList(); }
@@ -584,7 +586,6 @@
             document.getElementById('anniversary-inputs').innerHTML = ''; (d.anniversaries || []).forEach(a => addAnniversaryInput(a));
             const preview = document.getElementById('crop-preview'); if(d.image) { preview.src = d.image; preview.classList.remove('hidden'); document.getElementById('doll-hint').classList.add('hidden'); }
             closeProfile(); openModal(); document.querySelector('#modal .modal-content').scrollTop = 0;
-            // 開いた後にサイズ調整
             setTimeout(() => { document.querySelectorAll('#modal textarea').forEach(el => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }); }, 100);
         }
 
