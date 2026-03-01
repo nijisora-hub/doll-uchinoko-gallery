@@ -10,40 +10,43 @@
         body { font-family: 'Noto Sans JP', sans-serif; background-color: #fcfaf8; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         .logo-font { font-family: 'Dancing Script', cursive; }
         
-        img { 
-            -webkit-touch-callout: none; 
-            -webkit-user-select: none; 
-            user-select: none; 
-            pointer-events: auto; 
-            -webkit-user-drag: none;
-        }
+        /* 画像の保護 */
+        img { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; pointer-events: auto; -webkit-user-drag: none; }
 
         .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .film-outer::-webkit-scrollbar { display: none; }
         .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 20px; }
         .film-frame { width: 80px; height: 80px; background: #333; border: 2px solid #eee; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; position: relative; z-index: 10; }
+        
         .modal-base { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 10px; }
         .modal-content { background: white; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; border-radius: 24px; padding: 24px; position: relative; }
+        
         #custom-dialog { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100000; align-items: center; justify-content: center; padding: 20px; }
+        
         .crop-area { display: flex; flex-direction: row-reverse; gap: 10px; align-items: center; margin-bottom: 10px; }
         .v-bar-box { width: 20px; height: 180px; display: flex; align-items: center; justify-content: center; }
         .vertical-range { writing-mode: vertical-lr; direction: rtl; appearance: slider-vertical; width: 8px; height: 100%; }
+        
         .preview-sq { flex: 1; aspect-ratio: 1/1; background: #f3f3f3; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid #eee; }
         .preview-sq img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; }
+        
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; border-radius: 50%; cursor: pointer; position: relative; }
         .cal-dots { display: flex; gap: 2px; justify-content: center; position: absolute; bottom: 4px; width: 100%; height: 4px; overflow: hidden; }
         .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
+        
         .color-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 12px; padding: 4px; display: none; }
         .color-grid.grid-open { display: grid; }
         .color-chip { aspect-ratio: 1; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.1s; }
         .color-chip.selected { outline: 3px solid #000; outline-offset: 1px; z-index: 2; }
         .color-select-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #ddd; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 0 2px #fff; }
+        
         .date-input { font-size: 16px !important; padding: 8px; border-radius: 8px; border: 1px solid #e5e7eb; width: 100%; }
         .sns-link-pill { display: inline-flex; align-items: center; padding: 8px 16px; background: #f0f0f0; border-radius: 20px; font-size: 12px; font-weight: bold; color: #555; transition: all 0.2s; border: 1px solid transparent; }
-        .sns-link-pill:active { background: #e0e0e0; transform: translateY(1px); }
+        
         @keyframes pulse-anni { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 114, 182, 0.4); } 70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(244, 114, 182, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 114, 182, 0); } }
         .animate-anni { animation: pulse-anni 2s infinite ease-in-out; border: 2px solid #f472b6 !important; }
+        
         .admin-only { display: none !important; }
         body.is-admin .admin-only { display: block !important; }
         body.is-admin .admin-only-flex { display: flex !important; }
@@ -51,14 +54,17 @@
         .post-card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); transition: all 0.3s; border: 1px solid #f0f0f0; }
         .post-card:active { transform: scale(0.97); }
 
-        .auto-resize {
-            resize: none;
-            overflow: hidden;
-            min-height: 1.5em;
-        }
+        /* ローディング用 */
+        #loading-overlay { position: fixed; inset: 0; background: #fcfaf8; z-index: 200000; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        .loader { width: 40px; height: 40px; border: 4px solid #eee; border-top-color: #1a1a1a; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="text-stone-800 pb-20">
+<body class="text-stone-800 pb-20 opacity-0 transition-opacity duration-500">
+
+    <div id="loading-overlay">
+        <div class="loader"></div>
+    </div>
 
     <div id="custom-dialog">
         <div class="bg-white w-full max-w-xs p-8 rounded-3xl shadow-2xl text-center">
@@ -100,7 +106,7 @@
                 <button onclick="showHome(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">🏠 ホーム</button>
                 <button onclick="openModalWithClear()" class="text-left py-4 font-bold border-b text-blue-600 w-full admin-only">✨ うちの子を登録する</button>
                 <button onclick="openPostModal()" class="text-left py-4 font-bold border-b text-emerald-600 w-full admin-only">📝 投稿する</button>
-                <button onclick="showDollList(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">📸 うちの子一覧</button>
+                <button onclick="showDollList()" class="text-left py-4 font-bold border-b w-full text-stone-800">📸 うちの子一覧</button>
                 <button onclick="showPostListPage()" class="text-left py-4 font-bold border-b w-full text-stone-800">📋 投稿一覧</button>
             </div>
             <div class="py-6 space-y-2 border-b">
@@ -222,8 +228,7 @@
             <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
             <h3 id="post-modal-title" class="text-xl font-bold mb-4">投稿作成</h3>
             <input type="hidden" id="edit-post-id">
-            <textarea id="p-title" class="auto-resize w-full border-b p-3 font-bold mb-6 outline-none text-lg" placeholder="タイトルを入力" rows="1" oninput="adjustHeight(this)"></textarea>
-            
+            <input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-6 outline-none text-lg" placeholder="タイトルを入力">
             <div id="post-blocks-container" class="space-y-6"></div>
             <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ 画像と文章を追加 (最大10枚)</button>
             <div class="p-6 bg-stone-50 rounded-3xl mt-8">
@@ -260,7 +265,7 @@
                     <button id="art-del-btn" class="text-xs font-bold bg-red-50 text-red-400 px-4 py-2 rounded-full">削除</button>
                 </div>
             </div>
-            <h2 id="art-title" class="text-3xl font-bold text-center mb-12 whitespace-pre-wrap"></h2>
+            <h2 id="art-title" class="text-3xl font-bold text-center mb-12"></h2>
             <div id="art-content" class="space-y-6"></div>
         </div>
     </div>
@@ -294,7 +299,7 @@
     </script>
 
     <script>
-        let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"" }, posts = [], calOffset = 0;
+        let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"" }, posts = [], recovery = { birth:'', user:'', secret:'' }, calOffset = 0;
         let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null }, loopInterval;
         let isLoggedIn = false; const urlParams = new URLSearchParams(window.location.search);
         let galleryId = urlParams.get('id');
@@ -306,34 +311,37 @@
             return colors.slice(0, 100);
         })();
 
-        document.addEventListener('contextmenu', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            e.preventDefault();
-        }, false);
-
-        document.addEventListener('mousedown', (e) => {
-            if (e.target.tagName === 'IMG') { e.preventDefault(); }
-        }, false);
-        
-        document.addEventListener('dragstart', (e) => {
-            if (e.target.tagName === 'IMG') e.preventDefault();
-        }, false);
-
-        function adjustHeight(el) {
-            el.style.height = 'auto';
-            el.style.height = el.scrollHeight + 'px';
-        }
+        document.addEventListener('contextmenu', (e) => { if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') e.preventDefault(); }, false);
+        document.addEventListener('mousedown', (e) => { if (e.target.tagName === 'IMG') e.preventDefault(); }, false);
+        document.addEventListener('dragstart', (e) => { if (e.target.tagName === 'IMG') e.preventDefault(); }, false);
 
         window.onload = async () => {
             const checkFirebase = setInterval(async () => {
                 if(window.fb) {
                     clearInterval(checkFirebase);
                     initDateSelectors(); initColorPalettes();
-                    if (!galleryId || urlParams.get('mode') === 'new') { openAuthModal('set', true); }
-                    else { await loadGalleryData(); checkLoginSession(); renderAll(); setupInfiniteScroll(); }
+                    if (!galleryId || urlParams.get('mode') === 'new') { 
+                        hideLoader();
+                        openAuthModal('set', true); 
+                    } else { 
+                        await loadGalleryData(); 
+                        checkLoginSession(); 
+                        renderAll(); 
+                        setupInfiniteScroll();
+                        hideLoader(); // データ描画後に消す
+                    }
                 }
             }, 100);
         };
+
+        function hideLoader() {
+            const loader = document.getElementById('loading-overlay');
+            loader.style.opacity = '0';
+            setTimeout(() => { 
+                loader.style.display = 'none'; 
+                document.body.classList.add('opacity-100');
+            }, 500);
+        }
 
         async function loadGalleryData() {
             if(!galleryId) return;
@@ -345,11 +353,18 @@
                     dolls = data.dolls || []; 
                     owner = data.owner || owner; 
                     posts = data.posts || []; 
+                    recovery = data.recovery || { birth:'', user:'', secret:'' };
                 }
             } catch(e) { console.error("Data load error:", e); }
         }
 
-        async function syncFirebase() { if(!galleryId) return; const docRef = window.fb.doc(window.fb.db, "galleries", galleryId); await window.fb.updateDoc(docRef, { dolls, owner, posts }); }
+        async function syncFirebase() { 
+            if(!galleryId) return; 
+            const docRef = window.fb.doc(window.fb.db, "galleries", galleryId); 
+            // すべてのグローバル変数をFirestoreに反映させる（recoveryも含める）
+            await window.fb.updateDoc(docRef, { dolls, owner, posts, recovery }); 
+        }
+
         function updateLoginSession() { if(isLoggedIn) localStorage.setItem('uchinoko_last_active', Date.now()); }
         function checkLoginSession() {
             const lastActive = localStorage.getItem('uchinoko_last_active'), session = localStorage.getItem('uchinoko_session'), sid = localStorage.getItem('uchinoko_gallery_id');
@@ -370,9 +385,16 @@
                     if(isNew && !gIdInput.value) return showAlert("IDを入力してください");
                     if(!idInput.value || !pwInput.value) return showAlert("ユーザー名とパスワードを入力してください");
                     const finalGid = isNew ? gIdInput.value.trim() : galleryId, authData = { adminUser: idInput.value, adminPw: pwInput.value };
-                    if(isNew) { await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", finalGid), { auth: authData, dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [] }); galleryId = finalGid; }
-                    else { await window.fb.updateDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { auth: authData }); }
-                    closeDialog(); showAlert("保存されました", () => { if(isNew) { isLoggedIn = true; localStorage.setItem('uchinoko_session', 'true'); localStorage.setItem('uchinoko_gallery_id', galleryId); updateLoginSession(); window.location.search = `?id=${finalGid}`; } });
+                    if(isNew) { 
+                        await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", finalGid), { 
+                            auth: authData, dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [], recovery: { birth:'', user:'', secret:'' } 
+                        }); 
+                        galleryId = finalGid; 
+                    } else { 
+                        await window.fb.updateDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { auth: authData }); 
+                    }
+                    closeDialog(); 
+                    showAlert("保存されました", () => { if(isNew) { isLoggedIn = true; localStorage.setItem('uchinoko_session', 'true'); localStorage.setItem('uchinoko_gallery_id', galleryId); updateLoginSession(); window.location.search = `?id=${finalGid}`; } });
                 };
                 buttons.appendChild(btn);
                 if(!isNew) { const cancel = document.createElement('button'); cancel.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; cancel.innerText = "キャンセル"; cancel.onclick = closeDialog; buttons.appendChild(cancel); }
@@ -487,7 +509,7 @@
                         </div>
                         <div class="p-6">
                             <p class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">${p.date || ''}</p>
-                            <h4 class="font-bold text-lg leading-tight line-clamp-2 whitespace-pre-wrap">${p.title}</h4>
+                            <h4 class="font-bold text-lg leading-tight line-clamp-2">${p.title}</h4>
                         </div>
                     </div>`;
                 if(p.position === 'menu') { menuArea.insertAdjacentHTML('beforeend', cardHtml); } else { homeArea.insertAdjacentHTML('beforeend', cardHtml); }
@@ -632,20 +654,19 @@
             const title = document.getElementById('post-modal-title'), container = document.getElementById('post-blocks-container');
             container.innerHTML = ''; 
             document.getElementById('edit-post-id').value = editId !== null ? editId : "";
-            const titleInput = document.getElementById('p-title');
+            
             if(editId !== null) {
                 const p = posts.find(x => x.id == editId); 
                 title.innerText = "投稿編集"; 
-                titleInput.value = p.title || "";
+                document.getElementById('p-title').value = p.title || "";
                 if (p.blocks && p.blocks.length > 0) { p.blocks.forEach(b => addPostBlock(b)); } else { addPostBlock(); }
                 document.querySelector(`input[name="p-pos"][value="${p.position || 'home'}"]`).checked = true;
             } else { 
                 title.innerText = "投稿作成"; 
-                titleInput.value = ""; 
+                document.getElementById('p-title').value = ""; 
                 addPostBlock();
                 document.querySelector('input[name="p-pos"][value="home"]').checked = true; 
             }
-            adjustHeight(titleInput);
             document.getElementById('post-modal').style.display = 'flex'; 
             document.body.style.overflow = 'hidden';
             document.querySelector('#post-modal .modal-content').scrollTop = 0;
@@ -655,16 +676,8 @@
             const container = document.getElementById('post-blocks-container'); if(container.children.length >= 10) return;
             const id = Date.now() + Math.random(); const div = document.createElement('div'); div.className = "space-y-3 p-4 bg-stone-50 rounded-2xl relative";
             const imgClass = v.image ? "" : "hidden"; const hintClass = v.image ? "hidden" : "";
-            div.innerHTML = `
-                <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 w-6 h-6 bg-white rounded-full shadow text-xs text-stone-400">✕</button>
-                <div class="preview-sq bg-white" onclick="document.getElementById('file-${id}').click()">
-                    <img id="img-${id}" src="${v.image}" class="${imgClass}">
-                    <span class="text-stone-300 text-[10px] font-bold ${hintClass}">タップして画像を選択</span>
-                </div>
-                <input type="file" id="file-${id}" class="hidden" accept="image/*" onchange="loadPostImg(event, '${id}')">
-                <textarea class="p-block-text auto-resize w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="文章を入力..." rows="1" oninput="adjustHeight(this)">${v.text}</textarea>`;
+            div.innerHTML = `<button onclick="this.parentElement.remove()" class="absolute top-2 right-2 w-6 h-6 bg-white rounded-full shadow text-xs text-stone-400">✕</button><div class="preview-sq bg-white" onclick="document.getElementById('file-${id}').click()"><img id="img-${id}" src="${v.image}" class="${imgClass}"><span class="text-stone-300 text-[10px] font-bold ${hintClass}">タップして画像を選択</span></div><input type="file" id="file-${id}" class="hidden" accept="image/*" onchange="loadPostImg(event, '${id}')"><textarea class="p-block-text w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="文章を入力..." rows="3">${v.text}</textarea>`;
             container.appendChild(div);
-            setTimeout(() => { adjustHeight(div.querySelector('textarea')); }, 0);
         }
 
         function loadPostImg(event, id) {
@@ -702,17 +715,46 @@
         function openRecoveryModal() {
             const dialog = document.getElementById('custom-dialog'), msg = document.getElementById('dialog-message'), recInputs = document.getElementById('recovery-inputs'), buttons = document.getElementById('dialog-buttons');
             document.getElementById('dialog-inputs').classList.add('hidden'); recInputs.classList.remove('hidden'); buttons.innerHTML = ''; msg.innerText = "リカバリ情報の登録";
+            
+            // 既存の設定があれば表示
+            document.getElementById('rec-birth').value = recovery.birth || '';
+            document.getElementById('rec-user').value = recovery.user || '';
+            document.getElementById('rec-secret').value = recovery.secret || '';
+
             const btn = document.createElement('button'); btn.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold"; btn.innerText = "設定を保存";
-            btn.onclick = async () => { const data = { birth: document.getElementById('rec-birth').value, user: document.getElementById('rec-user').value, secret: document.getElementById('rec-secret').value }; if(!data.birth || !data.user || !data.secret) return showAlert("すべて入力してください"); await window.fb.updateDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { recovery: data }); closeDialog(); showAlert("保存しました"); };
-            buttons.appendChild(btn); const cancel = document.createElement('button'); cancel.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; cancel.innerText = "キャンセル"; cancel.onclick = closeDialog; buttons.appendChild(cancel); dialog.style.display = 'flex';
+            btn.onclick = async () => { 
+                const data = { birth: document.getElementById('rec-birth').value, user: document.getElementById('rec-user').value, secret: document.getElementById('rec-secret').value }; 
+                if(!data.birth || !data.user || !data.secret) return showAlert("すべて入力してください"); 
+                recovery = data; // グローバル変数を更新
+                await syncFirebase(); // Firebaseと同期
+                closeDialog(); 
+                showAlert("保存しました"); 
+            };
+            buttons.appendChild(btn); 
+            const cancel = document.createElement('button'); cancel.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; cancel.innerText = "キャンセル"; cancel.onclick = closeDialog; buttons.appendChild(cancel); 
+            dialog.style.display = 'flex';
         }
 
         function openForgotModal() {
             const dialog = document.getElementById('custom-dialog'), msg = document.getElementById('dialog-message'), recInputs = document.getElementById('recovery-inputs'), buttons = document.getElementById('dialog-buttons');
             document.getElementById('dialog-inputs').classList.add('hidden'); recInputs.classList.remove('hidden'); buttons.innerHTML = ''; msg.innerText = "リカバリ認証";
+            
+            // 入力欄をクリア
+            document.getElementById('rec-birth').value = '';
+            document.getElementById('rec-user').value = '';
+            document.getElementById('rec-secret').value = '';
+
             const btn = document.createElement('button'); btn.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold"; btn.innerText = "認証";
-            btn.onclick = async () => { const snap = await window.fb.getDoc(window.fb.doc(window.fb.db, "galleries", galleryId)), rec = snap.data().recovery; if(rec && rec.birth === document.getElementById('rec-birth').value && rec.user === document.getElementById('rec-user').value && rec.secret === document.getElementById('rec-secret').value) { closeDialog(); openAuthModal('set'); } else showAlert("認証失敗"); };
-            buttons.appendChild(btn); dialog.style.display = 'flex';
+            btn.onclick = async () => { 
+                const snap = await window.fb.getDoc(window.fb.doc(window.fb.db, "galleries", galleryId)), rec = snap.data().recovery; 
+                if(rec && rec.birth === document.getElementById('rec-birth').value && rec.user === document.getElementById('rec-user').value && rec.secret === document.getElementById('rec-secret').value) { 
+                    closeDialog(); 
+                    openAuthModal('set'); 
+                } else showAlert("認証失敗"); 
+            };
+            buttons.appendChild(btn); 
+            const cancel = document.createElement('button'); cancel.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; cancel.innerText = "キャンセル"; cancel.onclick = closeDialog; buttons.appendChild(cancel);
+            dialog.style.display = 'flex';
         }
 
         function handleLogout() { isLoggedIn = false; localStorage.removeItem('uchinoko_session'); localStorage.removeItem('uchinoko_gallery_id'); renderAll(); toggleMenu('side-menu'); }
@@ -731,7 +773,7 @@
             ms.onchange = upd; ds.onchange = upd; inp.onchange = () => { ms.value = ""; ds.value = ""; };
         }
 
-        async function requestClearAll() { showConfirm("全てのデータを完全に削除しますか？", async () => { await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image: "" }, posts: [] }, { merge: true }); location.reload(); }, "削除する"); }
+        async function requestClearAll() { showConfirm("全てのデータを完全に削除しますか？", async () => { await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [], recovery: { birth:'', user:'', secret:'' } }, { merge: true }); location.reload(); }, "削除する"); }
         function shareSNS(type) { const url = window.location.href; if(type === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`); else window.open(`https://twitter.com/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Doll Uchinoko Gallery")}`); }
         function copyURL() { navigator.clipboard.writeText(window.location.href); alert("URLをコピーしました"); }
     </script>
