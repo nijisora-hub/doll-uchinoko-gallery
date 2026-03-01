@@ -1,4 +1,4 @@
-# 📸 うちの子ギャラリー（Doll Uchinoko Gallery）
+# Doll Uchinoko Gallery
 
 このプロジェクトは、ドールの「うちの子」を紹介するための、自分専用Webギャラリーを作成するためのテンプレートです。
 GitHub PagesとFirebaseを利用することで、**完全に無料**で自分だけのギャラリーを公開・運営できます。
