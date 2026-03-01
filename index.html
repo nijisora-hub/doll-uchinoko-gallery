@@ -58,6 +58,9 @@
         #loading-overlay { position: fixed; inset: 0; background: #fcfaf8; z-index: 200000; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
         .loader { width: 40px; height: 40px; border: 4px solid #eee; border-top-color: #1a1a1a; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 自動収縮テキストエリア用 */
+        textarea.auto-resize { resize: none; overflow: hidden; min-height: 48px; }
     </style>
 </head>
 <body class="text-stone-800 pb-20 opacity-0 transition-opacity duration-500">
@@ -217,7 +220,7 @@
                 </div>
                 <div id="anniversary-inputs" class="space-y-3"></div>
                 <button onclick="addAnniversaryInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-400 font-bold">+ 記念日を追加</button>
-                <textarea id="f-profile" class="w-full border p-4 rounded-2xl h-48 text-sm outline-none" placeholder="プロフィール"></textarea>
+                <textarea id="f-profile" class="auto-resize w-full border p-4 rounded-2xl h-48 text-sm outline-none" placeholder="プロフィール"></textarea>
                 <button onclick="saveData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg shadow-xl">保存する</button>
             </div>
         </div>
@@ -282,7 +285,7 @@
             <div class="space-y-4">
                 <input type="file" id="owner-file" accept="image/*" class="hidden" onchange="loadImg(event, 'owner')">
                 <input type="text" id="o-name" class="w-full border-b p-2 font-bold" placeholder="オーナー名">
-                <textarea id="o-bio" class="w-full border p-3 rounded-xl h-32 text-sm" placeholder="自己紹介"></textarea>
+                <textarea id="o-bio" class="auto-resize w-full border p-3 rounded-xl h-32 text-sm" placeholder="自己紹介"></textarea>
                 <div id="sns-inputs-container" class="space-y-3"></div>
                 <button onclick="addSnsInput()" class="w-full py-2 bg-stone-100 rounded text-xs font-bold">+ SNSリンクを追加</button>
                 <button onclick="saveOwner()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">保存</button>
@@ -315,8 +318,26 @@
         document.addEventListener('mousedown', (e) => { if (e.target.tagName === 'IMG') e.preventDefault(); }, false);
         document.addEventListener('dragstart', (e) => { if (e.target.tagName === 'IMG') e.preventDefault(); }, false);
 
+        // テキストエリアの自動収縮
+        function initAutoResize() {
+            const adjust = (el) => {
+                el.style.height = 'auto';
+                el.style.height = el.scrollHeight + 'px';
+            };
+            document.addEventListener('input', (e) => {
+                if (e.target.classList.contains('auto-resize') || e.target.classList.contains('p-block-text')) {
+                    adjust(e.target);
+                }
+            });
+            // 初期表示用
+            document.querySelectorAll('.auto-resize, .p-block-text').forEach(adjust);
+        }
+
         window.onload = async () => {
+            initAutoResize();
+            let attempts = 0;
             const checkFirebase = setInterval(async () => {
+                attempts++;
                 if(window.fb) {
                     clearInterval(checkFirebase);
                     initDateSelectors(); initColorPalettes();
@@ -328,19 +349,29 @@
                         checkLoginSession(); 
                         renderAll(); 
                         setupInfiniteScroll();
-                        hideLoader(); // データ描画後に消す
+                        hideLoader();
                     }
+                } else if (attempts > 50) { // 5秒待ってもFirebaseが来ない場合の脱出
+                    clearInterval(checkFirebase);
+                    hideLoader();
                 }
             }, 100);
         };
 
         function hideLoader() {
             const loader = document.getElementById('loading-overlay');
-            loader.style.opacity = '0';
-            setTimeout(() => { 
-                loader.style.display = 'none'; 
-                document.body.classList.add('opacity-100');
-            }, 500);
+            if(loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => { 
+                    loader.style.display = 'none'; 
+                    document.body.classList.add('opacity-100');
+                    // 読み込み後に再度サイズ調整
+                    document.querySelectorAll('.auto-resize, .p-block-text').forEach(el => {
+                        el.style.height = 'auto';
+                        el.style.height = el.scrollHeight + 'px';
+                    });
+                }, 500);
+            }
         }
 
         async function loadGalleryData() {
@@ -361,7 +392,6 @@
         async function syncFirebase() { 
             if(!galleryId) return; 
             const docRef = window.fb.doc(window.fb.db, "galleries", galleryId); 
-            // すべてのグローバル変数をFirestoreに反映させる（recoveryも含める）
             await window.fb.updateDoc(docRef, { dolls, owner, posts, recovery }); 
         }
 
@@ -554,6 +584,8 @@
             document.getElementById('anniversary-inputs').innerHTML = ''; (d.anniversaries || []).forEach(a => addAnniversaryInput(a));
             const preview = document.getElementById('crop-preview'); if(d.image) { preview.src = d.image; preview.classList.remove('hidden'); document.getElementById('doll-hint').classList.add('hidden'); }
             closeProfile(); openModal(); document.querySelector('#modal .modal-content').scrollTop = 0;
+            // 開いた後にサイズ調整
+            setTimeout(() => { document.querySelectorAll('#modal textarea').forEach(el => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }); }, 100);
         }
 
         function deleteDoll(idx) { showConfirm("この「うちの子」のデータを削除しますか？", async () => { dolls.splice(idx, 1); await syncFirebase(); closeProfile(); renderAll(); if(document.getElementById('doll-list-page').offsetParent) showDollList(); }, "削除する"); }
@@ -567,6 +599,7 @@
             document.getElementById('anniversary-inputs').innerHTML = '';
             document.getElementById('crop-preview').classList.add('hidden'); document.getElementById('doll-hint').classList.remove('hidden');
             openModal(); document.querySelector('#modal .modal-content').scrollTop = 0;
+            setTimeout(() => { document.querySelectorAll('#modal textarea').forEach(el => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }); }, 100);
         }
 
         function openModal() { document.getElementById('modal').style.display = 'flex'; document.body.style.overflow = 'hidden'; }
@@ -576,6 +609,7 @@
         function initDateSelectors() {
             const setup = (mId, dId, inputId) => {
                 const ms = document.getElementById(mId), ds = document.getElementById(dId), inp = document.getElementById(inputId);
+                if (!ms || !ds) return;
                 for(let i=1; i<=12; i++) ms.innerHTML += `<option value="${i}">${i}</option>`;
                 for(let i=1; i<=31; i++) ds.innerHTML += `<option value="${i}">${i}</option>`;
                 const updateFromSelect = () => { if(ms.value && ds.value) { const y = new Date().getFullYear(); inp.value = `${y}-${ms.value.padStart(2,'0')}-${ds.value.padStart(2,'0')}`; } };
@@ -587,12 +621,14 @@
 
         function setDateValue(val, inputId, mId, dId) {
             const inp = document.getElementById(inputId), ms = document.getElementById(mId), ds = document.getElementById(dId);
+            if (!inp || !ms || !ds) return;
             inp.value = val || ""; if(val && val.includes('-')) { const parts = val.split('-'); if(parts.length === 3) { ms.value = parseInt(parts[1]); ds.value = parseInt(parts[2]); } } else { ms.value = ""; ds.value = ""; }
         }
 
         function initColorPalettes() {
             ['bg','text','cal'].forEach(type => {
                 const grid = document.getElementById(`${type}-color-grid`);
+                if (!grid) return;
                 palette100.forEach(c => {
                     const chip = document.createElement('div'); chip.className = "color-chip"; chip.style.backgroundColor = c;
                     chip.onclick = () => { document.querySelectorAll(`#${type}-color-grid .color-chip`).forEach(el => el.classList.remove('selected')); chip.classList.add('selected'); document.getElementById(`f-${type}-color`).value = c; updateColorIcon(type, c); toggleColorGrid(type); };
@@ -612,11 +648,11 @@
             }; reader.readAsDataURL(file);
         }
 
-        function updateCrop(imgId, hId, vId) { const img = document.getElementById(imgId); if(!img.src) return; const h = document.getElementById(hId).value, v = document.getElementById(vId).value; img.style.objectPosition = `${h}% ${v}%`; }
+        function updateCrop(imgId, hId, vId) { const img = document.getElementById(imgId); if(!img || !img.src) return; const h = document.getElementById(hId).value, v = document.getElementById(vId).value; img.style.objectPosition = `${h}% ${v}%`; }
 
         async function getCroppedBase64(type) {
             const imgId = type === 'doll' ? 'crop-preview' : 'owner-preview'; const hId = type === 'doll' ? 'crop-h' : 'o-crop-h', vId = type === 'doll' ? 'crop-v' : 'o-crop-v';
-            const imgEl = document.getElementById(imgId); if(!imgEl.src || imgEl.classList.contains('hidden')) return null; if(!currentRawImg[type]) return imgEl.src;
+            const imgEl = document.getElementById(imgId); if(!imgEl || !imgEl.src || imgEl.classList.contains('hidden')) return null; if(!currentRawImg[type]) return imgEl.src;
             const canvas = document.createElement('canvas'); canvas.width = 800; canvas.height = 800; const ctx = canvas.getContext('2d'); const tempImg = new Image(); tempImg.src = currentRawImg[type];
             await new Promise(r => tempImg.onload = r); const hPerc = document.getElementById(hId).value / 100, vPerc = document.getElementById(vId).value / 100;
             const s = Math.min(tempImg.width, tempImg.height); const x = (tempImg.width - s) * hPerc, y = (tempImg.height - s) * vPerc; ctx.drawImage(tempImg, x, y, s, s, 0, 0, 800, 800);
@@ -636,6 +672,7 @@
             document.getElementById('o-name').value = owner.name || ""; document.getElementById('o-bio').value = owner.bio || ""; document.getElementById('sns-inputs-container').innerHTML = ''; (owner.sns || []).forEach(s => addSnsInput(s));
             const preview = document.getElementById('owner-preview'); if(owner.image) { preview.src = owner.image; preview.classList.remove('hidden'); document.getElementById('owner-hint').classList.add('hidden'); }
             document.getElementById('owner-modal').style.display = 'flex'; document.querySelector('#owner-modal .modal-content').scrollTop = 0;
+            setTimeout(() => { document.querySelectorAll('#owner-modal textarea').forEach(el => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }); }, 100);
         }
 
         function addSnsInput(v = {type:'X(旧Twitter)', val:'', label:''}) {
@@ -670,6 +707,7 @@
             document.getElementById('post-modal').style.display = 'flex'; 
             document.body.style.overflow = 'hidden';
             document.querySelector('#post-modal .modal-content').scrollTop = 0;
+            setTimeout(() => { document.querySelectorAll('#post-modal textarea').forEach(el => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }); }, 100);
         }
 
         function addPostBlock(v = {image:'', text:''}) {
@@ -678,6 +716,7 @@
             const imgClass = v.image ? "" : "hidden"; const hintClass = v.image ? "hidden" : "";
             div.innerHTML = `<button onclick="this.parentElement.remove()" class="absolute top-2 right-2 w-6 h-6 bg-white rounded-full shadow text-xs text-stone-400">✕</button><div class="preview-sq bg-white" onclick="document.getElementById('file-${id}').click()"><img id="img-${id}" src="${v.image}" class="${imgClass}"><span class="text-stone-300 text-[10px] font-bold ${hintClass}">タップして画像を選択</span></div><input type="file" id="file-${id}" class="hidden" accept="image/*" onchange="loadPostImg(event, '${id}')"><textarea class="p-block-text w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="文章を入力..." rows="3">${v.text}</textarea>`;
             container.appendChild(div);
+            setTimeout(() => { const ta = div.querySelector('textarea'); ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }, 0);
         }
 
         function loadPostImg(event, id) {
@@ -715,20 +754,14 @@
         function openRecoveryModal() {
             const dialog = document.getElementById('custom-dialog'), msg = document.getElementById('dialog-message'), recInputs = document.getElementById('recovery-inputs'), buttons = document.getElementById('dialog-buttons');
             document.getElementById('dialog-inputs').classList.add('hidden'); recInputs.classList.remove('hidden'); buttons.innerHTML = ''; msg.innerText = "リカバリ情報の登録";
-            
-            // 既存の設定があれば表示
             document.getElementById('rec-birth').value = recovery.birth || '';
             document.getElementById('rec-user').value = recovery.user || '';
             document.getElementById('rec-secret').value = recovery.secret || '';
-
             const btn = document.createElement('button'); btn.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold"; btn.innerText = "設定を保存";
             btn.onclick = async () => { 
                 const data = { birth: document.getElementById('rec-birth').value, user: document.getElementById('rec-user').value, secret: document.getElementById('rec-secret').value }; 
                 if(!data.birth || !data.user || !data.secret) return showAlert("すべて入力してください"); 
-                recovery = data; // グローバル変数を更新
-                await syncFirebase(); // Firebaseと同期
-                closeDialog(); 
-                showAlert("保存しました"); 
+                recovery = data; await syncFirebase(); closeDialog(); showAlert("保存しました"); 
             };
             buttons.appendChild(btn); 
             const cancel = document.createElement('button'); cancel.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; cancel.innerText = "キャンセル"; cancel.onclick = closeDialog; buttons.appendChild(cancel); 
@@ -738,19 +771,13 @@
         function openForgotModal() {
             const dialog = document.getElementById('custom-dialog'), msg = document.getElementById('dialog-message'), recInputs = document.getElementById('recovery-inputs'), buttons = document.getElementById('dialog-buttons');
             document.getElementById('dialog-inputs').classList.add('hidden'); recInputs.classList.remove('hidden'); buttons.innerHTML = ''; msg.innerText = "リカバリ認証";
-            
-            // 入力欄をクリア
             document.getElementById('rec-birth').value = '';
             document.getElementById('rec-user').value = '';
             document.getElementById('rec-secret').value = '';
-
             const btn = document.createElement('button'); btn.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold"; btn.innerText = "認証";
             btn.onclick = async () => { 
                 const snap = await window.fb.getDoc(window.fb.doc(window.fb.db, "galleries", galleryId)), rec = snap.data().recovery; 
-                if(rec && rec.birth === document.getElementById('rec-birth').value && rec.user === document.getElementById('rec-user').value && rec.secret === document.getElementById('rec-secret').value) { 
-                    closeDialog(); 
-                    openAuthModal('set'); 
-                } else showAlert("認証失敗"); 
+                if(rec && rec.birth === document.getElementById('rec-birth').value && rec.user === document.getElementById('rec-user').value && rec.secret === document.getElementById('rec-secret').value) { closeDialog(); openAuthModal('set'); } else showAlert("認証失敗"); 
             };
             buttons.appendChild(btn); 
             const cancel = document.createElement('button'); cancel.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; cancel.innerText = "キャンセル"; cancel.onclick = closeDialog; buttons.appendChild(cancel);
