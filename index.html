@@ -10,7 +10,6 @@
         body { font-family: 'Noto Sans JP', sans-serif; background-color: #fcfaf8; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         .logo-font { font-family: 'Dancing Script', cursive; }
         
-        /* 画像の長押し・選択を禁止（ペースト操作には影響しません） */
         img { 
             -webkit-touch-callout: none; 
             -webkit-user-select: none; 
@@ -52,7 +51,6 @@
         .post-card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); transition: all 0.3s; border: 1px solid #f0f0f0; }
         .post-card:active { transform: scale(0.97); }
 
-        /* 自動リサイズ用設定 */
         .auto-resize {
             resize: none;
             overflow: hidden;
@@ -102,7 +100,7 @@
                 <button onclick="showHome(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">🏠 ホーム</button>
                 <button onclick="openModalWithClear()" class="text-left py-4 font-bold border-b text-blue-600 w-full admin-only">✨ うちの子を登録する</button>
                 <button onclick="openPostModal()" class="text-left py-4 font-bold border-b text-emerald-600 w-full admin-only">📝 投稿する</button>
-                <button onclick="showDollList()" class="text-left py-4 font-bold border-b w-full text-stone-800">📸 うちの子一覧</button>
+                <button onclick="showDollList(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">📸 うちの子一覧</button>
                 <button onclick="showPostListPage()" class="text-left py-4 font-bold border-b w-full text-stone-800">📋 投稿一覧</button>
             </div>
             <div class="py-6 space-y-2 border-b">
@@ -308,7 +306,6 @@
             return colors.slice(0, 100);
         })();
 
-        // ページ全体でのイベント制御
         document.addEventListener('contextmenu', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
             e.preventDefault();
@@ -322,7 +319,6 @@
             if (e.target.tagName === 'IMG') e.preventDefault();
         }, false);
 
-        // textareaの自動高さ調整
         function adjustHeight(el) {
             el.style.height = 'auto';
             el.style.height = el.scrollHeight + 'px';
@@ -636,17 +632,12 @@
             const title = document.getElementById('post-modal-title'), container = document.getElementById('post-blocks-container');
             container.innerHTML = ''; 
             document.getElementById('edit-post-id').value = editId !== null ? editId : "";
-            
             const titleInput = document.getElementById('p-title');
             if(editId !== null) {
                 const p = posts.find(x => x.id == editId); 
                 title.innerText = "投稿編集"; 
                 titleInput.value = p.title || "";
-                if (p.blocks && p.blocks.length > 0) {
-                    p.blocks.forEach(b => addPostBlock(b)); 
-                } else {
-                    addPostBlock(); 
-                }
+                if (p.blocks && p.blocks.length > 0) { p.blocks.forEach(b => addPostBlock(b)); } else { addPostBlock(); }
                 document.querySelector(`input[name="p-pos"][value="${p.position || 'home'}"]`).checked = true;
             } else { 
                 title.innerText = "投稿作成"; 
@@ -654,7 +645,7 @@
                 addPostBlock();
                 document.querySelector('input[name="p-pos"][value="home"]').checked = true; 
             }
-            adjustHeight(titleInput); // 初期高さ設定
+            adjustHeight(titleInput);
             document.getElementById('post-modal').style.display = 'flex'; 
             document.body.style.overflow = 'hidden';
             document.querySelector('#post-modal .modal-content').scrollTop = 0;
@@ -673,7 +664,6 @@
                 <input type="file" id="file-${id}" class="hidden" accept="image/*" onchange="loadPostImg(event, '${id}')">
                 <textarea class="p-block-text auto-resize w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="文章を入力..." rows="1" oninput="adjustHeight(this)">${v.text}</textarea>`;
             container.appendChild(div);
-            // 動的に追加した要素の高さを調整
             setTimeout(() => { adjustHeight(div.querySelector('textarea')); }, 0);
         }
 
@@ -689,27 +679,12 @@
                 const imgEl = el.querySelector('img'); 
                 const text = el.querySelector('.p-block-text').value; 
                 let imgData = imgEl.src;
-                if(imgData.startsWith('data:image')) {
-                    imgData = await resizePostImg(imgData);
-                }
-                if(imgData || text) {
-                    blocks.push({ image: imgData, text });
-                }
+                if(imgData.startsWith('data:image')) { imgData = await resizePostImg(imgData); }
+                if(imgData || text) { blocks.push({ image: imgData, text }); }
             }
             const eid = document.getElementById('edit-post-id').value;
-            const postData = { 
-                id: eid ? parseInt(eid) : Date.now(), 
-                title, 
-                date: new Date().toLocaleDateString('ja-JP'), 
-                blocks, 
-                position: document.querySelector('input[name="p-pos"]:checked').value 
-            };
-            if(eid) { 
-                const idx = posts.findIndex(x => x.id == eid); 
-                posts[idx] = postData; 
-            } else {
-                posts.push(postData); 
-            }
+            const postData = { id: eid ? parseInt(eid) : Date.now(), title, date: new Date().toLocaleDateString('ja-JP'), blocks, position: document.querySelector('input[name="p-pos"]:checked').value };
+            if(eid) { const idx = posts.findIndex(x => x.id == eid); posts[idx] = postData; } else { posts.push(postData); }
             await syncFirebase(); closeModal(); renderAll(); window.scrollTo(0, 0);
         }
 
@@ -756,7 +731,7 @@
             ms.onchange = upd; ds.onchange = upd; inp.onchange = () => { ms.value = ""; ds.value = ""; };
         }
 
-        async function requestClearAll() { showConfirm("全てのデータを完全に削除しますか？", async () => { await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [] }, { merge: true }); location.reload(); }, "削除する"); }
+        async function requestClearAll() { showConfirm("全てのデータを完全に削除しますか？", async () => { await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image: "" }, posts: [] }, { merge: true }); location.reload(); }, "削除する"); }
         function shareSNS(type) { const url = window.location.href; if(type === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`); else window.open(`https://twitter.com/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Doll Uchinoko Gallery")}`); }
         function copyURL() { navigator.clipboard.writeText(window.location.href); alert("URLをコピーしました"); }
     </script>
