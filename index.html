@@ -443,7 +443,6 @@
             return happy;
         }
 
-        /* 改修：投稿一覧UI（サムネイル付きカード） */
         function renderPosts() {
             const homeArea = document.getElementById('home-posts'), menuArea = document.getElementById('menu-post-list');
             homeArea.innerHTML = ''; menuArea.innerHTML = ''; const sorted = [...posts].sort((a,b) => b.id - a.id);
@@ -459,12 +458,7 @@
                             <h4 class="font-bold text-lg leading-tight line-clamp-2">${p.title}</h4>
                         </div>
                     </div>`;
-
-                if(p.position === 'menu') {
-                    menuArea.insertAdjacentHTML('beforeend', cardHtml);
-                } else {
-                    homeArea.insertAdjacentHTML('beforeend', cardHtml);
-                }
+                if(p.position === 'menu') { menuArea.insertAdjacentHTML('beforeend', cardHtml); } else { homeArea.insertAdjacentHTML('beforeend', cardHtml); }
             });
             if(menuArea.children.length === 0) menuArea.innerHTML = '<p class="text-stone-400 text-center py-10 col-span-full">まだ投稿がありません</p>';
         }
@@ -478,19 +472,8 @@
             window.scrollTo(0,0);
         }
 
-        function showPostListPage() { 
-            document.getElementById('home-content').classList.add('hidden'); 
-            document.getElementById('doll-list-page').classList.add('hidden'); 
-            document.getElementById('post-list-page').classList.remove('hidden'); 
-            window.scrollTo(0,0); toggleMenu('side-menu'); 
-        }
-
-        function showHome() { 
-            document.getElementById('doll-list-page').classList.add('hidden'); 
-            document.getElementById('post-list-page').classList.add('hidden'); 
-            document.getElementById('home-content').classList.remove('hidden'); 
-            window.scrollTo(0,0); 
-        }
+        function showPostListPage() { document.getElementById('home-content').classList.add('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.remove('hidden'); window.scrollTo(0,0); toggleMenu('side-menu'); }
+        function showHome() { document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); document.getElementById('home-content').classList.remove('hidden'); window.scrollTo(0,0); }
 
         function showDetail(idx) {
             const d = dolls[idx]; if(!d) return; const over = document.getElementById('profile-overlay'), bg = document.getElementById('profile-bg'); bg.style.backgroundColor = d.bgColor || '#ffffff'; bg.style.color = d.textColor || '#000000';
@@ -615,13 +598,27 @@
 
         function openPostModal(editId = null) {
             const title = document.getElementById('post-modal-title'), container = document.getElementById('post-blocks-container');
-            container.innerHTML = ''; document.getElementById('edit-post-id').value = editId || "";
+            container.innerHTML = ''; 
+            document.getElementById('edit-post-id').value = editId !== null ? editId : "";
+            
             if(editId !== null) {
-                const p = posts.find(x => x.id == editId); title.innerText = "投稿編集"; document.getElementById('p-title').value = p.title;
-                if (p.blocks && p.blocks.length > 0) p.blocks.forEach(b => addPostBlock(b)); else addPostBlock();
+                const p = posts.find(x => x.id == editId); 
+                title.innerText = "投稿編集"; 
+                document.getElementById('p-title').value = p.title || "";
+                if (p.blocks && p.blocks.length > 0) {
+                    p.blocks.forEach(b => addPostBlock(b)); 
+                } else {
+                    addPostBlock(); 
+                }
                 document.querySelector(`input[name="p-pos"][value="${p.position || 'home'}"]`).checked = true;
-            } else { title.innerText = "投稿作成"; document.getElementById('p-title').value = ""; addPostBlock(); document.querySelector('input[name="p-pos"][value="home"]').checked = true; }
-            document.getElementById('post-modal').style.display = 'flex'; document.body.style.overflow = 'hidden';
+            } else { 
+                title.innerText = "投稿作成"; 
+                document.getElementById('p-title').value = ""; 
+                addPostBlock(); // 空のブロックを1つ追加
+                document.querySelector('input[name="p-pos"][value="home"]').checked = true; 
+            }
+            document.getElementById('post-modal').style.display = 'flex'; 
+            document.body.style.overflow = 'hidden';
             document.querySelector('#post-modal .modal-content').scrollTop = 0;
         }
 
@@ -641,9 +638,32 @@
         async function savePost() {
             const title = document.getElementById('p-title').value; if(!title) return showAlert("タイトルを入力してください");
             const blocks = []; const blockEls = document.querySelectorAll('#post-blocks-container > div');
-            for(const el of blockEls) { const imgEl = el.querySelector('img'); const text = el.querySelector('.p-block-text').value; if(imgEl.src && !imgEl.src.includes(window.location.origin)) { blocks.push({ image: imgEl.src.startsWith('data') ? await resizePostImg(imgEl.src) : imgEl.src, text }); } else if(text) { blocks.push({ image: '', text }); } }
-            const postData = { id: parseInt(document.getElementById('edit-post-id').value) || Date.now(), title, date: new Date().toLocaleDateString('ja-JP'), blocks, position: document.querySelector('input[name="p-pos"]:checked').value };
-            const eid = document.getElementById('edit-post-id').value; if(eid) { const idx = posts.findIndex(x => x.id == eid); posts[idx] = postData; } else posts.push(postData);
+            for(const el of blockEls) { 
+                const imgEl = el.querySelector('img'); 
+                const text = el.querySelector('.p-block-text').value; 
+                let imgData = imgEl.src;
+                // 新規画像（Base64）のみリサイズ処理
+                if(imgData.startsWith('data:image')) {
+                    imgData = await resizePostImg(imgData);
+                }
+                if(imgData || text) {
+                    blocks.push({ image: imgData, text });
+                }
+            }
+            const eid = document.getElementById('edit-post-id').value;
+            const postData = { 
+                id: eid ? parseInt(eid) : Date.now(), 
+                title, 
+                date: new Date().toLocaleDateString('ja-JP'), 
+                blocks, 
+                position: document.querySelector('input[name="p-pos"]:checked').value 
+            };
+            if(eid) { 
+                const idx = posts.findIndex(x => x.id == eid); 
+                posts[idx] = postData; 
+            } else {
+                posts.push(postData); 
+            }
             await syncFirebase(); closeModal(); renderAll(); window.scrollTo(0, 0);
         }
 
