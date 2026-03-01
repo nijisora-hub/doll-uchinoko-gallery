@@ -9,7 +9,16 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Dancing+Script:wght@700&display=swap');
         body { font-family: 'Noto Sans JP', sans-serif; background-color: #fcfaf8; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         .logo-font { font-family: 'Dancing Script', cursive; }
-        img { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; pointer-events: auto; }
+        
+        /* 画像の長押し・選択を禁止（ペースト操作には影響しません） */
+        img { 
+            -webkit-touch-callout: none; 
+            -webkit-user-select: none; 
+            user-select: none; 
+            pointer-events: auto; 
+            -webkit-user-drag: none;
+        }
+
         .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .film-outer::-webkit-scrollbar { display: none; }
         .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 20px; }
@@ -40,12 +49,11 @@
         body.is-admin .admin-only { display: block !important; }
         body.is-admin .admin-only-flex { display: flex !important; }
         
-        /* 投稿一覧用カードUI */
         .post-card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); transition: all 0.3s; border: 1px solid #f0f0f0; }
         .post-card:active { transform: scale(0.97); }
     </style>
 </head>
-<body class="text-stone-800 pb-20" oncontextmenu="return false;">
+<body class="text-stone-800 pb-20">
 
     <div id="custom-dialog">
         <div class="bg-white w-full max-w-xs p-8 rounded-3xl shadow-2xl text-center">
@@ -291,6 +299,25 @@
             hues.forEach(h => { for(let i=0; i<10; i++) colors.push(`hsl(${h}, 80%, ${Math.min(30 + (i * 7.2), 95)}%)`); });
             return colors.slice(0, 100);
         })();
+
+        // ページ全体でのイベント制御
+        document.addEventListener('contextmenu', (e) => {
+            // 入力要素（input, textarea）ではコンテキストメニュー（ペースト等）を許可
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            // それ以外（画像等）は禁止
+            e.preventDefault();
+        }, false);
+
+        // 画像の保護（長押し保存・ドラッグ禁止）
+        document.addEventListener('mousedown', (e) => {
+            if (e.target.tagName === 'IMG') {
+                e.preventDefault();
+            }
+        }, false);
+        
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.tagName === 'IMG') e.preventDefault();
+        }, false);
 
         window.onload = async () => {
             const checkFirebase = setInterval(async () => {
@@ -614,7 +641,7 @@
             } else { 
                 title.innerText = "投稿作成"; 
                 document.getElementById('p-title').value = ""; 
-                addPostBlock(); // 空のブロックを1つ追加
+                addPostBlock();
                 document.querySelector('input[name="p-pos"][value="home"]').checked = true; 
             }
             document.getElementById('post-modal').style.display = 'flex'; 
@@ -642,7 +669,6 @@
                 const imgEl = el.querySelector('img'); 
                 const text = el.querySelector('.p-block-text').value; 
                 let imgData = imgEl.src;
-                // 新規画像（Base64）のみリサイズ処理
                 if(imgData.startsWith('data:image')) {
                     imgData = await resizePostImg(imgData);
                 }
