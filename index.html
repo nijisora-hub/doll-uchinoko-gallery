@@ -54,7 +54,6 @@
         .post-card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); transition: all 0.3s; border: 1px solid #f0f0f0; }
         .post-card:active { transform: scale(0.97); }
 
-        /* ローディング・自動収縮用の追加CSS */
         #loading-overlay { position: fixed; inset: 0; background: #fcfaf8; z-index: 200000; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
         .loader { width: 40px; height: 40px; border: 4px solid #eee; border-top-color: #1a1a1a; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -152,14 +151,6 @@
             <div id="day-events" class="space-y-3"></div>
         </section>
         <div id="home-posts" class="p-6 space-y-8"></div>
-        <section class="p-10 bg-stone-100 mt-10 text-center border-t">
-            <p class="text-[10px] font-bold text-stone-400 mb-8 tracking-widest uppercase">Share this gallery</p>
-            <div class="flex flex-col gap-4 max-w-[280px] mx-auto">
-                <button onclick="shareSNS('x')" class="w-full h-14 bg-black rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">X (旧Twitter)</span></button>
-                <button onclick="shareSNS('line')" class="w-full h-14 bg-[#06C755] rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">LINE</span></button>
-                <button onclick="copyURL()" class="w-full h-14 bg-stone-400 rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">URL Copy</span></button>
-            </div>
-        </section>
     </main>
 
     <div id="post-list-page" class="max-w-2xl mx-auto hidden p-6">
@@ -191,8 +182,8 @@
                 <input type="text" id="f-name" class="w-full border-b p-2 font-bold text-lg outline-none" placeholder="お名前">
                 <input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none" placeholder="ふりがな">
                 <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
-                    <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE (例: 1/6, 20cmなど)">
-                    <input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="BODY (例: オビツ22)">
+                    <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE">
+                    <input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="BODY">
                     <input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="HEAD">
                 </div>
                 <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
@@ -231,7 +222,7 @@
             <input type="hidden" id="edit-post-id">
             <input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-6 outline-none text-lg" placeholder="タイトルを入力">
             <div id="post-blocks-container" class="space-y-6"></div>
-            <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ 画像と文章を追加 (最大10枚)</button>
+            <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ 画像と文章を追加</button>
             <div class="p-6 bg-stone-50 rounded-3xl mt-8">
                 <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase mb-4">表示場所</p>
                 <div class="flex gap-6">
@@ -294,15 +285,21 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        const firebaseConfig = { 
-            apiKey: "AIzaSyCHfU_v-6z3_l0T0_K0A_f_0S0_S0_0", 
-            authDomain: "doll-uchinoko-gallery.firebaseapp.com", 
-            projectId: "doll-uchinoko-gallery", 
-            storageBucket: "doll-uchinoko-gallery.appspot.com", 
-            messagingSenderId: "1234567890", 
-            appId: "1:1234567890:web:abcdef1234567890" 
+        
+        // 指定された新しいFirebase構成
+        const firebaseConfig = {
+            apiKey: "AIzaSyCWzLwhTnOg58o4rdf-T8e0E57_dLGm2gk",
+            authDomain: "doll-uchinoko-gallery.firebaseapp.com",
+            projectId: "doll-uchinoko-gallery",
+            storageBucket: "doll-uchinoko-gallery.firebasestorage.app",
+            messagingSenderId: "78946857999",
+            appId: "1:78946857999:web:d0ffcac3527334f66c5f7a"
         };
-        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // 既存のメインスクリプトから参照できるようにグローバルに公開
         window.fb = { db, doc, setDoc, getDoc, updateDoc };
     </script>
 
@@ -320,10 +317,7 @@
         })();
 
         document.addEventListener('contextmenu', (e) => { if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') e.preventDefault(); }, false);
-        document.addEventListener('mousedown', (e) => { if (e.target.tagName === 'IMG') e.preventDefault(); }, false);
-        document.addEventListener('dragstart', (e) => { if (e.target.tagName === 'IMG') e.preventDefault(); }, false);
 
-        // テキストエリアの自動収縮
         function initAutoResize() {
             const adjust = (el) => {
                 el.style.height = 'auto';
@@ -334,7 +328,6 @@
                     adjust(e.target);
                 }
             });
-            document.querySelectorAll('.auto-resize, .p-block-text').forEach(adjust);
         }
 
         window.onload = async () => {
@@ -369,9 +362,8 @@
                 setTimeout(() => { 
                     loader.style.display = 'none'; 
                     document.body.classList.add('opacity-100');
-                    document.querySelectorAll('.auto-resize, .p-block-text').forEach(el => {
-                        el.style.height = 'auto';
-                        el.style.height = el.scrollHeight + 'px';
+                    document.querySelectorAll('.auto-resize').forEach(el => {
+                        el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px';
                     });
                 }, 500);
             }
@@ -395,7 +387,7 @@
         async function syncFirebase() { 
             if(!galleryId) return; 
             const docRef = window.fb.doc(window.fb.db, "galleries", galleryId); 
-            await window.fb.updateDoc(docRef, { dolls, owner, posts, recovery }); 
+            await window.fb.setDoc(docRef, { dolls, owner, posts, recovery }, { merge: true }); 
         }
 
         function updateLoginSession() { if(isLoggedIn) localStorage.setItem('uchinoko_last_active', Date.now()); }
@@ -485,8 +477,6 @@
                 const dayBox = document.createElement('div'); dayBox.className = "cal-day"; dayBox.innerText = d;
                 if (viewDate.getFullYear() === todayY && (viewDate.getMonth() + 1) === todayM && d === todayD) {
                     dayBox.classList.add('bg-stone-100', 'font-bold');
-                    const tTag = document.createElement('span'); tTag.innerText = 'today'; tTag.className = "absolute top-0.5 text-[7px] text-stone-400 uppercase tracking-tighter";
-                    dayBox.appendChild(tTag);
                 }
                 const events = getEvents(viewDate.getFullYear(), viewDate.getMonth()+1, d);
                 if(events.length > 0) {
@@ -537,9 +527,7 @@
                 const firstImg = p.blocks.find(b => b.image)?.image || 'https://via.placeholder.com/400x300?text=No+Image';
                 const cardHtml = `
                     <div class="post-card cursor-pointer" onclick="showArticle(${p.id})">
-                        <div class="aspect-[4/3] bg-stone-100">
-                            <img src="${firstImg}" class="w-full h-full object-cover">
-                        </div>
+                        <div class="aspect-[4/3] bg-stone-100"><img src="${firstImg}" class="w-full h-full object-cover"></div>
                         <div class="p-6">
                             <p class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">${p.date || ''}</p>
                             <h4 class="font-bold text-lg leading-tight line-clamp-2">${p.title}</h4>
@@ -585,7 +573,7 @@
             setDateValue(d.birthday, 'f-bday', 'f-bday-m', 'f-bday-d'); setDateValue(d.welcomeDate, 'f-welcome', 'f-welcome-m', 'f-welcome-d');
             document.getElementById('anniversary-inputs').innerHTML = ''; (d.anniversaries || []).forEach(a => addAnniversaryInput(a));
             const preview = document.getElementById('crop-preview'); if(d.image) { preview.src = d.image; preview.classList.remove('hidden'); document.getElementById('doll-hint').classList.add('hidden'); }
-            closeProfile(); openModal(); document.querySelector('#modal .modal-content').scrollTop = 0;
+            closeProfile(); openModal();
             setTimeout(() => { document.querySelectorAll('#modal textarea').forEach(el => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }); }, 100);
         }
 
@@ -599,7 +587,7 @@
             updateColorIcon('bg','#ffffff'); updateColorIcon('text','#000000'); updateColorIcon('cal','#E11D48');
             document.getElementById('anniversary-inputs').innerHTML = '';
             document.getElementById('crop-preview').classList.add('hidden'); document.getElementById('doll-hint').classList.remove('hidden');
-            openModal(); document.querySelector('#modal .modal-content').scrollTop = 0;
+            openModal();
             setTimeout(() => { document.querySelectorAll('#modal textarea').forEach(el => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }); }, 100);
         }
 
@@ -610,7 +598,6 @@
         function initDateSelectors() {
             const setup = (mId, dId, inputId) => {
                 const ms = document.getElementById(mId), ds = document.getElementById(dId), inp = document.getElementById(inputId);
-                if (!ms || !ds) return;
                 for(let i=1; i<=12; i++) ms.innerHTML += `<option value="${i}">${i}</option>`;
                 for(let i=1; i<=31; i++) ds.innerHTML += `<option value="${i}">${i}</option>`;
                 const updateFromSelect = () => { if(ms.value && ds.value) { const y = new Date().getFullYear(); inp.value = `${y}-${ms.value.padStart(2,'0')}-${ds.value.padStart(2,'0')}`; } };
@@ -622,14 +609,12 @@
 
         function setDateValue(val, inputId, mId, dId) {
             const inp = document.getElementById(inputId), ms = document.getElementById(mId), ds = document.getElementById(dId);
-            if (!inp || !ms || !ds) return;
-            inp.value = val || ""; if(val && val.includes('-')) { const parts = val.split('-'); if(parts.length === 3) { ms.value = parseInt(parts[1]); ds.value = parseInt(parts[2]); } } else { ms.value = ""; ds.value = ""; }
+            inp.value = val || ""; if(val && val.includes('-')) { const parts = val.split('-'); ms.value = parseInt(parts[1]); ds.value = parseInt(parts[2]); } else { ms.value = ""; ds.value = ""; }
         }
 
         function initColorPalettes() {
             ['bg','text','cal'].forEach(type => {
                 const grid = document.getElementById(`${type}-color-grid`);
-                if (!grid) return;
                 palette100.forEach(c => {
                     const chip = document.createElement('div'); chip.className = "color-chip"; chip.style.backgroundColor = c;
                     chip.onclick = () => { document.querySelectorAll(`#${type}-color-grid .color-chip`).forEach(el => el.classList.remove('selected')); chip.classList.add('selected'); document.getElementById(`f-${type}-color`).value = c; updateColorIcon(type, c); toggleColorGrid(type); };
@@ -666,13 +651,13 @@
             const annis = []; document.querySelectorAll('#anniversary-inputs > div').forEach(div => { const n = div.querySelector('.f-anni-name').value, d = div.querySelector('.f-anni-date').value; if(n && d) annis.push({ name: n, date: d }); });
             const data = { name, kana: document.getElementById('f-kana').value, sizeLabel: document.getElementById('f-size-label').value, bodyMake: document.getElementById('f-body-make').value, head: document.getElementById('f-head').value, birthday: document.getElementById('f-bday').value, welcomeDate: document.getElementById('f-welcome').value, anniversaries: annis, profile: document.getElementById('f-profile').value, image: img || (document.getElementById('edit-id').value !== "" ? dolls[document.getElementById('edit-id').value].image : ""), bgColor: document.getElementById('f-bg-color').value, textColor: document.getElementById('f-text-color').value, calColor: document.getElementById('f-cal-color').value };
             const eid = document.getElementById('edit-id').value; if(eid !== "") dolls[eid] = data; else dolls.push(data);
-            await syncFirebase(); closeModal(); renderAll(); if(document.getElementById('doll-list-page').offsetParent) showDollList(); window.scrollTo(0, 0);
+            await syncFirebase(); closeModal(); renderAll(); if(document.getElementById('doll-list-page').offsetParent) showDollList();
         }
 
         function openOwnerModal() {
             document.getElementById('o-name').value = owner.name || ""; document.getElementById('o-bio').value = owner.bio || ""; document.getElementById('sns-inputs-container').innerHTML = ''; (owner.sns || []).forEach(s => addSnsInput(s));
             const preview = document.getElementById('owner-preview'); if(owner.image) { preview.src = owner.image; preview.classList.remove('hidden'); document.getElementById('owner-hint').classList.add('hidden'); }
-            document.getElementById('owner-modal').style.display = 'flex'; document.querySelector('#owner-modal .modal-content').scrollTop = 0;
+            document.getElementById('owner-modal').style.display = 'flex';
             setTimeout(() => { document.querySelectorAll('#owner-modal textarea').forEach(el => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }); }, 100);
         }
 
@@ -685,29 +670,18 @@
         async function saveOwner() {
             const sns = []; document.querySelectorAll('#sns-inputs-container > div').forEach(div => { const t = div.querySelector('.sns-type').value, v = div.querySelector('.sns-val').value, l = div.querySelector('.sns-label').value; if(v) sns.push({ type: t, val: v, label: l }); });
             owner = { name: document.getElementById('o-name').value, bio: document.getElementById('o-bio').value, sns, image: await getCroppedBase64('owner') || owner.image };
-            await syncFirebase(); closeModal(); renderAll(); window.scrollTo(0, 0);
+            await syncFirebase(); closeModal(); renderAll();
         }
 
         function openPostModal(editId = null) {
             const title = document.getElementById('post-modal-title'), container = document.getElementById('post-blocks-container');
-            container.innerHTML = ''; 
-            document.getElementById('edit-post-id').value = editId !== null ? editId : "";
-            
+            container.innerHTML = ''; document.getElementById('edit-post-id').value = editId !== null ? editId : "";
             if(editId !== null) {
-                const p = posts.find(x => x.id == editId); 
-                title.innerText = "投稿編集"; 
-                document.getElementById('p-title').value = p.title || "";
-                if (p.blocks && p.blocks.length > 0) { p.blocks.forEach(b => addPostBlock(b)); } else { addPostBlock(); }
+                const p = posts.find(x => x.id == editId); title.innerText = "投稿編集"; document.getElementById('p-title').value = p.title || "";
+                if (p.blocks) p.blocks.forEach(b => addPostBlock(b)); else addPostBlock();
                 document.querySelector(`input[name="p-pos"][value="${p.position || 'home'}"]`).checked = true;
-            } else { 
-                title.innerText = "投稿作成"; 
-                document.getElementById('p-title').value = ""; 
-                addPostBlock();
-                document.querySelector('input[name="p-pos"][value="home"]').checked = true; 
-            }
-            document.getElementById('post-modal').style.display = 'flex'; 
-            document.body.style.overflow = 'hidden';
-            document.querySelector('#post-modal .modal-content').scrollTop = 0;
+            } else { title.innerText = "投稿作成"; document.getElementById('p-title').value = ""; addPostBlock(); document.querySelector('input[name="p-pos"][value="home"]').checked = true; }
+            document.getElementById('post-modal').style.display = 'flex';
             setTimeout(() => { document.querySelectorAll('#post-modal textarea').forEach(el => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }); }, 100);
         }
 
@@ -717,7 +691,7 @@
             const imgClass = v.image ? "" : "hidden"; const hintClass = v.image ? "hidden" : "";
             div.innerHTML = `<button onclick="this.parentElement.remove()" class="absolute top-2 right-2 w-6 h-6 bg-white rounded-full shadow text-xs text-stone-400">✕</button><div class="preview-sq bg-white" onclick="document.getElementById('file-${id}').click()"><img id="img-${id}" src="${v.image}" class="${imgClass}"><span class="text-stone-300 text-[10px] font-bold ${hintClass}">タップして画像を選択</span></div><input type="file" id="file-${id}" class="hidden" accept="image/*" onchange="loadPostImg(event, '${id}')"><textarea class="p-block-text w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="文章を入力..." rows="3">${v.text}</textarea>`;
             container.appendChild(div);
-            setTimeout(() => { const ta = div.querySelector('textarea'); ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }, 0);
+            const ta = div.querySelector('textarea'); ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px';
         }
 
         function loadPostImg(event, id) {
@@ -729,16 +703,14 @@
             const title = document.getElementById('p-title').value; if(!title) return showAlert("タイトルを入力してください");
             const blocks = []; const blockEls = document.querySelectorAll('#post-blocks-container > div');
             for(const el of blockEls) { 
-                const imgEl = el.querySelector('img'); 
-                const text = el.querySelector('.p-block-text').value; 
-                let imgData = imgEl.src;
-                if(imgData.startsWith('data:image')) { imgData = await resizePostImg(imgData); }
-                if(imgData || text) { blocks.push({ image: imgData, text }); }
+                const imgEl = el.querySelector('img'), text = el.querySelector('.p-block-text').value; let imgData = imgEl.src;
+                if(imgData.startsWith('data:image')) imgData = await resizePostImg(imgData);
+                if(imgData || text) blocks.push({ image: imgData, text });
             }
             const eid = document.getElementById('edit-post-id').value;
             const postData = { id: eid ? parseInt(eid) : Date.now(), title, date: new Date().toLocaleDateString('ja-JP'), blocks, position: document.querySelector('input[name="p-pos"]:checked').value };
             if(eid) { const idx = posts.findIndex(x => x.id == eid); posts[idx] = postData; } else { posts.push(postData); }
-            await syncFirebase(); closeModal(); renderAll(); window.scrollTo(0, 0);
+            await syncFirebase(); closeModal(); renderAll();
         }
 
         function resizePostImg(base64) { return new Promise(r => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const scale = 1000 / Math.max(img.width, img.height); canvas.width = img.width * scale; canvas.height = img.height * scale; canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); r(canvas.toDataURL('image/jpeg', 0.7)); }; img.src = base64; }); }
@@ -764,24 +736,19 @@
                 if(!data.birth || !data.user || !data.secret) return showAlert("すべて入力してください"); 
                 recovery = data; await syncFirebase(); closeDialog(); showAlert("保存しました"); 
             };
-            buttons.appendChild(btn); 
-            const cancel = document.createElement('button'); cancel.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; cancel.innerText = "キャンセル"; cancel.onclick = closeDialog; buttons.appendChild(cancel); 
+            buttons.appendChild(btn); const cancel = document.createElement('button'); cancel.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; cancel.innerText = "キャンセル"; cancel.onclick = closeDialog; buttons.appendChild(cancel); 
             dialog.style.display = 'flex';
         }
 
         function openForgotModal() {
             const dialog = document.getElementById('custom-dialog'), msg = document.getElementById('dialog-message'), recInputs = document.getElementById('recovery-inputs'), buttons = document.getElementById('dialog-buttons');
             document.getElementById('dialog-inputs').classList.add('hidden'); recInputs.classList.remove('hidden'); buttons.innerHTML = ''; msg.innerText = "リカバリ認証";
-            document.getElementById('rec-birth').value = '';
-            document.getElementById('rec-user').value = '';
-            document.getElementById('rec-secret').value = '';
             const btn = document.createElement('button'); btn.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold"; btn.innerText = "認証";
             btn.onclick = async () => { 
                 const snap = await window.fb.getDoc(window.fb.doc(window.fb.db, "galleries", galleryId)), rec = snap.data().recovery; 
                 if(rec && rec.birth === document.getElementById('rec-birth').value && rec.user === document.getElementById('rec-user').value && rec.secret === document.getElementById('rec-secret').value) { closeDialog(); openAuthModal('set'); } else showAlert("認証失敗"); 
             };
-            buttons.appendChild(btn); 
-            const cancel = document.createElement('button'); cancel.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; cancel.innerText = "キャンセル"; cancel.onclick = closeDialog; buttons.appendChild(cancel);
+            buttons.appendChild(btn); const cancel = document.createElement('button'); cancel.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; cancel.innerText = "キャンセル"; cancel.onclick = closeDialog; buttons.appendChild(cancel);
             dialog.style.display = 'flex';
         }
 
@@ -802,8 +769,6 @@
         }
 
         async function requestClearAll() { showConfirm("全てのデータを完全に削除しますか？", async () => { await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [], recovery: { birth:'', user:'', secret:'' } }, { merge: true }); location.reload(); }, "削除する"); }
-        function shareSNS(type) { const url = window.location.href; if(type === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`); else window.open(`https://twitter.com/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Doll Uchinoko Gallery")}`); }
-        function copyURL() { navigator.clipboard.writeText(window.location.href); alert("URLをコピーしました"); }
     </script>
 </body>
 </html>
