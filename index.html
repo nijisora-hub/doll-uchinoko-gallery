@@ -251,8 +251,19 @@
                 // ログイン中
                 const targetId = new URLSearchParams(window.location.search).get('id');
                 // 自分のギャラリーを見ている、またはギャラリー未指定の場合は「管理者モード」
-                window.isLoggedIn = (targetId === user.uid || !targetId);
-                if (!targetId) {
+const currentUid = user.uid;
+const urlParams = new URLSearchParams(window.location.search);
+const targetId = urlParams.get('id');
+
+// 自分のIDでログイン中、かつURLのIDが自分のもの、もしくはID未指定なら管理者
+window.isLoggedIn = (targetId === currentUid || !targetId);
+
+if (!targetId) {
+    // 自分の専用ページへ移動
+    window.location.href = window.location.pathname + '?id=' + currentUid;
+    return;
+}
+
                     // 自分のURLにリダイレクト（初回ログインなど）
                     window.location.search = `?id=${user.uid}`;
                     return;
