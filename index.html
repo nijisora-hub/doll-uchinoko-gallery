@@ -224,7 +224,7 @@
         </div>
     </div>
 
-        <script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -243,7 +243,68 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        // グローバルに公開（HTML側のonclickから呼べるようにする）
+        window.fb = { db, doc, setDoc, getDoc, updateDoc, auth, provider, signInWithPopup, signOut };
+
+        // 認証状態の監視
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // ログイン中
+                const targetId = new URLSearchParams(window.location.search).get('id');
+                // 自分のギャラリーを見ている、またはギャラリー未指定の場合は「管理者モード」
+               
+const currentUid = user.uid;
+const urlParams = new URLSearchParams(window.location.search);
+const targetId = urlParams.get('id');
+
+// 自分のIDでログイン中、かつURLのIDが自分のもの、もしくはID未指定なら管理者
+window.isLoggedIn = (targetId === currentUid || !targetId);
+
+if (!targetId) {
+    // 自分の専用ページへ移動
+    window.location.href = window.location.pathname + '?id=' + currentUid;
+    return;
+}
+
+                    // 自分のURLにリダイレクト（初回ログインなど）
+                    window.location.search = `?id=${user.uid}`;
+                    return;
+                }
+                document.getElementById('user-display-name').innerText = user.displayName + " さん";
+            } else {
+                window.isLoggedIn = false;
+                document.getElementById('user-display-name').innerText = "";
+            }
+            
+            // ギャラリーデータのロード
+            const urlParams = new URLSearchParams(window.location.search);
+            window.galleryId = urlParams.get('id');
+            if (window.galleryId) {
+                await loadGalleryData();
+            } else {
+                showAlert("Googleログインして自分専用のギャラリーを作成しましょう。");
+            }
+            renderAll();
+        });
+    </script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyCWzLwhTnOg58o4rdf-T8e0E57_dLGm2gk",
+          authDomain: "doll-uchinoko-gallery.firebaseapp.com",
+          projectId: "doll-uchinoko-gallery",
+          storageBucket: "doll-uchinoko-gallery.firebasestorage.app",
+          messagingSenderId: "78946857999",
+          appId: "1:78946857999:web:d0ffcac3527334f66c5f7a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
         window.fb = { db, doc, setDoc, getDoc, updateDoc, auth, provider, signInWithPopup, signOut };
 
         // 認証状態の監視
@@ -252,20 +313,18 @@
             let targetId = urlParams.get('id');
 
             if (user) {
-                // ログイン中の処理
                 const currentUid = user.uid;
                 
-                // 1. URLにIDがない場合は、自分のページへリダイレクト
+                // URLにIDがない場合は自分のIDを付与してリダイレクト
                 if (!targetId) {
                     window.location.href = window.location.pathname + '?id=' + currentUid;
                     return;
                 }
 
-                // 2. 自分のページを見ているなら管理者モード
+                // 「URLのID」と「ログイン中のUID」が一致すれば管理者
                 window.isLoggedIn = (targetId === currentUid);
                 document.getElementById('user-display-name').innerText = user.displayName + " さん";
             } else {
-                // ログアウト中の処理
                 window.isLoggedIn = false;
                 document.getElementById('user-display-name').innerText = "";
             }
@@ -274,11 +333,9 @@
             window.galleryId = targetId;
             if (window.galleryId) {
                 await loadGalleryData();
-            } else {
-                // IDがない＆ログインもしていない場合
-                document.getElementById('owner-name').innerText = "Doll Gallery";
-                document.getElementById('owner-bio').innerText = "ログインしてギャラリーを作成してください。";
             }
+            
+            // 画面の再描画（ここでadmin-onlyクラスの表示・非表示が切り替わります）
             renderAll();
         });
     </script>
