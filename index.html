@@ -51,6 +51,13 @@
         
         .post-card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); transition: all 0.3s; border: 1px solid #f0f0f0; }
         .post-card:active { transform: scale(0.97); }
+
+        /* 自動リサイズ用設定 */
+        .auto-resize {
+            resize: none;
+            overflow: hidden;
+            min-height: 1.5em;
+        }
     </style>
 </head>
 <body class="text-stone-800 pb-20">
@@ -217,7 +224,8 @@
             <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
             <h3 id="post-modal-title" class="text-xl font-bold mb-4">投稿作成</h3>
             <input type="hidden" id="edit-post-id">
-            <input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-6 outline-none text-lg" placeholder="タイトルを入力">
+            <textarea id="p-title" class="auto-resize w-full border-b p-3 font-bold mb-6 outline-none text-lg" placeholder="タイトルを入力" rows="1" oninput="adjustHeight(this)"></textarea>
+            
             <div id="post-blocks-container" class="space-y-6"></div>
             <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ 画像と文章を追加 (最大10枚)</button>
             <div class="p-6 bg-stone-50 rounded-3xl mt-8">
@@ -254,7 +262,7 @@
                     <button id="art-del-btn" class="text-xs font-bold bg-red-50 text-red-400 px-4 py-2 rounded-full">削除</button>
                 </div>
             </div>
-            <h2 id="art-title" class="text-3xl font-bold text-center mb-12"></h2>
+            <h2 id="art-title" class="text-3xl font-bold text-center mb-12 whitespace-pre-wrap"></h2>
             <div id="art-content" class="space-y-6"></div>
         </div>
     </div>
@@ -302,22 +310,23 @@
 
         // ページ全体でのイベント制御
         document.addEventListener('contextmenu', (e) => {
-            // 入力要素（input, textarea）ではコンテキストメニュー（ペースト等）を許可
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            // それ以外（画像等）は禁止
             e.preventDefault();
         }, false);
 
-        // 画像の保護（長押し保存・ドラッグ禁止）
         document.addEventListener('mousedown', (e) => {
-            if (e.target.tagName === 'IMG') {
-                e.preventDefault();
-            }
+            if (e.target.tagName === 'IMG') { e.preventDefault(); }
         }, false);
         
         document.addEventListener('dragstart', (e) => {
             if (e.target.tagName === 'IMG') e.preventDefault();
         }, false);
+
+        // textareaの自動高さ調整
+        function adjustHeight(el) {
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+        }
 
         window.onload = async () => {
             const checkFirebase = setInterval(async () => {
@@ -482,7 +491,7 @@
                         </div>
                         <div class="p-6">
                             <p class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">${p.date || ''}</p>
-                            <h4 class="font-bold text-lg leading-tight line-clamp-2">${p.title}</h4>
+                            <h4 class="font-bold text-lg leading-tight line-clamp-2 whitespace-pre-wrap">${p.title}</h4>
                         </div>
                     </div>`;
                 if(p.position === 'menu') { menuArea.insertAdjacentHTML('beforeend', cardHtml); } else { homeArea.insertAdjacentHTML('beforeend', cardHtml); }
@@ -628,10 +637,11 @@
             container.innerHTML = ''; 
             document.getElementById('edit-post-id').value = editId !== null ? editId : "";
             
+            const titleInput = document.getElementById('p-title');
             if(editId !== null) {
                 const p = posts.find(x => x.id == editId); 
                 title.innerText = "投稿編集"; 
-                document.getElementById('p-title').value = p.title || "";
+                titleInput.value = p.title || "";
                 if (p.blocks && p.blocks.length > 0) {
                     p.blocks.forEach(b => addPostBlock(b)); 
                 } else {
@@ -640,10 +650,11 @@
                 document.querySelector(`input[name="p-pos"][value="${p.position || 'home'}"]`).checked = true;
             } else { 
                 title.innerText = "投稿作成"; 
-                document.getElementById('p-title').value = ""; 
+                titleInput.value = ""; 
                 addPostBlock();
                 document.querySelector('input[name="p-pos"][value="home"]').checked = true; 
             }
+            adjustHeight(titleInput); // 初期高さ設定
             document.getElementById('post-modal').style.display = 'flex'; 
             document.body.style.overflow = 'hidden';
             document.querySelector('#post-modal .modal-content').scrollTop = 0;
@@ -653,8 +664,17 @@
             const container = document.getElementById('post-blocks-container'); if(container.children.length >= 10) return;
             const id = Date.now() + Math.random(); const div = document.createElement('div'); div.className = "space-y-3 p-4 bg-stone-50 rounded-2xl relative";
             const imgClass = v.image ? "" : "hidden"; const hintClass = v.image ? "hidden" : "";
-            div.innerHTML = `<button onclick="this.parentElement.remove()" class="absolute top-2 right-2 w-6 h-6 bg-white rounded-full shadow text-xs text-stone-400">✕</button><div class="preview-sq bg-white" onclick="document.getElementById('file-${id}').click()"><img id="img-${id}" src="${v.image}" class="${imgClass}"><span class="text-stone-300 text-[10px] font-bold ${hintClass}">タップして画像を選択</span></div><input type="file" id="file-${id}" class="hidden" accept="image/*" onchange="loadPostImg(event, '${id}')"><textarea class="p-block-text w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="文章を入力..." rows="3">${v.text}</textarea>`;
+            div.innerHTML = `
+                <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 w-6 h-6 bg-white rounded-full shadow text-xs text-stone-400">✕</button>
+                <div class="preview-sq bg-white" onclick="document.getElementById('file-${id}').click()">
+                    <img id="img-${id}" src="${v.image}" class="${imgClass}">
+                    <span class="text-stone-300 text-[10px] font-bold ${hintClass}">タップして画像を選択</span>
+                </div>
+                <input type="file" id="file-${id}" class="hidden" accept="image/*" onchange="loadPostImg(event, '${id}')">
+                <textarea class="p-block-text auto-resize w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="文章を入力..." rows="1" oninput="adjustHeight(this)">${v.text}</textarea>`;
             container.appendChild(div);
+            // 動的に追加した要素の高さを調整
+            setTimeout(() => { adjustHeight(div.querySelector('textarea')); }, 0);
         }
 
         function loadPostImg(event, id) {
