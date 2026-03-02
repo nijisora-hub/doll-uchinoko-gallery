@@ -44,7 +44,6 @@
         .admin-only { display: none !important; }
         body.is-admin .admin-only { display: block !important; }
         body.is-admin .admin-only-flex { display: flex !important; }
-        /* Google Photos Picker */
         #photo-picker { display: none; position: fixed; inset: 0; background: white; z-index: 110000; flex-direction: column; }
         .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; overflow-y: auto; flex: 1; padding: 2px; }
         .photo-item { aspect-ratio: 1/1; width: 100%; object-fit: cover; cursor: pointer; }
@@ -255,10 +254,11 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
-        // Google Photos API への読み取り権限を追加
+        
+        // ★重要: Googleフォトへのアクセス権限をリクエスト
         provider.addScope('https://www.googleapis.com/auth/photoslibrary.readonly');
 
-        window.fb = { db, doc, setDoc, getDoc, updateDoc, auth, provider, signInWithPopup, signOut, onAuthStateChanged };
+        window.fb = { db, doc, setDoc, getDoc, updateDoc, auth, provider, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider };
     </script>
 
     <script>
@@ -294,7 +294,6 @@
                         } 
                         else { 
                             isLoggedIn = false; 
-                            googleAccessToken = null;
                         }
                         renderAll();
                     });
@@ -323,12 +322,15 @@
                 await window.fb.updateDoc(docRef, { dolls, owner, posts });
             } catch (e) {
                 console.error("Sync Error:", e);
-                showAlert("保存に失敗しました。管理者としてログインしているか確認してください。");
+                showAlert("保存に失敗しました。管理者権限が必要です。");
             }
         }
 
         async function handleGoogleLogin() {
             try {
+                // 確実にアカウント選択画面を出し、リフレッシュしても権限を維持しやすくする設定
+                window.fb.provider.setCustomParameters({ prompt: 'select_account' });
+                
                 const result = await window.fb.signInWithPopup(window.fb.auth, window.fb.provider);
                 const credential = window.fb.GoogleAuthProvider.credentialFromResult(result);
                 googleAccessToken = credential.accessToken;
@@ -337,24 +339,30 @@
                     isLoggedIn = true;
                     renderAll();
                     toggleMenu('side-menu');
+                } else if (!adminEmail) {
+                    // 新規作成時などのケース
+                    renderAll();
                 } else {
                     showAlert("このギャラリーの管理者権限がありません。");
                     await window.fb.signOut(window.fb.auth);
                 }
             } catch (error) {
                 console.error(error);
-                showAlert("ログインに失敗しました。");
+                showAlert("ログインに失敗しました。Googleの確認画面で『詳細』→『移動』を選択してください。");
             }
         }
 
         // Google Photos Picker Logic
         let currentPhotoTarget = null;
         async function openPhotoPicker(targetId) {
+            // アクセストークンがない場合は再ログインを促す
             if(!isLoggedIn || !googleAccessToken) {
-                showAlert("Googleフォトを使用するには、再度ログインして権限を承認してください。");
-                handleGoogleLogin();
+                showAlert("Googleフォトへのアクセス許可が必要です。ログインし直してください。", () => {
+                    handleGoogleLogin();
+                });
                 return;
             }
+            
             currentPhotoTarget = targetId;
             document.getElementById('photo-picker').style.display = 'flex';
             const grid = document.getElementById('photo-grid');
@@ -378,11 +386,11 @@
                         grid.appendChild(img);
                     });
                 } else {
-                    grid.innerHTML = '<p class="col-span-3 p-10 text-center text-stone-400">画像が見つかりませんでした</p>';
+                    grid.innerHTML = '<p class="col-span-3 p-10 text-center text-stone-400">画像が見つかりませんでした。Googleフォトに写真があるか確認してください。</p>';
                 }
             } catch (e) {
                 console.error(e);
-                showAlert("フォトの取得に失敗しました。");
+                showAlert("フォトの取得に失敗しました。セッションが切れた可能性があります。");
                 closePhotoPicker();
             }
         }
@@ -393,7 +401,6 @@
 
         async function selectGooglePhoto(baseUrl, targetId) {
             closePhotoPicker();
-            // GoogleフォトのURLから画像を読み込んでBase64化する（CORS回避のためプロキシ等が必要な場合があるが、baseUrlは一定期間有効）
             const img = new Image();
             img.crossOrigin = "anonymous";
             img.onload = () => {
@@ -410,10 +417,10 @@
                 if(el) {
                     el.src = img.src;
                     el.classList.remove('hidden');
-                    document.getElementById(hintId).classList.add('hidden');
+                    const hintEl = document.getElementById(hintId);
+                    if(hintEl) hintEl.classList.add('hidden');
                 }
             };
-            // 編集用に十分なサイズを取得
             img.src = baseUrl + '=w1000';
         }
 
@@ -432,6 +439,7 @@
                 if(!finalGid) return showAlert("公開用IDを入力してください");
                 
                 try {
+                    window.fb.provider.setCustomParameters({ prompt: 'select_account' });
                     const result = await window.fb.signInWithPopup(window.fb.auth, window.fb.provider);
                     const credential = window.fb.GoogleAuthProvider.credentialFromResult(result);
                     googleAccessToken = credential.accessToken;
