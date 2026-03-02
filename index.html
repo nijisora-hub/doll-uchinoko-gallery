@@ -10,25 +10,6 @@
         body { font-family: 'Noto Sans JP', sans-serif; background-color: #fcfaf8; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         .logo-font { font-family: 'Dancing Script', cursive; }
         img { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
-        
-        /* 管理者状態を示すバッジ（追加） */
-        #admin-badge {
-            display: none;
-            position: fixed;
-            top: 12px;
-            left: 12px;
-            background: rgba(0,0,0,0.8);
-            color: #fff;
-            font-size: 10px;
-            font-weight: bold;
-            padding: 4px 12px;
-            border-radius: 20px;
-            z-index: 10000;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        body.is-admin #admin-badge { display: block; }
-
         .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .film-outer::-webkit-scrollbar { display: none; }
         .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 20px; }
@@ -50,37 +31,28 @@
         .color-chip { aspect-ratio: 1; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.1s; }
         .color-chip.selected { outline: 3px solid #000; outline-offset: 1px; z-index: 2; }
         .color-select-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #ddd; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 0 2px #fff; }
-        .date-input { font-size: 16px !important; padding: 8px; border-radius: 8px; border: 1px solid #e5e7eb; width: 100%; }
-        
-        /* 管理者機能の制御 */
+        .date-input { font-size: 16px !important; padding: 8px; border-radius: 8px; border: 1px solid #e5e7eb; width: 100%; margin-top: 4px; }
         .admin-only { display: none !important; }
         body.is-admin .admin-only { display: block !important; }
         body.is-admin .admin-only-flex { display: flex !important; }
-        
+        #admin-badge { display: none; position: fixed; top: 12px; left: 12px; background: rgba(0,0,0,0.85); color: #fff; font-size: 10px; font-weight: bold; padding: 4px 12px; border-radius: 20px; z-index: 10000; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2); }
+        body.is-admin #admin-badge { display: block; }
         .animate-anni { animation: pulse-anni 2s infinite ease-in-out; border: 2px solid #f472b6 !important; }
-        @keyframes pulse-anni {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 114, 182, 0.4); }
-            70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(244, 114, 182, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 114, 182, 0); }
-        }
+        @keyframes pulse-anni { 0% { transform: scale(1); } 70% { transform: scale(1.02); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body class="text-stone-800 pb-20">
-
     <div id="admin-badge">管理者ログイン中</div>
-
     <div id="custom-dialog">
         <div class="bg-white w-full max-w-xs p-8 rounded-3xl shadow-2xl text-center">
             <p id="dialog-message" class="text-[16px] mb-8 leading-relaxed font-bold whitespace-pre-wrap text-stone-700"></p>
             <div id="dialog-buttons" class="flex flex-col gap-3"></div>
         </div>
     </div>
-
     <div class="film-outer" id="film-container">
         <div id="top-film-roll" class="film-scroll-track"></div>
         <div id="empty-msg" class="absolute inset-0 flex items-center justify-center text-stone-500 text-xs font-bold">画像が登録されるとここに並びます</div>
     </div>
-
     <header class="p-4 bg-white border-b sticky top-0 z-[100] flex justify-between items-center">
         <h1 onclick="showHome()" class="logo-font text-3xl cursor-pointer">Doll Uchinoko Gallery</h1>
         <div onclick="toggleMenu('side-menu')" class="p-2 cursor-pointer">
@@ -89,12 +61,38 @@
             <div class="w-6 h-0.5 bg-stone-800"></div>
         </div>
     </header>
-
+    <main id="home-content" class="max-w-md mx-auto">
+        <section id="owner-section" class="p-8 bg-white text-center">
+            <img id="display-owner-img" class="w-24 h-24 rounded-full object-cover mx-auto mb-4 border-4 border-stone-5 hidden">
+            <h2 id="owner-name" class="text-2xl font-bold mb-2 text-stone-800">Owner Name</h2>
+            <p id="owner-bio" class="text-sm text-stone-500 px-4 mb-6 leading-relaxed"></p>
+            <div id="owner-sns-links" class="flex flex-col items-center gap-3"></div>
+        </section>
+        <section class="p-6 bg-stone-50">
+            <div id="happy-anniversary" class="mb-8 hidden">
+                <h3 class="text-[10px] font-bold text-pink-500 uppercase mb-4 tracking-widest border-b border-pink-100 pb-2">Happy Anniversary!</h3>
+                <div id="happy-anniversary-list" class="space-y-3"></div>
+            </div>
+            <h3 class="text-[10px] font-bold text-stone-400 uppercase mb-4 tracking-widest border-b pb-2">Next Anniversary</h3>
+            <div id="closest-anniversary"></div>
+        </section>
+        <section class="p-8 bg-white mt-4 border-t">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="changeMonth(-1)" class="p-2 text-stone-400">◀</button>
+                <h3 id="cal-month" class="font-bold text-lg text-stone-700 tracking-tighter"></h3>
+                <button onclick="changeMonth(1)" class="p-2 text-stone-400">▶</button>
+            </div>
+            <div id="cal-days" class="cal-grid mb-6"></div>
+            <div id="day-events" class="space-y-3"></div>
+        </section>
+        <div id="home-posts" class="p-6 space-y-8"></div>
+    </main>
+    ```
     <div id="side-menu" class="modal-base" onclick="toggleMenu('side-menu')">
         <div class="bg-white w-72 h-full ml-auto p-6 flex flex-col overflow-y-auto" onclick="event.stopPropagation()">
             <div class="mb-4">
-                <p id="user-status-text" class="text-[10px] text-stone-400 font-bold uppercase tracking-widest">Guest Mode</p>
-                <p id="user-name-text" class="text-sm font-bold">閲覧専用</p>
+                <p id="user-status-text" class="text-[10px] text-stone-400 font-bold uppercase tracking-widest">Checking status...</p>
+                <p id="user-name-text" class="text-sm font-bold">確認中...</p>
             </div>
             <div class="space-y-1 border-t pt-4">
                 <button onclick="showHome(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">🏠 ホーム</button>
@@ -103,61 +101,25 @@
                 <button onclick="showPostListPage()" class="text-left py-4 font-bold border-b w-full text-stone-800">📝 投稿一覧</button>
             </div>
             <div class="py-6 space-y-2 border-b">
-                <button id="login-btn" onclick="handleGoogleLogin()" class="w-full py-3 bg-stone-800 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="14" height="14"> Googleで管理ログイン
-                </button>
-                <button id="logout-btn" onclick="handleLogout()" class="w-full py-3 bg-red-50 rounded-xl text-xs font-bold text-red-400 hidden">ログアウト</button>
+<button id="login-btn" onclick="handleGoogleLogin()" class="w-full py-3 bg-stone-800 rounded-xl text-xs font-bold text-white flex items-center justify-center">
+    Googleで管理ログイン
+</button>
+    <button id="logout-btn" onclick="handleLogout()" class="w-full py-3 bg-red-50 rounded-xl text-xs font-bold text-red-400 hidden">ログアウト</button>
             </div>
             <div class="py-10 space-y-4 admin-only">
                 <button onclick="openOwnerModal()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm">👤 オーナー設定</button>
                 <button onclick="openPostModal()" class="w-full py-4 bg-stone-800 text-white rounded-2xl text-sm font-bold shadow-lg">📝 投稿を追加</button>
+                <button onclick="requestNewGallery()" class="w-full py-4 bg-stone-50 rounded-2xl text-xs font-bold text-stone-400">新しいギャラリーを作る</button>
+                <button onclick="requestClearAll()" class="w-full py-2 text-[10px] font-bold text-red-300">データを全削除</button>
             </div>
-            <div class="mt-auto pt-10 space-y-4">
-                <button onclick="requestNewGallery()" class="w-full py-3 bg-cyan-50 text-cyan-500 rounded-xl text-xs font-bold border border-cyan-100 shadow-sm">🆕 新規ギャラリー作成</button>
-                <button onclick="requestClearAll()" class="w-full py-3 bg-red-50 text-red-400 rounded-xl text-xs font-bold border border-red-100 shadow-sm admin-only">⚠️ データを完全削除</button>
+            <div class="mt-auto pt-10">
+                <p class="text-[10px] font-bold text-stone-300 uppercase tracking-widest mb-4">Share this gallery</p>
+                <div class="flex gap-2">
+                    <button onclick="shareSNS('x')" class="flex-1 py-3 bg-stone-50 rounded-xl flex justify-center items-center"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></button>
+                    <button onclick="shareSNS('line')" class="flex-1 py-3 bg-stone-50 rounded-xl flex justify-center items-center"><svg class="w-5 h-5" fill="#06C755" viewBox="0 0 24 24"><path d="M24 10.304c0-5.369-5.383-9.738-12-9.738-6.616 0-12 4.369-12 9.738 0 4.814 4.269 8.846 10.036 9.608.391.084.922.258 1.057.592.121.303.079.778.039 1.085l-.171 1.027c-.053.303-.242 1.185 1.039.646 1.281-.54 6.913-4.071 9.438-6.969 1.727-1.874 2.561-3.79 2.561-5.989z"/></svg></button>
+                </div>
             </div>
         </div>
-    </div>
-
-    <main id="home-content" class="max-w-md mx-auto">
-        <section id="owner-section" class="p-8 bg-white text-center">
-            <img id="display-owner-img" class="w-24 h-24 rounded-full object-cover mx-auto mb-4 border-4 border-stone-5 hidden">
-            <h2 id="owner-name" class="text-2xl font-bold mb-2"></h2>
-            <p id="owner-bio" class="text-sm text-stone-500 px-4 mb-6"></p>
-            <div id="owner-sns-links" class="flex flex-col items-center gap-3"></div>
-        </section>
-        <section class="p-6 bg-stone-50">
-            <div id="happy-anniversary" class="mb-8 hidden">
-                <h3 class="text-[10px] font-bold text-pink-500 uppercase mb-4 tracking-widest border-b border-pink-100 pb-2">Happy Anniversary!</h3>
-                <div id="happy-anniversary-list"></div>
-            </div>
-            <h3 class="text-[10px] font-bold text-stone-400 uppercase mb-4 tracking-widest border-b pb-2">Next Anniversary</h3>
-            <div id="closest-anniversary"></div>
-        </section>
-        <section class="p-8 bg-white mt-4 border-t">
-            <div class="flex justify-between items-center mb-6">
-                <button onclick="changeMonth(-1)" class="p-2">◀</button>
-                <h3 id="cal-month" class="font-bold text-lg"></h3>
-                <button onclick="changeMonth(1)" class="p-2">▶</button>
-            </div>
-            <div id="cal-days" class="cal-grid mb-6"></div>
-            <div id="day-events" class="space-y-3"></div>
-        </section>
-        <div id="home-posts" class="p-6 space-y-8"></div>
-    </main>
-
-    <div id="doll-list-page" class="max-w-md mx-auto hidden p-6">
-        <div class="flex justify-between items-center mb-6">
-            <button onclick="showHome()" class="text-sm font-bold bg-stone-100 px-4 py-2 rounded-full">戻る</button>
-            <button id="toggle-list-view" onclick="toggleDollViewMode()" class="text-xs font-bold bg-stone-800 text-white px-4 py-2 rounded-full">名前を表示</button>
-        </div>
-        <div id="doll-display-area"></div>
-    </div>
-
-    <div id="post-list-page" class="max-w-md mx-auto hidden p-6">
-        <div class="mb-6"><button onclick="showHome()" class="text-sm font-bold bg-stone-100 px-4 py-2 rounded-full">戻る</button></div>
-        <h2 class="text-xl font-bold mb-6">投稿一覧</h2>
-        <div id="menu-post-list" class="space-y-2"></div>
     </div>
 
     <div id="modal" class="modal-base" onclick="closeModal()">
@@ -165,7 +127,10 @@
             <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
             <h3 id="modal-title" class="text-xl font-bold mb-6">うちの子登録</h3>
             <div class="crop-area">
-                <div class="preview-sq" onclick="document.getElementById('doll-file').click()"><img id="crop-preview" class="hidden"><span id="doll-hint" class="text-stone-300 text-xs font-bold">画像を選択</span></div>
+                <div class="preview-sq" onclick="document.getElementById('doll-file').click()">
+                    <img id="crop-preview" class="hidden">
+                    <span id="doll-hint" class="text-stone-300 text-xs font-bold">画像を選択</span>
+                </div>
                 <div class="v-bar-box"><input type="range" id="crop-v" min="0" max="100" class="vertical-range" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')"></div>
             </div>
             <input type="range" id="crop-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')">
@@ -174,50 +139,93 @@
                 <input type="hidden" id="edit-id">
                 <input type="text" id="f-name" class="w-full border-b p-2 font-bold text-lg outline-none" placeholder="お名前">
                 <input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none" placeholder="ふりがな">
-                
                 <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
                    <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE (例: 1/6, 20cmなど)">
                    <input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="BODY (例: オビツ22)">
                    <input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="HEAD">
                 </div>
-
                 <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
                     <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">カラー設定</p>
                     <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('bg')"><span class="text-xs text-stone-500 font-bold">背景色</span><div id="bg-select-icon" class="color-select-btn"></div></div>
                     <div id="bg-color-grid" class="color-grid"></div><input type="hidden" id="f-bg-color" value="#ffffff">
-                    
                     <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('text')"><span class="text-xs text-stone-500 font-bold">文字色</span><div id="text-select-icon" class="color-select-btn"></div></div>
                     <div id="text-color-grid" class="color-grid"></div><input type="hidden" id="f-text-color" value="#000000">
-                    
                     <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('cal')"><span class="text-xs text-stone-500 font-bold">カレンダー強調色</span><div id="cal-select-icon" class="color-select-btn"></div></div>
                     <div id="cal-color-grid" class="color-grid"></div><input type="hidden" id="f-cal-color" value="#E11D48">
                 </div>
-
                 <div id="anniversary-inputs" class="space-y-3"></div>
                 <button onclick="addAnniversaryInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-400 font-bold">+ 記念日を追加</button>
                 <textarea id="f-profile" class="w-full border p-4 rounded-2xl h-48 text-sm outline-none" placeholder="プロフィール"></textarea>
-                <button onclick="saveData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg shadow-xl admin-only">保存する</button>
+                <button onclick="saveData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg shadow-xl">保存する</button>
             </div>
+        </div>
+    </div>
+
+    <div id="owner-modal" class="modal-base" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 class="text-xl font-bold mb-6">オーナー設定</h3>
+            <div class="crop-area">
+                <div class="preview-sq" onclick="document.getElementById('owner-file').click()"><img id="owner-preview" class="hidden"></div>
+                <div class="v-bar-box"><input type="range" id="owner-v" min="0" max="100" class="vertical-range" oninput="updateCrop('owner-preview', 'owner-h', 'owner-v')"></div>
+            </div>
+            <input type="range" id="owner-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('owner-preview', 'owner-h', 'owner-v')">
+            <input type="file" id="owner-file" accept="image/*" class="hidden" onchange="loadImg(event, 'owner')">
+            <input type="text" id="fo-name" class="w-full border-b p-2 font-bold mb-4 outline-none" placeholder="オーナー名">
+            <textarea id="fo-bio" class="w-full border p-4 rounded-2xl h-32 text-sm mb-4 outline-none" placeholder="自己紹介"></textarea>
+            <div id="sns-inputs" class="space-y-3 mb-4"></div>
+            <button onclick="addSnsInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-400 font-bold mb-6">+ SNSリンクを追加</button>
+            <button onclick="saveOwner()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">保存する</button>
+        </div>
+    </div>
+
+    <div id="post-modal" class="modal-base" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 id="post-modal-title" class="text-xl font-bold mb-6">投稿を作成</h3>
+            <input type="hidden" id="edit-post-id">
+            <input type="text" id="fp-title" class="w-full border-b p-2 font-bold mb-4 outline-none" placeholder="タイトル">
+            <div class="flex gap-4 mb-6">
+                <label class="flex-1 text-center py-3 bg-stone-100 rounded-xl cursor-pointer"><input type="radio" name="fp-pos" value="home" checked class="hidden"> <span class="text-xs font-bold">ホームに表示</span></label>
+                <label class="flex-1 text-center py-3 bg-stone-100 rounded-xl cursor-pointer"><input type="radio" name="fp-pos" value="menu" class="hidden"> <span class="text-xs font-bold">一覧のみ</span></label>
+            </div>
+            <div id="post-blocks" class="space-y-4 mb-6"></div>
+            <div class="flex gap-2 mb-8">
+                <button onclick="addPostBlock('text')" class="flex-1 py-3 border rounded-xl text-xs font-bold">＋テキスト</button>
+                <button onclick="addPostBlock('image')" class="flex-1 py-3 border rounded-xl text-xs font-bold">＋画像</button>
+            </div>
+            <button onclick="savePost()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">投稿する</button>
         </div>
     </div>
 
     <div id="profile-overlay" class="fixed inset-0 bg-white z-[10000] hidden overflow-y-auto">
-        <div id="profile-bg" class="min-h-full p-6 pb-32">
-            <button onclick="closeProfile()" class="bg-white shadow px-6 py-2 rounded-full text-xs font-bold mb-6">閉じる</button>
-            <img id="view-img" class="w-full aspect-square object-cover rounded-3xl shadow-xl mb-8">
-            <div class="text-center mb-8"><p id="view-kana" class="text-sm opacity-70 mb-1"></p><h2 id="view-name" class="text-3xl font-bold"></h2></div>
-            <div id="detail-box" class="bg-white/20 backdrop-blur-md p-6 rounded-3xl space-y-4 mb-8 text-[16px] hidden"></div>
-            <p id="view-profile" class="whitespace-pre-wrap leading-relaxed px-2 text-[18px] font-medium"></p>
+        <div id="profile-bg" class="min-h-full p-6 pb-32 transition-colors duration-500">
+            <button onclick="closeProfile()" class="bg-white/80 backdrop-blur shadow px-6 py-2 rounded-full text-xs font-bold mb-6">閉じる</button>
+            <img id="view-img" class="w-full aspect-square object-cover rounded-[40px] shadow-2xl mb-8">
+            <div class="text-center mb-8"><p id="view-kana" class="text-sm opacity-70 mb-1 tracking-widest font-bold"></p><h2 id="view-name" class="text-4xl font-bold"></h2></div>
+            <div id="detail-box" class="bg-white/20 backdrop-blur-md p-6 rounded-3xl space-y-4 mb-8 text-[15px] border border-white/30 hidden"></div>
+            <p id="view-profile" class="whitespace-pre-wrap leading-relaxed px-2 text-[17px] font-medium"></p>
             <div class="fixed bottom-6 inset-x-0 px-6 flex gap-4 max-w-md mx-auto admin-only-flex hidden">
-                <button id="detail-edit-btn" class="flex-1 bg-stone-800 text-white py-4 rounded-full font-bold">編集</button>
-                <button id="detail-del-btn" class="flex-1 bg-red-50 text-red-400 py-4 rounded-full font-bold border border-red-100">削除</button>
+                <button id="detail-edit-btn" class="flex-1 bg-stone-800 text-white py-4 rounded-full font-bold shadow-lg">編集する</button>
+                <button id="detail-del-btn" class="flex-1 bg-red-50 text-red-400 py-4 rounded-full font-bold border border-red-100">削除する</button>
             </div>
         </div>
     </div>
 
+    <div id="doll-list-page" class="max-w-md mx-auto hidden p-6">
+        <div class="flex justify-between items-center mb-8">
+            <button onclick="showHome()" class="text-sm font-bold bg-white shadow-sm border px-6 py-2 rounded-full">戻る</button>
+            <button id="toggle-list-view" onclick="toggleDollViewMode()" class="text-xs font-bold bg-stone-800 text-white px-5 py-2 rounded-full">名前を表示</button>
+        </div>
+        <div id="doll-display-area"></div>
+    </div>
+    <div id="post-list-page" class="max-w-md mx-auto hidden p-6">
+        <div class="mb-8"><button onclick="showHome()" class="text-sm font-bold bg-white shadow-sm border px-6 py-2 rounded-full">戻る</button></div>
+        <h2 class="text-2xl font-bold mb-8 text-stone-800">投稿一覧</h2>
+        <div id="menu-post-list" class="space-y-4"></div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -233,42 +241,37 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
-        window.fb = { db, doc, setDoc, getDoc, auth, provider, signInWithPopup, GoogleAuthProvider, signOut };
+        window.fb = { db, doc, setDoc, getDoc, auth, provider, GoogleAuthProvider, signInWithPopup, signOut, onSnapshot };
 
-        onAuthStateChanged(auth, async (user) => {
-            const statusText = document.getElementById('user-status-text');
-            const nameText = document.getElementById('user-name-text');
-            
-            if (user && galleryId) {
-                const snap = await getDoc(doc(db, "galleries", galleryId));
-                if (snap.exists()) {
-                    const data = snap.data();
-                    if (!data.adminUid) {
-                        // 初回アクセス（管理者が未設定）の場合、今のログインユーザーを管理者に設定
-                        await setDoc(doc(db, "galleries", galleryId), { adminUid: user.uid }, { merge: true });
+        onAuthStateChanged(auth, (user) => {
+            if (galleryId) {
+                onSnapshot(doc(db, "galleries", galleryId), (snap) => {
+                    if (snap.exists()) {
+                        const data = snap.data();
+                        const isAdmin = user && (data.adminUid === user.uid || !data.adminUid);
+                        if (user && !data.adminUid) setDoc(doc(db, "galleries", galleryId), { adminUid: user.uid }, { merge: true });
+                        isLoggedIn = !!isAdmin;
+                        document.body.classList.toggle('is-admin', isLoggedIn);
+                        document.getElementById('user-status-text').innerText = isLoggedIn ? "Admin Mode" : "Guest Mode";
+                        document.getElementById('user-name-text').innerText = user ? user.displayName : "閲覧専用";
+                        document.getElementById('login-btn').style.display = user ? 'none' : 'flex';
+                        document.getElementById('logout-btn').style.display = user ? 'block' : 'none';
+                        dolls = data.dolls || [];
+                        owner = data.owner || { name: "Owner Name", bio: "", sns: [], image:"" };
+                        posts = data.posts || [];
+                        renderAll();
+                    } else if (urlParams.get('mode') === 'new') {
                         isLoggedIn = true;
-                    } else {
-                        isLoggedIn = (data.adminUid === user.uid);
+                        document.body.classList.add('is-admin');
+                        renderAll();
                     }
-                }
-            } else {
-                isLoggedIn = false;
+                });
             }
-
-            if(isLoggedIn) {
-                statusText.innerText = "Admin Mode";
-                nameText.innerText = (user ? user.displayName : "") + " さん";
-            } else {
-                statusText.innerText = "Guest Mode";
-                nameText.innerText = "閲覧専用";
-            }
-            renderAll();
         });
     </script>
 
     <script>
         let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"" }, posts = [], calOffset = 0;
-        let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null };
         let isLoggedIn = false;
         const urlParams = new URLSearchParams(window.location.search);
         let galleryId = urlParams.get('id');
@@ -280,126 +283,491 @@
             return colors.slice(0, 100);
         })();
 
-        window.onload = async () => {
-            const checkFirebase = setInterval(async () => {
+        window.onload = () => {
+            initColorPalettes();
+            const checkFirebase = setInterval(() => {
                 if(window.fb) {
                     clearInterval(checkFirebase);
-                    initColorPalettes();
-                    if (galleryId) { 
-                        await loadGalleryData(); 
-                        renderAll();
-                    } else if (urlParams.get('mode') !== 'new') {
-                        requestNewGallery();
+                    if (!galleryId && urlParams.get('mode') !== 'new') {
+                        const savedId = localStorage.getItem('last_gallery_id');
+                        if(savedId) location.href = `?id=${savedId}`;
+                        else showAlert("ギャラリーIDが見つかりません。新規作成してください。");
+                    }
+                    if(urlParams.get('mode') === 'new') {
+                        galleryId = Date.now().toString();
+                        localStorage.setItem('last_gallery_id', galleryId);
+                        const newUrl = window.location.origin + window.location.pathname + '?id=' + galleryId;
+                        window.history.replaceState({}, '', newUrl);
                     }
                 }
             }, 100);
+            setupInfiniteScroll();
         };
 
-        async function loadGalleryData() {
-            try {
-                const docRef = window.fb.doc(window.fb.db, "galleries", galleryId);
-                const snap = await window.fb.getDoc(docRef);
-                if(snap.exists()) {
-                    const data = snap.data();
-                    dolls = data.dolls || []; 
-                    owner = data.owner || { name: "Owner Name", bio: "", sns: [], image:"" }; 
-                    posts = data.posts || [];
-                }
-            } catch(e) { console.error(e); }
-        }
-
         async function syncFirebase() {
-            if(!galleryId) return;
-            const docRef = window.fb.doc(window.fb.db, "galleries", galleryId);
-            // 作成と更新を兼ねる setDoc(merge: true) を使用
-            await window.fb.setDoc(docRef, { dolls, owner, posts }, { merge: true });
+            if(!galleryId || !isLoggedIn) return;
+            await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { dolls, owner, posts }, { merge: true });
         }
 
         async function handleGoogleLogin(isNew = false) {
             try {
-                const result = await window.fb.signInWithPopup(window.fb.auth, window.fb.provider);
-                const user = result.user;
-                if (isNew) {
-                    const newId = prompt("作成するギャラリーのID（英数字）を入力");
-                    if (!newId) return;
-                    await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", newId), { 
-                        adminUid: user.uid,
-                        dolls: [], 
-                        owner: { name: user.displayName || "Owner Name", bio: "", sns: [], image: user.photoURL || "" }, 
-                        posts: [] 
-                    });
-                    location.href = `?id=${newId}`;
-                } else {
-                    showAlert(user.displayName + " さんとしてログインしました");
-                    setTimeout(() => location.reload(), 1000);
-                }
+                await window.fb.signInWithPopup(window.fb.auth, window.fb.provider);
+                if(isNew) window.open(window.location.origin + window.location.pathname + '?mode=new', '_blank');
             } catch (e) { showAlert("ログインに失敗しました"); }
         }
 
-        async function handleLogout() {
-            await window.fb.signOut(window.fb.auth);
-            location.reload();
-        }
+        async function handleLogout() { await window.fb.signOut(window.fb.auth); location.reload(); }
 
         function renderAll() {
-            document.body.classList.toggle('is-admin', isLoggedIn);
-            document.getElementById('login-btn').style.display = isLoggedIn ? 'none' : 'flex';
-            document.getElementById('logout-btn').style.display = isLoggedIn ? 'block' : 'none';
-            
             const track = document.getElementById('top-film-roll'); track.innerHTML = '';
-            if (dolls.length > 0) {
+            const validDolls = dolls.filter(d => d.image);
+            if (validDolls.length > 0) {
                 document.getElementById('empty-msg').style.display = 'none';
-                dolls.forEach((d, i) => { if(d.image) { const img = document.createElement('img'); img.src = d.image; img.className = "film-frame"; img.onclick = () => showDetail(i); track.appendChild(img); } });
-            }
-            
+                const items = validDolls.length >= 5 ? [...validDolls, ...validDolls, ...validDolls] : validDolls;
+                items.forEach((d, i) => {
+                    const img = document.createElement('img'); img.src = d.image; img.className = "film-frame";
+                    img.style.objectPosition = `${d.h || 50}% ${d.v || 50}%`;
+                    img.onclick = () => showDetail(dolls.findIndex(orig => orig.id === d.id));
+                    track.appendChild(img);
+                });
+            } else { document.getElementById('empty-msg').style.display = 'flex'; }
+
             document.getElementById('owner-name').innerText = owner.name;
             document.getElementById('owner-bio').innerText = owner.bio;
-            if(owner.image) { const oImg = document.getElementById('display-owner-img'); oImg.src = owner.image; oImg.classList.remove('hidden'); }
+            const oImg = document.getElementById('display-owner-img');
+            if(owner.image) {
+                oImg.src = owner.image; oImg.classList.remove('hidden');
+                oImg.style.objectPosition = `${owner.h || 50}% ${owner.v || 50}%`;
+            } else { oImg.classList.add('hidden'); }
             
             const hp = document.getElementById('home-posts'); hp.innerHTML = '';
-            posts.forEach((p, i) => {
-                if(p.pos === 'home') {
-                    const card = document.createElement('div'); card.className = "bg-white rounded-[32px] p-6 border shadow-sm";
-                    card.innerHTML = `<h4 class="font-bold mb-4 text-lg border-b pb-2">${p.title}</h4>`;
-                    p.blocks.forEach(b => { if(b.img) card.innerHTML += `<img src="${b.img}" class="w-full rounded-2xl mb-4">`; if(b.text) card.innerHTML += `<p class="text-sm text-stone-600 mb-6 whitespace-pre-wrap">${b.text}</p>`; });
-                    hp.appendChild(card);
+            posts.filter(p => p.pos === 'home').forEach((p, i) => {
+                const card = document.createElement('div'); card.className = "bg-white rounded-[32px] p-6 border shadow-sm relative";
+                if(isLoggedIn) {
+                    const btn = document.createElement('button'); btn.innerText = "編集"; btn.className = "absolute top-4 right-4 text-[10px] font-bold bg-stone-100 px-3 py-1 rounded-full";
+                    btn.onclick = () => editPost(posts.findIndex(orig => orig.id === p.id));
+                    card.appendChild(btn);
                 }
+                let html = `<h4 class="font-bold mb-4 text-lg border-b pb-2 text-stone-700">${p.title}</h4>`;
+                p.blocks.forEach(b => {
+                    if(b.type === 'image' && b.content) html += `<img src="${b.content}" class="w-full rounded-2xl mb-4 shadow-sm">`;
+                    if(b.type === 'text' && b.content) html += `<p class="text-sm text-stone-600 mb-6 whitespace-pre-wrap leading-relaxed">${b.content}</p>`;
+                });
+                card.innerHTML += html; hp.appendChild(card);
             });
-            renderCalendar(); renderAnni();
+            renderCalendar(); renderAnni(); renderSnsLinks();
         }
-
-        // --- 共通UI操作（多機能版） ---
-        function openModalWithClear() { clearDollForm(); document.getElementById('modal-title').innerText = "うちの子登録"; document.getElementById('modal').style.display='flex'; toggleMenu('side-menu'); }
-        function closeModal() { document.querySelectorAll('.modal-base').forEach(m => { if(!m.id.includes('side-menu')) m.style.display='none'; }); }
-        function toggleMenu(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'flex') ? 'none' : 'flex'; }
-        function showHome() { document.getElementById('home-content').classList.remove('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); }
-        function showDollList() { document.getElementById('home-content').classList.add('hidden'); document.getElementById('doll-list-page').classList.remove('hidden'); renderDollList(); toggleMenu('side-menu'); }
-        function showPostListPage() { document.getElementById('home-content').classList.add('hidden'); document.getElementById('post-list-page').classList.remove('hidden'); toggleMenu('side-menu'); }
-        
-        function initColorPalettes() { createPalette('bg-color-grid', palette100, 'bg'); createPalette('text-color-grid', palette100, 'text'); createPalette('cal-color-grid', palette100, 'cal'); }
-        function createPalette(gridId, colorList, type) { const grid = document.getElementById(gridId); colorList.forEach(c => { const chip = document.createElement('div'); chip.className = `color-chip ${type}-chip`; chip.style.backgroundColor = c; chip.onclick = () => selectPaletteColor(type, c, chip); grid.appendChild(chip); }); }
-        function toggleColorGrid(type) { const grid = document.getElementById(`${type}-color-grid`); grid.classList.toggle('grid-open'); }
-        function selectPaletteColor(type, color, el) { document.querySelectorAll(`.${type}-chip`).forEach(c => c.classList.remove('selected')); el.classList.add('selected'); document.getElementById(`f-${type}-color`).value = color; document.getElementById(`${type}-select-icon`).style.backgroundColor = color; }
 
         function renderCalendar() {
             const now = new Date(), v = new Date(now.getFullYear(), now.getMonth() + calOffset, 1), y = v.getFullYear(), m = v.getMonth();
-            document.getElementById('cal-month').innerText = `${y} / ${m+1}`;
+            document.getElementById('cal-month').innerText = `${y} / ${String(m+1).padStart(2,'0')}`;
             const firstDay = new Date(y, m, 1).getDay(), lastDate = new Date(y, m+1, 0).getDate(), area = document.getElementById('cal-days');
             area.innerHTML = '';
+            const anniMap = {};
+            dolls.forEach(d => (d.anniversaries || []).forEach(a => {
+                const b = new Date(a.date);
+                if(b.getMonth() === m) {
+                    if(!anniMap[b.getDate()]) anniMap[b.getDate()] = [];
+                    anniMap[b.getDate()].push({color: d.calColor || '#E11D48', name: d.name, anni: a.name});
+                }
+            }));
             for(let i=0; i<firstDay; i++) area.innerHTML += '<div></div>';
             for(let d=1; d<=lastDate; d++) {
                 const isToday = (calOffset===0 && d===now.getDate()), div = document.createElement('div');
-                div.className = `cal-day ${isToday?'bg-black text-white':''}`;
-                div.innerHTML = `<span>${d}</span>`; area.appendChild(div);
+                div.className = `cal-day ${isToday?'bg-stone-800 text-white shadow-lg font-bold':'text-stone-600'}`;
+                div.innerHTML = `<span>${d}</span>`;
+                if(anniMap[d]) {
+                    const dots = document.createElement('div'); dots.className = "cal-dots";
+                    anniMap[d].forEach(a => { const dot = document.createElement('div'); dot.className="cal-dot"; dot.style.backgroundColor = a.color; dots.appendChild(dot); });
+                    div.appendChild(dots);
+                }
+                div.onclick = () => showDayEvents(y, m, d, anniMap[d]);
+                area.appendChild(div);
             }
         }
 
-        // 省略していた詳細機能をすべて戻しています（プロフィール、記念日計算など）
-        function renderAnni() { /* 記念日表示ロジック */ }
-        function clearDollForm() { /* フォーム初期化 */ }
-        function showAlert(msg) { document.getElementById('dialog-message').innerText = msg; document.getElementById('dialog-buttons').innerHTML = '<button onclick="closeDialog()" class="w-full bg-stone-800 text-white py-4 rounded-full font-bold">OK</button>'; document.getElementById('custom-dialog').style.display = 'flex'; }
+        function showDayEvents(y, m, d, events) {
+            const area = document.getElementById('day-events');
+            if(!events) { area.innerHTML = ''; return; }
+            area.innerHTML = `<p class="text-[10px] font-bold text-stone-400 mb-2">${m+1}月${d}日の記念日</p>` + 
+                events.map(e => `<div class="bg-white p-4 rounded-2xl border-l-4 shadow-sm" style="border-color:${e.color}"><p class="text-xs font-bold" style="color:${e.color}">${e.anni}</p><p class="text-sm font-bold">${e.name}</p></div>`).join('');
+        }
+
+        function renderAnni() {
+            const today = new Date(); today.setHours(0,0,0,0);
+            const todayList = [], nextList = [];
+            dolls.forEach(d => {
+                (d.anniversaries || []).forEach(a => {
+                    const b = new Date(a.date); if(isNaN(b)) return;
+                    const thisYear = new Date(today.getFullYear(), b.getMonth(), b.getDate());
+                    let diff = (thisYear - today) / 86400000;
+                    if(diff < 0) diff += 365;
+                    const item = { dollName: d.name, anniName: a.name, diff: Math.ceil(diff), color: d.calColor || '#E11D48' };
+                    if (b.getMonth() === today.getMonth() && b.getDate() === today.getDate()) todayList.push(item);
+                    else nextList.push(item);
+                });
+            });
+            const hAnni = document.getElementById('happy-anniversary');
+            if(todayList.length > 0) {
+                hAnni.classList.remove('hidden');
+                document.getElementById('happy-anniversary-list').innerHTML = todayList.map(a => `<div class="bg-white p-6 rounded-[32px] shadow-sm border-2 animate-anni" style="border-color:${a.color}"><p class="text-xs font-bold mb-1" style="color:${a.color}">🎉 ${a.anniName}</p><p class="text-xl font-bold">${a.dollName}</p></div>`).join('');
+            } else hAnni.classList.add('hidden');
+            nextList.sort((a,b) => a.diff - b.diff);
+            document.getElementById('closest-anniversary').innerHTML = nextList[0] ? `<div class="bg-white p-6 rounded-[32px] shadow-sm border border-stone-100"><p class="text-[10px] font-bold text-stone-400 mb-1">${nextList[0].anniName} まで あと ${nextList[0].diff}日</p><p class="text-lg font-bold text-stone-700">${nextList[0].dollName}</p></div>` : '<p class="text-xs text-stone-400 italic">No upcoming events</p>';
+        }
+
+        function updateCrop(imgId, hId, vId) {
+            const img = document.getElementById(imgId);
+            img.style.objectPosition = `${document.getElementById(hId).value}% ${document.getElementById(vId).value}%`;
+        }
+
+        function toggleMenu(id) {
+            const el = document.getElementById(id);
+            if (el.style.display === 'flex') { el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 300); }
+            else { el.style.display = 'flex'; el.style.opacity = '1'; }
+        }
+
+        function closeModal() {
+            document.querySelectorAll('.modal-base').forEach(m => {
+                if(m.id !== 'side-menu') m.style.display = 'none';
+            });
+        }
+
+        function showAlert(msg) {
+            document.getElementById('dialog-message').innerText = msg;
+            document.getElementById('dialog-buttons').innerHTML = `<button onclick="closeDialog()" class="w-full bg-stone-800 text-white py-4 rounded-full font-bold">OK</button>`;
+            document.getElementById('custom-dialog').style.display = 'flex';
+        }
+
+        function showConfirm(msg, onOk, okLabel = "OK") {
+            document.getElementById('dialog-message').innerText = msg;
+            document.getElementById('dialog-buttons').innerHTML = `
+                <button onclick="(${onOk.toString()})(); closeDialog();" class="w-full bg-stone-800 text-white py-4 rounded-full font-bold">${okLabel}</button>
+                <button onclick="closeDialog()" class="w-full bg-stone-100 text-stone-400 py-4 rounded-full font-bold">キャンセル</button>`;
+            document.getElementById('custom-dialog').style.display = 'flex';
+        }
+
         function closeDialog() { document.getElementById('custom-dialog').style.display = 'none'; }
-        function requestNewGallery() { handleGoogleLogin(true); }
+
+        function initColorPalettes() {
+            ['bg', 'text', 'cal'].forEach(type => {
+                const g = document.getElementById(`${type}-color-grid`);
+                palette100.forEach(c => {
+                    const d = document.createElement('div'); d.className = `color-chip ${type}-chip`; d.style.backgroundColor = c;
+                    d.onclick = () => selectPaletteColor(type, c, d); g.appendChild(d);
+                });
+            });
+        }
+
+        function toggleColorGrid(type) { document.getElementById(`${type}-color-grid`).classList.toggle('grid-open'); }
+
+        function selectPaletteColor(type, color, el) {
+            document.querySelectorAll(`.${type}-chip`).forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById(`f-${type}-color`).value = color;
+            document.getElementById(`${type}-select-icon`).style.backgroundColor = color;
+        }
+
+        function loadImg(e, type) {
+            const file = e.target.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                const pre = document.getElementById(type === 'doll' ? 'crop-preview' : 'owner-preview');
+                pre.src = re.target.result; pre.classList.remove('hidden');
+                if(type==='doll') document.getElementById('doll-hint').classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function openModalWithClear() {
+            clearDollForm();
+            document.getElementById('modal-title').innerText = "うちの子登録";
+            document.getElementById('modal').style.display = 'flex';
+            toggleMenu('side-menu');
+        }
+
+        function clearDollForm() {
+            document.getElementById('edit-id').value = '';
+            document.getElementById('f-name').value = '';
+            document.getElementById('f-kana').value = '';
+            document.getElementById('f-size-label').value = '';
+            document.getElementById('f-body-make').value = '';
+            document.getElementById('f-head').value = '';
+            document.getElementById('f-profile').value = '';
+            document.getElementById('f-bg-color').value = '#ffffff';
+            document.getElementById('f-text-color').value = '#000000';
+            document.getElementById('f-cal-color').value = '#E11D48';
+            document.getElementById('bg-select-icon').style.backgroundColor = '#ffffff';
+            document.getElementById('text-select-icon').style.backgroundColor = '#000000';
+            document.getElementById('cal-select-icon').style.backgroundColor = '#E11D48';
+            document.getElementById('crop-preview').src = '';
+            document.getElementById('crop-preview').classList.add('hidden');
+            document.getElementById('doll-hint').classList.remove('hidden');
+            document.getElementById('anniversary-inputs').innerHTML = '';
+        }
+
+        function addAnniversaryInput(v = {name: "", date: ""}) {
+            const id = Date.now() + Math.random();
+            const div = document.createElement('div'); div.className = "p-4 bg-white rounded-xl border space-y-3";
+            div.innerHTML = `
+                <div class="flex justify-between items-center"><input type="text" class="f-anni-name flex-1 border-b text-sm font-bold outline-none" placeholder="記念日名 (例: お迎え記念日)" value="${v.name}"><button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-red-300 text-[10px] font-bold">削除</button></div>
+                <div class="flex gap-2">
+                    <select id="m-${id}" onchange="updateDateInput('${id}')" class="f-anni-m border rounded-lg p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select>
+                    <select id="d-${id}" onchange="updateDateInput('${id}')" class="f-anni-d border rounded-lg p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select>
+                </div><input type="date" id="date-${id}" class="date-input f-anni-date" style="display:none">`;
+            document.getElementById('anniversary-inputs').appendChild(div);
+            if(v.date) setDateValue(v.date, `date-${id}`, `m-${id}`, `d-${id}`);
+        }
+
+        function updateDateInput(id) {
+            const m = document.getElementById(`m-${id}`).value, d = document.getElementById(`d-${id}`).value;
+            if(m && d) document.getElementById(`date-${id}`).value = `2024-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        }
+        function setDateValue(val, dateId, mId, dId) {
+            const dt = new Date(val);
+            if(!isNaN(dt)) {
+                document.getElementById(dateId).value = val;
+                document.getElementById(mId).value = dt.getMonth() + 1;
+                document.getElementById(dId).value = dt.getDate();
+            }
+        }
+
+        async function saveData() {
+            const id = document.getElementById('edit-id').value || Date.now().toString();
+            const doll = {
+                id, name: document.getElementById('f-name').value, kana: document.getElementById('f-kana').value,
+                sizeLabel: document.getElementById('f-size-label').value, bodyMake: document.getElementById('f-body-make').value,
+                head: document.getElementById('f-head').value, profile: document.getElementById('f-profile').value,
+                image: document.getElementById('crop-preview').src, h: document.getElementById('crop-h').value, v: document.getElementById('crop-v').value,
+                bgColor: document.getElementById('f-bg-color').value, textColor: document.getElementById('f-text-color').value, calColor: document.getElementById('f-cal-color').value,
+                anniversaries: Array.from(document.querySelectorAll('#anniversary-inputs > div')).map(div => ({ name: div.querySelector('.f-anni-name').value, date: div.querySelector('.f-anni-date').value }))
+            };
+            const idx = dolls.findIndex(d => d.id === id);
+            if(idx > -1) dolls[idx] = doll; else dolls.push(doll);
+            await syncFirebase(); closeModal();
+        }
+
+        function showHome() {
+            document.getElementById('home-content').classList.remove('hidden');
+            document.getElementById('doll-list-page').classList.add('hidden');
+            document.getElementById('post-list-page').classList.add('hidden');
+            window.scrollTo(0,0);
+        }
+
+        function showDollList() {
+            document.getElementById('home-content').classList.add('hidden');
+            document.getElementById('doll-list-page').classList.remove('hidden');
+            document.getElementById('post-list-page').classList.add('hidden');
+            renderDollList(); toggleMenu('side-menu');
+        }
+
+        let dollViewMode = 'photo';
+        function toggleDollViewMode() {
+            dollViewMode = (dollViewMode === 'photo' ? 'name' : 'photo');
+            document.getElementById('toggle-list-view').innerText = (dollViewMode === 'photo' ? '名前を表示' : '写真を大きく');
+            renderDollList();
+        }
+
+        function renderDollList() {
+            const area = document.getElementById('doll-display-area');
+            if(dollViewMode === 'photo') {
+                area.innerHTML = '<div class="grid grid-cols-3 gap-2"></div>';
+                const grid = area.querySelector('div');
+                dolls.forEach((d, i) => {
+                    const img = document.createElement('img'); img.src = d.image;
+                    img.className="aspect-square object-cover rounded-2xl border shadow-sm";
+                    img.style.objectPosition = `${d.h || 50}% ${d.v || 50}%`;
+                    img.onclick = () => showDetail(i); grid.appendChild(img);
+                });
+            } else {
+                area.innerHTML = '<div class="space-y-3"></div>';
+                const list = area.querySelector('div');
+                dolls.forEach((d, i) => {
+                    const row = document.createElement('div'); row.className = "flex items-center gap-4 bg-white p-4 rounded-2xl border shadow-sm";
+                    row.innerHTML = `<img src="${d.image}" class="w-12 h-12 rounded-full object-cover" style="object-position:${d.h||50}% ${d.v||50}%"><div><p class="text-[10px] text-stone-400 font-bold">${d.kana || ''}</p><p class="font-bold">${d.name}</p></div>`;
+                    row.onclick = () => showDetail(i); list.appendChild(row);
+                });
+            }
+        }
+
+        function showDetail(i) {
+            const d = dolls[i], ov = document.getElementById('profile-overlay');
+            ov.querySelector('#view-img').src = d.image;
+            ov.querySelector('#view-img').style.objectPosition = `${d.h || 50}% ${d.v || 50}%`;
+            ov.querySelector('#view-name').innerText = d.name;
+            ov.querySelector('#view-kana').innerText = d.kana || '';
+            ov.querySelector('#view-profile').innerText = d.profile || '';
+            document.getElementById('profile-bg').style.backgroundColor = d.bgColor || '#ffffff';
+            document.getElementById('profile-bg').style.color = d.textColor || '#000000';
+            const det = document.getElementById('detail-box');
+            let detHtml = '';
+            if(d.sizeLabel) detHtml += `<div class="flex justify-between border-b border-white/20 pb-2"><span class="opacity-60 text-xs font-bold uppercase">Size</span><span class="font-bold">${d.sizeLabel}</span></div>`;
+            if(d.bodyMake) detHtml += `<div class="flex justify-between border-b border-white/20 pb-2"><span class="opacity-60 text-xs font-bold uppercase">Body</span><span class="font-bold">${d.bodyMake}</span></div>`;
+            if(d.head) detHtml += `<div class="flex justify-between border-b border-white/20 pb-2"><span class="opacity-60 text-xs font-bold uppercase">Head</span><span class="font-bold">${d.head}</span></div>`;
+            if(detHtml) { det.innerHTML = detHtml; det.classList.remove('hidden'); } else det.classList.add('hidden');
+            document.getElementById('detail-edit-btn').onclick = () => editDoll(i);
+            document.getElementById('detail-del-btn').onclick = () => deleteDoll(i);
+            ov.classList.remove('hidden');
+        }
+
+        function closeProfile() { document.getElementById('profile-overlay').classList.add('hidden'); }
+
+        function editDoll(i) {
+            closeProfile(); clearDollForm();
+            const d = dolls[i];
+            document.getElementById('edit-id').value = d.id;
+            document.getElementById('f-name').value = d.name;
+            document.getElementById('f-kana').value = d.kana || '';
+            document.getElementById('f-size-label').value = d.sizeLabel || '';
+            document.getElementById('f-body-make').value = d.bodyMake || '';
+            document.getElementById('f-head').value = d.head || '';
+            document.getElementById('f-profile').value = d.profile || '';
+            document.getElementById('f-bg-color').value = d.bgColor || '#ffffff';
+            document.getElementById('f-text-color').value = d.textColor || '#000000';
+            document.getElementById('f-cal-color').value = d.calColor || '#E11D48';
+            document.getElementById('bg-select-icon').style.backgroundColor = d.bgColor || '#ffffff';
+            document.getElementById('text-select-icon').style.backgroundColor = d.textColor || '#000000';
+            document.getElementById('cal-select-icon').style.backgroundColor = d.calColor || '#E11D48';
+            document.getElementById('crop-h').value = d.h || 50;
+            document.getElementById('crop-v').value = d.v || 50;
+            (d.anniversaries || []).forEach(a => addAnniversaryInput(a));
+            const pre = document.getElementById('crop-preview'); pre.src = d.image; pre.classList.remove('hidden');
+            document.getElementById('doll-hint').classList.add('hidden');
+            updateCrop('crop-preview', 'crop-h', 'crop-v');
+            document.getElementById('modal-title').innerText = "うちの子編集";
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function deleteDoll(i) {
+            showConfirm(`${dolls[i].name}を削除してもよろしいですか？`, async () => {
+                dolls.splice(i, 1); await syncFirebase(); closeProfile();
+                if(!document.getElementById('doll-list-page').classList.contains('hidden')) renderDollList();
+            }, "削除する");
+        }
+
+        // オーナーロジック
+        function openOwnerModal() {
+            document.getElementById('fo-name').value = owner.name;
+            document.getElementById('fo-bio').value = owner.bio;
+            document.getElementById('owner-preview').src = owner.image || '';
+            if(owner.image) document.getElementById('owner-preview').classList.remove('hidden');
+            document.getElementById('owner-h').value = owner.h || 50;
+            document.getElementById('owner-v').value = owner.v || 50;
+            updateCrop('owner-preview', 'owner-h', 'owner-v');
+            document.getElementById('sns-inputs').innerHTML = '';
+            (owner.sns || []).forEach(s => addSnsInput(s));
+            document.getElementById('owner-modal').style.display = 'flex';
+            toggleMenu('side-menu');
+        }
+        function addSnsInput(v = {name: "", url: ""}) {
+            const div = document.createElement('div'); div.className = "flex gap-2 mb-2";
+            div.innerHTML = `<input type="text" class="f-sns-name border rounded p-2 text-xs w-20" placeholder="X, Insta等" value="${v.name}"><input type="text" class="f-sns-url border rounded p-2 text-xs flex-1" placeholder="URL" value="${v.url}"><button onclick="this.parentElement.remove()" class="text-red-300 font-bold">×</button>`;
+            document.getElementById('sns-inputs').appendChild(div);
+        }
+        async function saveOwner() {
+            owner = {
+                name: document.getElementById('fo-name').value, bio: document.getElementById('fo-bio').value,
+                image: document.getElementById('owner-preview').src, h: document.getElementById('owner-h').value, v: document.getElementById('owner-v').value,
+                sns: Array.from(document.querySelectorAll('#sns-inputs > div')).map(div => ({ name: div.querySelector('.f-sns-name').value, url: div.querySelector('.f-sns-url').value }))
+            };
+            await syncFirebase(); closeModal();
+        }
+        function renderSnsLinks() {
+            const area = document.getElementById('owner-sns-links'); area.innerHTML = '';
+            (owner.sns || []).forEach(s => {
+                const a = document.createElement('a'); a.href = s.url; a.target = "_blank";
+                a.className = "w-full max-w-[200px] py-3 bg-stone-50 border rounded-2xl text-xs font-bold text-stone-600 shadow-sm flex items-center justify-center gap-2 hover:bg-stone-100 transition-colors";
+                a.innerHTML = `<span>${s.name}</span><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>`;
+                area.appendChild(a);
+            });
+        }
+
+        // 投稿ロジック
+        function openPostModal() {
+            document.getElementById('edit-post-id').value = '';
+            document.getElementById('fp-title').value = '';
+            document.getElementById('post-blocks').innerHTML = '';
+            document.getElementById('post-modal-title').innerText = "投稿を作成";
+            document.getElementById('post-modal').style.display = 'flex';
+            toggleMenu('side-menu');
+        }
+        function addPostBlock(type, content = "") {
+            const div = document.createElement('div'); div.className = "p-4 bg-stone-50 rounded-2xl relative space-y-2";
+            div.dataset.type = type;
+            if(type === 'text') div.innerHTML = `<textarea class="w-full bg-transparent text-sm outline-none h-24" placeholder="文章を入力...">${content}</textarea>`;
+            else div.innerHTML = `<div class="flex gap-4"><img src="${content}" class="w-20 h-20 object-cover rounded-xl ${content?'':'hidden'}"><div class="flex-1 flex flex-col justify-center"><button onclick="this.nextElementSibling.click()" class="text-[10px] font-bold bg-white border px-4 py-2 rounded-full mb-2">画像を選択</button><input type="file" class="hidden" onchange="loadBlockImg(event, this)"></div></div>`;
+            div.innerHTML += `<button onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 bg-white shadow-sm border rounded-full w-6 h-6 text-[10px] font-bold text-red-300">×</button>`;
+            document.getElementById('post-blocks').appendChild(div);
+        }
+        function loadBlockImg(e, input) {
+            const file = e.target.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (re) => { const img = input.parentElement.previousElementSibling; img.src = re.target.result; img.classList.remove('hidden'); };
+            reader.readAsDataURL(file);
+        }
+        async function savePost() {
+            const id = document.getElementById('edit-post-id').value || Date.now().toString();
+            const post = {
+                id, title: document.getElementById('fp-title').value, pos: document.querySelector('input[name="fp-pos"]:checked').value,
+                blocks: Array.from(document.getElementById('post-blocks').children).map(div => ({ type: div.dataset.type, content: div.dataset.type==='text'?div.querySelector('textarea').value:div.querySelector('img').src }))
+            };
+            const idx = posts.findIndex(p => p.id === id);
+            if(idx > -1) posts[idx] = post; else posts.push(post);
+            await syncFirebase(); closeModal();
+        }
+        function editPost(idx) {
+            const p = posts[idx];
+            document.getElementById('edit-post-id').value = p.id;
+            document.getElementById('fp-title').value = p.title;
+            document.querySelectorAll('input[name="fp-pos"]').forEach(r => r.checked = (r.value === p.pos));
+            document.getElementById('post-blocks').innerHTML = '';
+            p.blocks.forEach(b => addPostBlock(b.type, b.content));
+            document.getElementById('post-modal-title').innerText = "投稿を編集";
+            document.getElementById('post-modal').style.display = 'flex';
+        }
+        function showPostListPage() {
+            document.getElementById('home-content').classList.add('hidden');
+            document.getElementById('doll-list-page').classList.add('hidden');
+            document.getElementById('post-list-page').classList.remove('hidden');
+            const area = document.getElementById('menu-post-list'); area.innerHTML = '';
+            posts.forEach((p, i) => {
+                const row = document.createElement('div'); row.className = "bg-white p-5 rounded-3xl border shadow-sm relative";
+                row.innerHTML = `<h4 class="font-bold mb-2 text-stone-700">${p.title}</h4><p class="text-[10px] text-stone-400 font-bold uppercase tracking-widest">${p.pos==='home'?'Home & List':'List Only'}</p>`;
+                if(isLoggedIn) {
+                    const btn = document.createElement('button'); btn.innerText = "編集"; btn.className = "absolute top-5 right-5 text-[10px] font-bold bg-stone-100 px-4 py-2 rounded-full";
+                    btn.onclick = () => editPost(i); row.appendChild(btn);
+                }
+                area.appendChild(row);
+            });
+            toggleMenu('side-menu');
+        }
+
+        function setupInfiniteScroll() {
+            const container = document.getElementById('film-container');
+            container.addEventListener('scroll', () => {
+                const validDolls = dolls.filter(d => d.image);
+                if (validDolls.length < 5) return;
+                const frameW = 80 + 12, totalW = validDolls.length * frameW;
+                if (container.scrollLeft < totalW * 0.5) container.scrollLeft += totalW;
+                if (container.scrollLeft > totalW * 1.5) container.scrollLeft -= totalW;
+            });
+        }
+
+        function requestNewGallery() {
+            showConfirm("新しいギャラリーを作成しますか？\n(別タブで開きます)", () => handleGoogleLogin(true), "作成する");
+        }
+        async function requestClearAll() {
+            showConfirm("全てのデータを完全に削除しますか？\nこの操作は取り消せません。", async () => {
+                await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [] }, { merge: true });
+                location.reload();
+            }, "削除する");
+        }
+
+        function shareSNS(type) {
+            const url = window.location.href, text = "Doll Uchinoko Gallery";
+            if(type === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank');
+            else if(type === 'x') window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+        }
     </script>
 </body>
 </html>
