@@ -44,9 +44,6 @@
         .admin-only { display: none !important; }
         body.is-admin .admin-only { display: block !important; }
         body.is-admin .admin-only-flex { display: flex !important; }
-        #photo-picker { display: none; position: fixed; inset: 0; background: white; z-index: 110000; flex-direction: column; }
-        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; overflow-y: auto; flex: 1; padding: 2px; }
-        .photo-item { aspect-ratio: 1/1; width: 100%; object-fit: cover; cursor: pointer; }
     </style>
 </head>
 <body class="text-stone-800 pb-20">
@@ -59,16 +56,6 @@
             </div>
             <div id="dialog-buttons" class="flex flex-col gap-3"></div>
         </div>
-    </div>
-
-    <div id="photo-picker">
-        <div class="p-4 border-b flex justify-between items-center bg-white sticky top-0">
-            <button onclick="closePhotoPicker()" class="text-sm font-bold text-stone-500">キャンセル</button>
-            <span class="font-bold">Googleフォトから選択</span>
-            <div class="w-12"></div>
-        </div>
-        <div id="photo-grid" class="photo-grid"></div>
-        <div id="photo-loading" class="p-10 text-center text-stone-400 text-sm hidden">読み込み中...</div>
     </div>
 
     <div class="film-outer" id="film-container">
@@ -162,11 +149,12 @@
             <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
             <h3 id="modal-title" class="text-xl font-bold mb-6">うちの子登録</h3>
             <div class="crop-area">
-                <div class="preview-sq" onclick="openPhotoPicker('doll')"><img id="crop-preview" class="hidden"><span id="doll-hint" class="text-stone-300 text-xs font-bold">Googleフォトから選択</span></div>
+                <div class="preview-sq" onclick="document.getElementById('doll-file').click()"><img id="crop-preview" class="hidden"><span id="doll-hint" class="text-stone-300 text-xs font-bold">画像を選択</span></div>
                 <div class="v-bar-box"><input type="range" id="crop-v" min="0" max="100" class="vertical-range" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')"></div>
             </div>
             <input type="range" id="crop-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')">
             <div class="space-y-6">
+                <input type="file" id="doll-file" accept="image/*" class="hidden" onchange="loadImg(event, 'doll')">
                 <input type="hidden" id="edit-id"><input type="text" id="f-name" class="w-full border-b p-2 font-bold text-lg outline-none" placeholder="お名前"><input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none" placeholder="ふりがな">
                 <div class="p-4 bg-stone-50 rounded-2xl space-y-4"><input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE (例: 1/6, 20cmなど)"><input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="BODY (例: オビツ22, ピュアニーモ)"><input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="HEAD"></div>
                 <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
@@ -209,11 +197,12 @@
             <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
             <h3 class="text-xl font-bold mb-6">オーナー設定</h3>
             <div class="crop-area">
-                <div class="preview-sq" onclick="openPhotoPicker('owner')"><img id="owner-preview" class="hidden"><span id="owner-hint" class="text-stone-300 text-xs font-bold">Googleフォトから選択</span></div>
+                <div class="preview-sq" onclick="document.getElementById('owner-file').click()"><img id="owner-preview" class="hidden"><span id="owner-hint" class="text-stone-300 text-xs font-bold">画像を選択</span></div>
                 <div class="v-bar-box"><input type="range" id="o-crop-v" min="0" max="100" class="vertical-range" oninput="updateCrop('owner-preview', 'o-crop-h', 'o-crop-v')"></div>
             </div>
             <input type="range" id="o-crop-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('owner-preview', 'o-crop-h', 'o-crop-v')">
             <div class="space-y-4">
+                <input type="file" id="owner-file" accept="image/*" class="hidden" onchange="loadImg(event, 'owner')">
                 <input type="text" id="o-name" class="w-full border-b p-2 font-bold" placeholder="オーナー名"><textarea id="o-bio" class="w-full border p-3 rounded-xl min-h-[80px] text-sm outline-none" placeholder="自己紹介" oninput="autoResize(this)"></textarea>
                 <div id="sns-inputs-container" class="space-y-3"></div><button onclick="addSnsInput()" class="w-full py-2 bg-stone-100 rounded text-xs font-bold">+ SNSリンクを追加</button><button onclick="saveOwner()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">保存</button>
             </div>
@@ -254,17 +243,14 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
-        
-        // ★重要: Googleフォトへのアクセス権限をリクエスト
-        provider.addScope('https://www.googleapis.com/auth/photoslibrary.readonly');
 
-        window.fb = { db, doc, setDoc, getDoc, updateDoc, auth, provider, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider };
+        window.fb = { db, doc, setDoc, getDoc, updateDoc, auth, provider, signInWithPopup, signOut, onAuthStateChanged };
     </script>
 
     <script>
         let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"" }, posts = [], calOffset = 0;
         let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null }, loopInterval;
-        let isLoggedIn = false, adminEmail = "", googleAccessToken = null;
+        let isLoggedIn = false, adminEmail = "";
         const urlParams = new URLSearchParams(window.location.search);
         let galleryId = urlParams.get('id');
 
@@ -289,12 +275,8 @@
                     }
 
                     window.fb.onAuthStateChanged(window.fb.auth, (user) => {
-                        if (user && adminEmail && user.email === adminEmail) { 
-                            isLoggedIn = true; 
-                        } 
-                        else { 
-                            isLoggedIn = false; 
-                        }
+                        if (user && adminEmail && user.email === adminEmail) { isLoggedIn = true; } 
+                        else { isLoggedIn = false; }
                         renderAll();
                     });
 
@@ -322,106 +304,25 @@
                 await window.fb.updateDoc(docRef, { dolls, owner, posts });
             } catch (e) {
                 console.error("Sync Error:", e);
-                showAlert("保存に失敗しました。管理者権限が必要です。");
+                showAlert("保存に失敗しました。管理者としてログインしているか確認してください。");
             }
         }
 
         async function handleGoogleLogin() {
             try {
-                // 確実にアカウント選択画面を出し、リフレッシュしても権限を維持しやすくする設定
-                window.fb.provider.setCustomParameters({ prompt: 'select_account' });
-                
                 const result = await window.fb.signInWithPopup(window.fb.auth, window.fb.provider);
-                const credential = window.fb.GoogleAuthProvider.credentialFromResult(result);
-                googleAccessToken = credential.accessToken;
-
                 if (result.user.email === adminEmail) {
                     isLoggedIn = true;
                     renderAll();
                     toggleMenu('side-menu');
-                } else if (!adminEmail) {
-                    // 新規作成時などのケース
-                    renderAll();
                 } else {
                     showAlert("このギャラリーの管理者権限がありません。");
                     await window.fb.signOut(window.fb.auth);
                 }
             } catch (error) {
                 console.error(error);
-                showAlert("ログインに失敗しました。Googleの確認画面で『詳細』→『移動』を選択してください。");
+                showAlert("ログインに失敗しました。");
             }
-        }
-
-        // Google Photos Picker Logic
-        let currentPhotoTarget = null;
-        async function openPhotoPicker(targetId) {
-            // アクセストークンがない場合は再ログインを促す
-            if(!isLoggedIn || !googleAccessToken) {
-                showAlert("Googleフォトへのアクセス許可が必要です。ログインし直してください。", () => {
-                    handleGoogleLogin();
-                });
-                return;
-            }
-            
-            currentPhotoTarget = targetId;
-            document.getElementById('photo-picker').style.display = 'flex';
-            const grid = document.getElementById('photo-grid');
-            const loader = document.getElementById('photo-loading');
-            grid.innerHTML = '';
-            loader.classList.remove('hidden');
-
-            try {
-                const res = await fetch('https://photoslibrary.googleapis.com/v1/mediaItems?pageSize=60', {
-                    headers: { 'Authorization': `Bearer ${googleAccessToken}` }
-                });
-                const data = await res.json();
-                loader.classList.add('hidden');
-
-                if(data.mediaItems) {
-                    data.mediaItems.forEach(item => {
-                        const img = document.createElement('img');
-                        img.src = item.baseUrl + '=w200-h200-c';
-                        img.className = 'photo-item';
-                        img.onclick = () => selectGooglePhoto(item.baseUrl, targetId);
-                        grid.appendChild(img);
-                    });
-                } else {
-                    grid.innerHTML = '<p class="col-span-3 p-10 text-center text-stone-400">画像が見つかりませんでした。Googleフォトに写真があるか確認してください。</p>';
-                }
-            } catch (e) {
-                console.error(e);
-                showAlert("フォトの取得に失敗しました。セッションが切れた可能性があります。");
-                closePhotoPicker();
-            }
-        }
-
-        function closePhotoPicker() {
-            document.getElementById('photo-picker').style.display = 'none';
-        }
-
-        async function selectGooglePhoto(baseUrl, targetId) {
-            closePhotoPicker();
-            const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.onload = () => {
-                currentRawImg[targetId === 'doll' || targetId === 'owner' ? targetId : 'post'] = img;
-                
-                let previewId = '';
-                let hintId = '';
-                
-                if(targetId === 'doll') { previewId = 'crop-preview'; hintId = 'doll-hint'; }
-                else if(targetId === 'owner') { previewId = 'owner-preview'; hintId = 'owner-hint'; }
-                else { previewId = 'p-img-' + targetId; hintId = 'p-hint-' + targetId; }
-
-                const el = document.getElementById(previewId);
-                if(el) {
-                    el.src = img.src;
-                    el.classList.remove('hidden');
-                    const hintEl = document.getElementById(hintId);
-                    if(hintEl) hintEl.classList.add('hidden');
-                }
-            };
-            img.src = baseUrl + '=w1000';
         }
 
         async function openCreationModal() {
@@ -439,10 +340,7 @@
                 if(!finalGid) return showAlert("公開用IDを入力してください");
                 
                 try {
-                    window.fb.provider.setCustomParameters({ prompt: 'select_account' });
                     const result = await window.fb.signInWithPopup(window.fb.auth, window.fb.provider);
-                    const credential = window.fb.GoogleAuthProvider.credentialFromResult(result);
-                    googleAccessToken = credential.accessToken;
                     const userEmail = result.user.email;
                     
                     const docRef = window.fb.doc(window.fb.db, "galleries", finalGid);
@@ -550,7 +448,6 @@
         async function handleLogout() { 
             await window.fb.signOut(window.fb.auth);
             isLoggedIn = false; 
-            googleAccessToken = null;
             renderAll(); 
             toggleMenu('side-menu'); 
         }
@@ -579,6 +476,7 @@
                         let message = "";
                         if (totalDays >= 0) {
                             if (isDayMonthMatch) {
+                                // 記念日当日（年数祝い）
                                 if (totalDays === 0) {
                                     message = (v.type === 'welcome') ? `${d.name} と出会った！` : `${d.name} の ${v.n}`;
                                 } else {
@@ -586,6 +484,7 @@
                                               (v.type === 'welcome') ? `${d.name} と出会って ${diffYears}年` : `${d.name} の ${v.n} ${diffYears}年`;
                                 }
                             } else if (totalDays > 0 && totalDays % 100 === 0) {
+                                // キリ番（100日ごと）
                                 message = (v.type === 'welcome') ? `${d.name} と出会って ${totalDays}日` : `${d.name} の ${v.n} ${totalDays}日`;
                             }
                         }
@@ -669,7 +568,8 @@
         function deletePostDirectly(idx) { showConfirm("この投稿を削除しますか？", async () => { posts.splice(idx, 1); await syncFirebase(); renderAll(); }); }
         function editPost(idx) { const p = posts[idx]; document.getElementById('edit-post-id').value = idx; document.getElementById('post-modal-title').innerText = "投稿編集"; document.getElementById('p-title').value = p.title; document.getElementById('post-blocks-container').innerHTML = ''; p.blocks.forEach(b => addPostBlock(b)); document.querySelector(`input[name="p-pos"][value="${p.pos}"]`).checked = true; document.getElementById('post-modal').style.display = 'flex'; }
         function openPostModal() { document.getElementById('edit-post-id').value = ""; document.getElementById('post-modal-title').innerText = "投稿作成"; document.getElementById('p-title').value = ""; document.getElementById('post-blocks-container').innerHTML = ''; addPostBlock(); document.querySelector(`input[name="p-pos"][value="home"]`).checked = true; document.getElementById('post-modal').style.display='flex'; toggleMenu('side-menu'); }
-        function addPostBlock(data = {img: '', text: ''}) { const id = Date.now() + Math.random(), div = document.createElement('div'); div.className = "post-block p-4 border rounded-xl mb-4 bg-stone-50"; div.innerHTML = `<div class="preview-sq mb-2" onclick="openPhotoPicker('${id}')"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'}"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''}">Googleフォトから選択</span></div><textarea class="w-full text-sm p-3 border rounded-xl min-h-[60px] mt-2 outline-none" placeholder="文章を入力..." oninput="autoResize(this)">${data.text || ''}</textarea><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`; document.getElementById('post-blocks-container').appendChild(div); if(data.text) setTimeout(()=>autoResize(div.querySelector('textarea')),10); }
+        function addPostBlock(data = {img: '', text: ''}) { const id = Date.now() + Math.random(), div = document.createElement('div'); div.className = "post-block p-4 border rounded-xl mb-4 bg-stone-50"; div.innerHTML = `<div class="preview-sq mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'}"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''}">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><textarea class="w-full text-sm p-3 border rounded-xl min-h-[60px] mt-2 outline-none" placeholder="文章を入力..." oninput="autoResize(this)">${data.text || ''}</textarea><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`; document.getElementById('post-blocks-container').appendChild(div); if(data.text) setTimeout(()=>autoResize(div.querySelector('textarea')),10); }
+        async function loadBlockImg(e, id) { const f = e.target.files[0]; if(!f) return; const rd = new FileReader(); rd.onload = (re) => { const img = new Image(); img.onload = () => { const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'), s = Math.min(1200/img.width, 1200/img.height, 1); cvs.width = img.width*s; cvs.height = img.height*s; ctx.drawImage(img, 0, 0, cvs.width, cvs.height); const t = document.getElementById('p-img-'+id); t.src = cvs.toDataURL('image/webp', 0.6); t.classList.remove('hidden'); document.getElementById('p-hint-'+id).classList.add('hidden'); }; img.src = re.target.result; }; rd.readAsDataURL(f); }
         function viewPost(idx) { const p = posts[idx]; document.getElementById('art-title').innerText = p.title; const container = document.getElementById('art-content'); container.innerHTML = ''; p.blocks.forEach(b => { if(b.img) { const img = document.createElement('img'); img.src = b.img; img.className = "w-full rounded-2xl mb-4"; container.appendChild(img); } if(b.text) { const txt = document.createElement('p'); txt.className = "text-stone-700 whitespace-pre-wrap leading-relaxed mb-6"; txt.innerText = b.text; container.appendChild(txt); } }); document.getElementById('art-edit-btn').onclick = () => { closeArticle(); editPost(idx); }; document.getElementById('art-del-btn').onclick = () => showConfirm("この投稿を削除しますか？", async () => { posts.splice(idx, 1); await syncFirebase(); location.reload(); }); document.getElementById('article-page').style.display = 'block'; }
         function closeArticle() { document.getElementById('article-page').style.display = 'none'; }
         function setupInfiniteScroll() { const container = document.getElementById('film-container'); container.addEventListener('scroll', () => { const items = dolls.filter(d => d.image); if (items.length < 5) return; const w = items.length * (80 + 12); if (container.scrollLeft < w * 0.5) container.scrollLeft += w; if (container.scrollLeft > w * 1.5) container.scrollLeft -= w; }); }
@@ -679,11 +579,12 @@
         function getDateValue(mainId, mId, dId) { const main = document.getElementById(mainId).value, m = document.getElementById(mId).value, d = document.getElementById(dId).value; if(!main && m && d) return `2000-${m.padStart(2,'0')}-${d.padStart(2,'0')}`; return main; }
         function setDateValue(val, mainId, mId, dId) { if(!val) return; const dt = new Date(val); if(dt.getFullYear() === 2000) { const mm = document.getElementById(mId), dd = document.getElementById(dId); if(mm) mm.value = dt.getMonth() + 1; if(dd) dd.value = dt.getDate(); const main = document.getElementById(mainId); if(main) main.value = ""; } else { const main = document.getElementById(mainId); if(main) main.value = val; const mm = document.getElementById(mId), dd = document.getElementById(dId); if(mm) mm.value = ""; if(dd) dd.value = ""; } }
         function clearDollForm() { document.getElementById('edit-id').value = ""; document.getElementById('f-name').value = ""; document.getElementById('f-kana').value = ""; document.getElementById('f-size-label').value = ""; document.getElementById('f-body-make').value = ""; document.getElementById('f-head').value = ""; document.getElementById('f-bday').value = ""; document.getElementById('f-bday-m').value = ""; document.getElementById('f-bday-d').value = ""; document.getElementById('f-welcome').value = ""; document.getElementById('f-welcome-m').value = ""; document.getElementById('f-welcome-d').value = ""; document.getElementById('anniversary-inputs').innerHTML = ''; const prof = document.getElementById('f-profile'); prof.value = ""; autoResize(prof); document.getElementById('f-bg-color').value = "#ffffff"; document.getElementById('f-text-color').value = "#000000"; document.getElementById('f-cal-color').value = "#E11D48"; updatePaletteSelection('bg', "#ffffff"); updatePaletteSelection('text', "#000000"); updatePaletteSelection('cal', "#E11D48"); document.getElementById('crop-preview').classList.add('hidden'); document.getElementById('doll-hint').classList.remove('hidden'); currentRawImg.doll = null; }
+        function loadImg(e, type) { const f = e.target.files[0]; if(!f) return; const rd = new FileReader(); rd.onload = (re) => { const img = new Image(); img.onload = () => { currentRawImg[type] = img; const el = document.getElementById(type === 'doll' ? 'crop-preview' : 'owner-preview'); el.src = img.src; el.classList.remove('hidden'); document.getElementById(type === 'doll' ? 'doll-hint' : 'owner-hint').classList.add('hidden'); }; img.src = re.target.result; }; rd.readAsDataURL(f); }
         function renderDollList() { const area = document.getElementById('doll-display-area'); area.innerHTML = ''; if (dollViewMode === 'grid') { area.className = "grid grid-cols-3 gap-2"; dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="aspect-square bg-white border rounded-xl overflow-hidden"><img src="${d.image}" class="w-full h-full object-cover"></div>`; }); } else { area.className = "space-y-2"; dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="flex items-center gap-4 bg-white p-3 border rounded-xl"><img src="${d.image}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0"><div><p class="text-xs text-stone-400 font-bold">${d.kana || ''}</p><p class="font-bold text-stone-800">${d.name}</p></div></div>`; }); } }
         function toggleDollViewMode() { dollViewMode = (dollViewMode === 'grid') ? 'list' : 'grid'; document.getElementById('toggle-list-view').innerText = (dollViewMode === 'grid') ? '名前を表示' : 'サムネのみ'; renderDollList(); }
         function openOwnerModal() { document.getElementById('o-name').value = owner.name; const obio = document.getElementById('o-bio'); obio.value = owner.bio; autoResize(obio); document.getElementById('sns-inputs-container').innerHTML = ''; (owner.sns || []).forEach(s => addSnsInput(s)); if(owner.image) { const p = document.getElementById('owner-preview'); p.src = owner.image; p.classList.remove('hidden'); document.getElementById('owner-hint').classList.add('hidden'); } document.getElementById('owner-modal').style.display='flex'; toggleMenu('side-menu'); }
         function addSnsInput(v = {type:'X(旧Twitter)', val:''}) { const div = document.createElement('div'); div.className = "sns-input-row flex gap-2 items-center"; div.innerHTML = `<div class="flex gap-2 items-center w-full"><select class="sns-type text-sm border p-2 rounded-lg bg-white h-10 outline-none">${['X(旧Twitter)','Instagram','mixi2','Bluesky','Misskey','その他URL'].map(t => `<option ${v.type===t?'selected':''}>${t}</option>`).join('')}</select><input type="text" class="sns-val flex-1 text-sm border p-2 rounded-lg h-10 outline-none" placeholder="ID or URL" value="${v.val}"><button onclick="this.parentElement.remove()" class="p-2 text-stone-400">✕</button></div>`; document.getElementById('sns-inputs-container').appendChild(div); }
-        function addAnniversaryInput(v = {name:'', date:''}) { const id = Date.now() + Math.random(), div = document.createElement('div'); div.className = "p-4 bg-stone-100/50 rounded-2xl space-y-2 border border-stone-100"; div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type=\"date\" id=\"date-${id}\" class=\"date-input f-anni-date\">`; document.getElementById('anniversary-inputs').appendChild(div); if(v.date) setTimeout(()=>setDateValue(v.date, `date-${id}`, `m-${id}`, `d-${id}`), 10); }
+        function addAnniversaryInput(v = {name:'', date:''}) { const id = Date.now() + Math.random(), div = document.createElement('div'); div.className = "p-4 bg-stone-100/50 rounded-2xl space-y-2 border border-stone-100"; div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; document.getElementById('anniversary-inputs').appendChild(div); if(v.date) setTimeout(()=>setDateValue(v.date, `date-${id}`, `m-${id}`, `d-${id}`), 10); }
         function requestNewGallery() { showConfirm("新しいギャラリーを作成しますか？", () => window.open(window.location.origin + window.location.pathname + '?mode=new', '_blank'), "作成する"); }
         async function requestClearAll() { showConfirm("全てのデータを完全に削除しますか？\nこの操作は取り消せません。", async () => { await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [] }, { merge: true }); location.reload(); }, "削除する"); }
         function shareSNS(type) { const url = window.location.href; if(type === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank'); else if(type === 'x') window.open(`https://twitter.com/intent/tweet?text=Doll Uchinoko Gallery&url=${encodeURIComponent(url)}`, '_blank'); }
