@@ -291,9 +291,6 @@
                     const data = snap.data();
                     dolls = data.dolls || []; owner = data.owner || owner; posts = data.posts || [];
                     adminEmail = data.adminEmail || "";
-                    // ログイン済みかチェック
-                    const user = window.fb.auth.currentUser;
-                    if(user && user.email === adminEmail) isLoggedIn = true;
                 } else { showAlert("ギャラリーが見つかりません。"); }
             } catch(e) { console.error(e); }
         }
