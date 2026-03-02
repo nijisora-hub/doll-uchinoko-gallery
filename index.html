@@ -294,14 +294,26 @@
             document.getElementById('login-btn').style.display = isLoggedIn ? 'none' : 'block';
             document.getElementById('logout-btn').style.display = isLoggedIn ? 'block' : 'none';
 
-            const track = document.getElementById('top-film-roll'); track.innerHTML = '';
+            const track = document.getElementById('top-film-roll'); 
+            track.innerHTML = '';
             dolls.forEach((d, i) => {
                 if(d.image) {
-                    const img = document.createElement('img'); img.src = d.image; img.className = "film-frame";
+                    const img = document.createElement('img'); 
+                    img.src = d.image; 
+                    img.className = "film-frame";
                     img.style.objectPosition = d.pos || "50% 50%";
-                    img.onclick = () => showDetail(i); track.appendChild(img);
+                    img.onclick = () => showDetail(i); // サムネタップでプロフィールを表示するように修正
+                    track.appendChild(img);
                 }
             });
+
+            // 5個以上の場合は中央寄せを解除してスクロールを有効化
+            if (dolls.length >= 5) {
+                track.style.margin = "0";
+            } else {
+                track.style.margin = "0 auto";
+            }
+
             document.getElementById('empty-msg').style.display = dolls.length ? 'none' : 'flex';
 
             document.getElementById('display-owner-img').src = owner.image || "";
