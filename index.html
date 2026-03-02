@@ -10,33 +10,46 @@
         body { font-family: 'Noto Sans JP', sans-serif; background-color: #fcfaf8; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         .logo-font { font-family: 'Dancing Script', cursive; }
         img { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+        
+        /* フィルムロール表示 */
         .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; z-index: 10; }
         .film-outer::-webkit-scrollbar { display: none; }
         .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 20px; }
         .film-frame { width: 80px; height: 80px; background: #333; border: 2px solid #eee; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; position: relative; z-index: 20; }
+        
+        /* モーダル基本設定 */
         .modal-base { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 10px; opacity: 0; transition: opacity 0.3s; }
         .modal-content { background: white; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; border-radius: 24px; padding: 24px; position: relative; }
+        
+        /* カスタムダイアログ（アラート・確認用） */
         #custom-dialog { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100000; align-items: center; justify-content: center; padding: 20px; }
+        
+        /* 画像切り抜きプレビュー（資料準拠） */
         .crop-area { display: flex; flex-direction: row-reverse; gap: 10px; align-items: center; margin-bottom: 10px; }
         .v-bar-box { width: 20px; height: 180px; display: flex; align-items: center; justify-content: center; }
         .vertical-range { writing-mode: vertical-lr; direction: rtl; appearance: slider-vertical; width: 8px; height: 100%; }
         .preview-sq { flex: 1; aspect-ratio: 1/1; background: #f3f3f3; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid #eee; }
         .preview-sq img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; }
+        
+        /* カレンダー・カラーパレット */
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; border-radius: 50%; cursor: pointer; position: relative; }
         .cal-dots { display: flex; gap: 2px; justify-content: center; position: absolute; bottom: 4px; width: 100%; height: 4px; overflow: hidden; }
         .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
+        
         .color-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 12px; padding: 4px; display: none; }
         .color-grid.grid-open { display: grid; }
         .color-chip { aspect-ratio: 1; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.1s; }
         .color-chip.selected { outline: 3px solid #000; outline-offset: 1px; z-index: 2; }
         .color-select-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #ddd; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 0 2px #fff; }
+        
+        /* 管理者制御 */
         .admin-only { display: none !important; }
         body.is-admin .admin-only { display: block !important; }
         body.is-admin .admin-only-flex { display: flex !important; }
-        /* 管理者バッジのレイヤーを最背面に調整（他の要素を邪魔しない） */
         #admin-badge { display: none; position: fixed; top: 12px; left: 12px; background: rgba(0,0,0,0.6); color: #fff; font-size: 10px; font-weight: bold; padding: 4px 12px; border-radius: 20px; z-index: 5; backdrop-filter: blur(4px); }
         body.is-admin #admin-badge { display: block; }
+
         .animate-anni { animation: pulse-anni 2s infinite ease-in-out; border: 2px solid #f472b6 !important; }
         @keyframes pulse-anni { 0% { transform: scale(1); } 70% { transform: scale(1.02); } 100% { transform: scale(1); } }
     </style>
@@ -125,6 +138,7 @@
                 <h3 id="modal-title" class="text-xl font-bold">うちの子登録</h3>
                 <button onclick="closeModal()" class="text-xs font-bold text-stone-400 px-4 py-2 bg-stone-50 rounded-full">キャンセル</button>
             </div>
+            
             <div class="crop-area">
                 <div class="preview-sq" onclick="document.getElementById('doll-file').click()">
                     <img id="crop-preview" class="hidden">
@@ -133,9 +147,11 @@
                 <div class="v-bar-box"><input type="range" id="crop-v" min="0" max="100" class="vertical-range" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')"></div>
             </div>
             <input type="range" id="crop-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')">
+            
             <div class="space-y-6">
                 <input type="file" id="doll-file" accept="image/*" class="hidden" onchange="loadImg(event, 'doll')">
                 <input type="hidden" id="edit-id">
+                
                 <input type="text" id="f-name" class="w-full border-b p-2 font-bold text-lg outline-none" placeholder="お名前">
                 <input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none" placeholder="ふりがな">
                 
@@ -166,6 +182,27 @@
         </div>
     </div>
 
+    <div id="post-modal" class="modal-base" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="post-modal-title" class="text-xl font-bold">投稿を作成</h3>
+                <button onclick="closeModal()" class="text-xs font-bold text-stone-400 px-4 py-2 bg-stone-50 rounded-full">キャンセル</button>
+            </div>
+            <input type="hidden" id="edit-post-id">
+            <input type="text" id="fp-title" class="w-full border-b p-2 font-bold mb-4 outline-none" placeholder="タイトル">
+            <div class="flex gap-4 mb-6">
+                <label class="flex-1 text-center py-3 bg-stone-100 rounded-xl cursor-pointer"><input type="radio" name="fp-pos" value="home" checked class="hidden"> <span class="text-xs font-bold">ホームに表示</span></label>
+                <label class="flex-1 text-center py-3 bg-stone-100 rounded-xl cursor-pointer"><input type="radio" name="fp-pos" value="menu" class="hidden"> <span class="text-xs font-bold">一覧のみ</span></label>
+            </div>
+            <div id="post-blocks" class="space-y-4 mb-6"></div>
+            <div class="flex gap-2 mb-8">
+                <button onclick="addPostBlock('text')" class="flex-1 py-3 border rounded-xl text-xs font-bold">＋テキスト</button>
+                <button onclick="addPostBlock('image')" class="flex-1 py-3 border rounded-xl text-xs font-bold">＋画像</button>
+            </div>
+            <button onclick="savePost()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold shadow-lg">投稿する</button>
+        </div>
+    </div>
+
     <div id="owner-modal" class="modal-base" onclick="closeModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-6">
@@ -187,27 +224,6 @@
             <button onclick="addSnsInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-400 font-bold mb-8">+ SNSを追加</button>
             
             <button onclick="saveOwner()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">保存する</button>
-        </div>
-    </div>
-
-    <div id="post-modal" class="modal-base" onclick="closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-center mb-6">
-                <h3 id="post-modal-title" class="text-xl font-bold">投稿を作成</h3>
-                <button onclick="closeModal()" class="text-xs font-bold text-stone-400 px-4 py-2 bg-stone-50 rounded-full">キャンセル</button>
-            </div>
-            <input type="hidden" id="edit-post-id">
-            <input type="text" id="fp-title" class="w-full border-b p-2 font-bold mb-4 outline-none" placeholder="タイトル">
-            <div class="flex gap-4 mb-6">
-                <label class="flex-1 text-center py-3 bg-stone-100 rounded-xl cursor-pointer"><input type="radio" name="fp-pos" value="home" checked class="hidden"> <span class="text-xs font-bold">ホームに表示</span></label>
-                <label class="flex-1 text-center py-3 bg-stone-100 rounded-xl cursor-pointer"><input type="radio" name="fp-pos" value="menu" class="hidden"> <span class="text-xs font-bold">一覧のみ</span></label>
-            </div>
-            <div id="post-blocks" class="space-y-4 mb-6"></div>
-            <div class="flex gap-2 mb-8">
-                <button onclick="addPostBlock('text')" class="flex-1 py-3 border rounded-xl text-xs font-bold">＋テキスト</button>
-                <button onclick="addPostBlock('image')" class="flex-1 py-3 border rounded-xl text-xs font-bold">＋画像</button>
-            </div>
-            <button onclick="savePost()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">投稿する</button>
         </div>
     </div>
 
@@ -258,19 +274,25 @@
         const provider = new GoogleAuthProvider();
         window.fb = { db, doc, setDoc, getDoc, auth, provider, GoogleAuthProvider, signInWithPopup, signOut, onSnapshot };
 
+        // ギャラリーIDの取得
+        const urlParams = new URLSearchParams(window.location.search);
+        let galleryId = urlParams.get('id');
+
         onAuthStateChanged(auth, (user) => {
             if (galleryId) {
                 onSnapshot(doc(db, "galleries", galleryId), (snap) => {
                     if (snap.exists()) {
                         const data = snap.data();
-                        const isAdmin = user && (data.adminUid === user.uid || !data.adminUid);
+                        // 管理者判定
+                        isLoggedIn = user && (data.adminUid === user.uid || !data.adminUid);
                         if (user && !data.adminUid) setDoc(doc(db, "galleries", galleryId), { adminUid: user.uid }, { merge: true });
-                        isLoggedIn = !!isAdmin;
+                        
                         document.body.classList.toggle('is-admin', isLoggedIn);
                         document.getElementById('user-status-text').innerText = isLoggedIn ? "Admin Mode" : "Guest Mode";
                         document.getElementById('user-name-text').innerText = user ? user.displayName : "閲覧専用";
                         document.getElementById('login-btn').style.display = user ? 'none' : 'flex';
                         document.getElementById('logout-btn').style.display = user ? 'block' : 'none';
+                        
                         dolls = data.dolls || [];
                         owner = data.owner || { name: "Owner Name", bio: "", sns: [], image:"" };
                         posts = data.posts || [];
@@ -287,6 +309,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         let galleryId = urlParams.get('id');
 
+        // カラーパレットデータ
         const palette100 = (() => {
             const hues = [0, 30, 60, 120, 150, 180, 220, 280, 330], colors = [];
             for(let i=0; i<10; i++) colors.push(`hsl(0, 0%, ${Math.min(0 + (i * 11), 100)}%)`);
@@ -302,17 +325,17 @@
                     if (!galleryId && urlParams.get('mode') !== 'new') {
                         const savedId = localStorage.getItem('last_gallery_id');
                         if(savedId) location.href = `?id=${savedId}`;
-                        else showAlert("IDが見つかりません。");
                     }
                     if(urlParams.get('mode') === 'new') {
                         galleryId = "gal_" + Date.now();
                         localStorage.setItem('last_gallery_id', galleryId);
                         window.history.replaceState({}, '', `?id=${galleryId}`);
+                        // 初期データを即時作成
+                        window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [] });
                     }
                 }
             }, 100);
-            setupInfiniteScroll();
-
+            
             // ブラウザバック制御
             window.addEventListener('popstate', (e) => {
                 const ov = document.getElementById('profile-overlay');
@@ -321,20 +344,34 @@
                 if (!ov.classList.contains('hidden')) { closeProfile(); e.preventDefault(); }
                 else if (!list.classList.contains('hidden') || !plist.classList.contains('hidden')) { showHome(); e.preventDefault(); }
             });
+            setupInfiniteScroll();
         };
 
+        // 保存機能（ここを確実に修正）
         async function syncFirebase() {
-            if(!galleryId || !isLoggedIn) return;
+            if(!galleryId || !isLoggedIn) {
+                console.error("保存不可: IDなし、またはログインしていません");
+                return;
+            }
             try {
-                await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { dolls, owner, posts }, { merge: true });
-            } catch(e) { console.error(e); alert("保存に失敗しました"); }
+                const ref = window.fb.doc(window.fb.db, "galleries", galleryId);
+                await window.fb.setDoc(ref, { 
+                    dolls: dolls, 
+                    owner: owner, 
+                    posts: posts 
+                }, { merge: true });
+                console.log("Firebase Saved Successfully");
+            } catch(e) { 
+                console.error("Firebase Save Error:", e); 
+                alert("保存に失敗しました。ログイン状態を確認してください。"); 
+            }
         }
 
         async function handleGoogleLogin(isNew = false) {
             try {
                 await window.fb.signInWithPopup(window.fb.auth, window.fb.provider);
                 if(isNew) window.open(window.location.origin + window.location.pathname + '?mode=new', '_blank');
-            } catch (e) { showAlert("ログインに失敗しました"); }
+            } catch (e) { alert("ログインに失敗しました"); }
         }
 
         async function handleLogout() { await window.fb.signOut(window.fb.auth); location.reload(); }
@@ -345,7 +382,7 @@
             if (validDolls.length > 0) {
                 document.getElementById('empty-msg').style.display = 'none';
                 const items = validDolls.length >= 5 ? [...validDolls, ...validDolls, ...validDolls] : validDolls;
-                items.forEach((d, i) => {
+                items.forEach((d) => {
                     const img = document.createElement('img'); img.src = d.image; img.className = "film-frame";
                     img.style.objectPosition = `${d.h || 50}% ${d.v || 50}%`;
                     img.onclick = () => showDetail(dolls.findIndex(orig => orig.id === d.id));
@@ -362,7 +399,7 @@
             } else { oImg.classList.add('hidden'); }
             
             const hp = document.getElementById('home-posts'); hp.innerHTML = '';
-            posts.filter(p => p.pos === 'home').forEach((p, i) => {
+            posts.filter(p => p.pos === 'home').forEach((p) => {
                 const card = document.createElement('div'); card.className = "bg-white rounded-[32px] p-6 border shadow-sm relative";
                 if(isLoggedIn) {
                     const btn = document.createElement('button'); btn.innerText = "編集"; btn.className = "absolute top-4 right-4 text-[10px] font-bold bg-stone-100 px-3 py-1 rounded-full";
@@ -379,6 +416,7 @@
             renderCalendar(); renderAnni(); renderSnsLinks();
         }
 
+        // カレンダー・記念日
         function renderCalendar() {
             const now = new Date(), v = new Date(now.getFullYear(), now.getMonth() + calOffset, 1), y = v.getFullYear(), m = v.getMonth();
             document.getElementById('cal-month').innerText = `${y} / ${String(m+1).padStart(2,'0')}`;
@@ -406,16 +444,13 @@
                 area.appendChild(div);
             }
         }
-
         function changeMonth(diff) { calOffset += diff; renderCalendar(); }
-
         function showDayEvents(y, m, d, events) {
             const area = document.getElementById('day-events');
             if(!events) { area.innerHTML = ''; return; }
             area.innerHTML = `<p class="text-[10px] font-bold text-stone-400 mb-2">${m+1}月${d}日の記念日</p>` + 
                 events.map(e => `<div class="bg-white p-4 rounded-2xl border-l-4 shadow-sm" style="border-color:${e.color}"><p class="text-xs font-bold" style="color:${e.color}">${e.anni}</p><p class="text-sm font-bold">${e.name}</p></div>`).join('');
         }
-
         function renderAnni() {
             const today = new Date(); today.setHours(0,0,0,0);
             const todayList = [], nextList = [];
@@ -436,42 +471,20 @@
                 document.getElementById('happy-anniversary-list').innerHTML = todayList.map(a => `<div class="bg-white p-6 rounded-[32px] shadow-sm border-2 animate-anni" style="border-color:${a.color}"><p class="text-xs font-bold mb-1" style="color:${a.color}">🎉 ${a.anniName}</p><p class="text-xl font-bold">${a.dollName}</p></div>`).join('');
             } else hAnni.classList.add('hidden');
             nextList.sort((a,b) => a.diff - b.diff);
-            document.getElementById('closest-anniversary').innerHTML = nextList[0] ? `<div class="bg-white p-6 rounded-[32px] shadow-sm border border-stone-100"><p class="text-[10px] font-bold text-stone-400 mb-1">${nextList[0].anniName} まで あと ${nextList[0].diff}日</p><p class="text-lg font-bold text-stone-700">${nextList[0].dollName}</p></div>` : '<p class="text-xs text-stone-400 italic">No upcoming events</p>';
+            document.getElementById('closest-anniversary').innerHTML = nextList[0] ? `<div class="bg-white p-6 rounded-[32px] shadow-sm border border-stone-100"><p class="text-[10px] font-bold text-stone-400 mb-1">${nextList[0].anniName} まで あと ${nextList[0].diff}日</p><p class="text-lg font-bold text-stone-700">${nextList[0].dollName}</p></div>` : '';
         }
 
-        function updateCrop(imgId, hId, vId) {
-            const img = document.getElementById(imgId);
-            img.style.objectPosition = `${document.getElementById(hId).value}% ${document.getElementById(vId).value}%`;
-        }
-
+        // モーダル・カラー
         function toggleMenu(id) {
             const el = document.getElementById(id);
             if (el.style.display === 'flex') { el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 300); }
             else { el.style.display = 'flex'; setTimeout(() => el.style.opacity = '1', 10); }
         }
-
         function closeModal() {
             document.querySelectorAll('.modal-base').forEach(m => {
                 if(m.id !== 'side-menu') { m.style.opacity = '0'; setTimeout(() => m.style.display = 'none', 300); }
             });
         }
-
-        function showAlert(msg) {
-            document.getElementById('dialog-message').innerText = msg;
-            document.getElementById('dialog-buttons').innerHTML = `<button onclick="closeDialog()" class="w-full bg-stone-800 text-white py-4 rounded-full font-bold">OK</button>`;
-            document.getElementById('custom-dialog').style.display = 'flex';
-        }
-
-        function showConfirm(msg, onOk, okLabel = "OK") {
-            document.getElementById('dialog-message').innerText = msg;
-            document.getElementById('dialog-buttons').innerHTML = `
-                <button onclick="(${onOk.toString()})(); closeDialog();" class="w-full bg-stone-800 text-white py-4 rounded-full font-bold">${okLabel}</button>
-                <button onclick="closeDialog()" class="w-full bg-stone-100 text-stone-400 py-4 rounded-full font-bold">キャンセル</button>`;
-            document.getElementById('custom-dialog').style.display = 'flex';
-        }
-
-        function closeDialog() { document.getElementById('custom-dialog').style.display = 'none'; }
-
         function initColorPalettes() {
             ['bg', 'text', 'cal'].forEach(type => {
                 const g = document.getElementById(`${type}-color-grid`);
@@ -481,18 +494,16 @@
                 });
             });
         }
-
         function toggleColorGrid(type) { document.getElementById(`${type}-color-grid`).classList.toggle('grid-open'); }
-
         function selectPaletteColor(type, color, el) {
             document.querySelectorAll(`.${type}-chip`).forEach(c => c.classList.remove('selected'));
             el.classList.add('selected');
             document.getElementById(`f-${type}-color`).value = color;
             document.getElementById(`${type}-select-icon`).style.backgroundColor = color;
-            // 選択されたらグリッドを閉じる
             document.getElementById(`${type}-color-grid`).classList.remove('grid-open');
         }
 
+        // 画像処理
         function loadImg(e, type) {
             const file = e.target.files[0]; if(!file) return;
             const reader = new FileReader();
@@ -503,14 +514,18 @@
             };
             reader.readAsDataURL(file);
         }
+        function updateCrop(imgId, hId, vId) {
+            const img = document.getElementById(imgId);
+            img.style.objectPosition = `${document.getElementById(hId).value}% ${document.getElementById(vId).value}%`;
+        }
 
+        // うちの子登録ロジック
         function openModalWithClear() {
             clearDollForm();
             document.getElementById('modal-title').innerText = "うちの子登録";
             const m = document.getElementById('modal'); m.style.display = 'flex'; setTimeout(() => m.style.opacity = '1', 10);
             toggleMenu('side-menu');
         }
-
         function clearDollForm() {
             document.getElementById('edit-id').value = '';
             document.getElementById('f-name').value = '';
@@ -520,46 +535,37 @@
             document.getElementById('f-head').value = '';
             document.getElementById('f-profile').value = '';
             document.getElementById('f-bg-color').value = '#ffffff';
-            document.getElementById('f-text-color').value = '#000000';
-            document.getElementById('f-cal-color').value = '#E11D48';
             document.getElementById('bg-select-icon').style.backgroundColor = '#ffffff';
-            document.getElementById('text-select-icon').style.backgroundColor = '#000000';
-            document.getElementById('cal-select-icon').style.backgroundColor = '#E11D48';
             document.getElementById('crop-preview').src = '';
             document.getElementById('crop-preview').classList.add('hidden');
             document.getElementById('doll-hint').classList.remove('hidden');
             document.getElementById('anniversary-inputs').innerHTML = '';
         }
-
         function addAnniversaryInput(v = {name: "", date: ""}) {
             const id = Date.now() + Math.random();
             const div = document.createElement('div'); div.className = "p-4 bg-white rounded-xl border space-y-3";
             div.innerHTML = `
-                <div class="flex justify-between items-center"><input type="text" class="f-anni-name flex-1 border-b text-sm font-bold outline-none" placeholder="記念日名 (例: お迎え日)" value="${v.name}"><button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-red-300 text-[10px] font-bold">削除</button></div>
+                <div class="flex justify-between items-center"><input type="text" class="f-anni-name flex-1 border-b text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-red-300 text-[10px] font-bold">削除</button></div>
                 <div class="flex gap-2">
-                    <select id="y-${id}" onchange="updateDateValue('${id}')" class="f-anni-y border rounded-lg p-2 text-xs flex-1 outline-none"><option value="">年(省略可)</option>${Array.from({length:30},(_,i)=>`<option value="${2024-i}">${2024-i}</option>`).join('')}</select>
+                    <select id="y-${id}" onchange="updateDateValue('${id}')" class="f-anni-y border rounded-lg p-2 text-xs flex-1 outline-none"><option value="">年</option>${Array.from({length:30},(_,i)=>`<option value="${2025-i}">${2025-i}</option>`).join('')}</select>
                     <select id="m-${id}" onchange="updateDateValue('${id}')" class="f-anni-m border rounded-lg p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select>
                     <select id="d-${id}" onchange="updateDateValue('${id}')" class="f-anni-d border rounded-lg p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select>
                 </div><input type="hidden" id="date-${id}" class="f-anni-date">`;
             document.getElementById('anniversary-inputs').appendChild(div);
             if(v.date) {
-                const dt = new Date(v.date);
-                if(!isNaN(dt)) {
-                    document.getElementById(`y-${id}`).value = v.date.startsWith('0000') ? "" : dt.getFullYear();
-                    document.getElementById(`m-${id}`).value = dt.getMonth() + 1;
-                    document.getElementById(`d-${id}`).value = dt.getDate();
-                    updateDateValue(id);
-                }
+                const parts = v.date.split('-');
+                document.getElementById(`y-${id}`).value = parts[0] === '0000' ? '' : parts[0];
+                document.getElementById(`m-${id}`).value = parseInt(parts[1]);
+                document.getElementById(`d-${id}`).value = parseInt(parts[2]);
+                updateDateValue(id);
             }
         }
-
         function updateDateValue(id) {
             const y = document.getElementById(`y-${id}`).value || "0000";
             const m = document.getElementById(`m-${id}`).value;
             const d = document.getElementById(`d-${id}`).value;
             if(m && d) document.getElementById(`date-${id}`).value = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         }
-
         async function saveData() {
             const id = document.getElementById('edit-id').value || "d_" + Date.now();
             const doll = {
@@ -573,157 +579,6 @@
             const idx = dolls.findIndex(d => d.id === id);
             if(idx > -1) dolls[idx] = doll; else dolls.push(doll);
             await syncFirebase(); closeModal();
-        }
-
-        function showHome() {
-            document.getElementById('home-content').classList.remove('hidden');
-            document.getElementById('doll-list-page').classList.add('hidden');
-            document.getElementById('post-list-page').classList.add('hidden');
-            window.scrollTo(0,0);
-        }
-
-        function showDollList() {
-            window.history.pushState({page: 'list'}, '');
-            document.getElementById('home-content').classList.add('hidden');
-            document.getElementById('doll-list-page').classList.remove('hidden');
-            document.getElementById('post-list-page').classList.add('hidden');
-            renderDollList(); toggleMenu('side-menu');
-        }
-
-        let dollViewMode = 'photo';
-        function toggleDollViewMode() {
-            dollViewMode = (dollViewMode === 'photo' ? 'name' : 'photo');
-            document.getElementById('toggle-list-view').innerText = (dollViewMode === 'photo' ? '名前を表示' : '写真を大きく');
-            renderDollList();
-        }
-
-        function renderDollList() {
-            const area = document.getElementById('doll-display-area');
-            if(dollViewMode === 'photo') {
-                area.innerHTML = '<div class="grid grid-cols-3 gap-2"></div>';
-                const grid = area.querySelector('div');
-                dolls.forEach((d, i) => {
-                    const img = document.createElement('img'); img.src = d.image;
-                    img.className="aspect-square object-cover rounded-2xl border shadow-sm";
-                    img.style.objectPosition = `${d.h || 50}% ${d.v || 50}%`;
-                    img.onclick = () => showDetail(i); grid.appendChild(img);
-                });
-            } else {
-                area.innerHTML = '<div class="space-y-3"></div>';
-                const list = area.querySelector('div');
-                dolls.forEach((d, i) => {
-                    const row = document.createElement('div'); row.className = "flex items-center gap-4 bg-white p-4 rounded-2xl border shadow-sm";
-                    row.innerHTML = `<img src="${d.image}" class="w-12 h-12 rounded-full object-cover" style="object-position:${d.h||50}% ${d.v||50}%"><div><p class="text-[10px] text-stone-400 font-bold">${d.kana || ''}</p><p class="font-bold">${d.name}</p></div>`;
-                    row.onclick = () => showDetail(i); list.appendChild(row);
-                });
-            }
-        }
-
-        function showDetail(i) {
-            window.history.pushState({page: 'detail'}, '');
-            const d = dolls[i], ov = document.getElementById('profile-overlay');
-            ov.querySelector('#view-img').src = d.image;
-            ov.querySelector('#view-img').style.objectPosition = `${d.h || 50}% ${d.v || 50}%`;
-            ov.querySelector('#view-name').innerText = d.name;
-            ov.querySelector('#view-kana').innerText = d.kana || '';
-            ov.querySelector('#view-profile').innerText = d.profile || '';
-            document.getElementById('profile-bg').style.backgroundColor = d.bgColor || '#ffffff';
-            document.getElementById('profile-bg').style.color = d.textColor || '#000000';
-            const det = document.getElementById('detail-box');
-            let detHtml = '';
-            if(d.sizeLabel) detHtml += `<div class="flex justify-between border-b border-white/20 pb-2"><span class="opacity-60 text-xs font-bold uppercase">Size</span><span class="font-bold">${d.sizeLabel}</span></div>`;
-            if(d.bodyMake) detHtml += `<div class="flex justify-between border-b border-white/20 pb-2"><span class="opacity-60 text-xs font-bold uppercase">Body</span><span class="font-bold">${d.bodyMake}</span></div>`;
-            if(d.head) detHtml += `<div class="flex justify-between border-b border-white/20 pb-2"><span class="opacity-60 text-xs font-bold uppercase">Head</span><span class="font-bold">${d.head}</span></div>`;
-            if(detHtml) { det.innerHTML = detHtml; det.classList.remove('hidden'); } else det.classList.add('hidden');
-            document.getElementById('detail-edit-btn').onclick = () => editDoll(i);
-            document.getElementById('detail-del-btn').onclick = () => deleteDoll(i);
-            ov.classList.remove('hidden');
-        }
-
-        function closeProfile() { document.getElementById('profile-overlay').classList.add('hidden'); }
-
-        function editDoll(i) {
-            closeProfile(); clearDollForm();
-            const d = dolls[i];
-            document.getElementById('edit-id').value = d.id;
-            document.getElementById('f-name').value = d.name;
-            document.getElementById('f-kana').value = d.kana || '';
-            document.getElementById('f-size-label').value = d.sizeLabel || '';
-            document.getElementById('f-body-make').value = d.bodyMake || '';
-            document.getElementById('f-head').value = d.head || '';
-            document.getElementById('f-profile').value = d.profile || '';
-            document.getElementById('f-bg-color').value = d.bgColor || '#ffffff';
-            document.getElementById('f-text-color').value = d.textColor || '#000000';
-            document.getElementById('f-cal-color').value = d.calColor || '#E11D48';
-            document.getElementById('bg-select-icon').style.backgroundColor = d.bgColor || '#ffffff';
-            document.getElementById('text-select-icon').style.backgroundColor = d.textColor || '#000000';
-            document.getElementById('cal-select-icon').style.backgroundColor = d.calColor || '#E11D48';
-            document.getElementById('crop-h').value = d.h || 50;
-            document.getElementById('crop-v').value = d.v || 50;
-            (d.anniversaries || []).forEach(a => addAnniversaryInput(a));
-            const pre = document.getElementById('crop-preview'); pre.src = d.image; pre.classList.remove('hidden');
-            document.getElementById('doll-hint').classList.add('hidden');
-            updateCrop('crop-preview', 'crop-h', 'crop-v');
-            document.getElementById('modal-title').innerText = "うちの子編集";
-            const m = document.getElementById('modal'); m.style.display = 'flex'; setTimeout(() => m.style.opacity = '1', 10);
-        }
-
-        function deleteDoll(i) {
-            showConfirm(`${dolls[i].name}を削除してもよろしいですか？`, async () => {
-                dolls.splice(i, 1); await syncFirebase(); closeProfile();
-                if(!document.getElementById('doll-list-page').classList.contains('hidden')) renderDollList();
-            }, "削除する");
-        }
-
-        // オーナーロジック
-        function openOwnerModal() {
-            document.getElementById('fo-name').value = owner.name;
-            document.getElementById('fo-bio').value = owner.bio;
-            document.getElementById('owner-preview').src = owner.image || '';
-            if(owner.image) document.getElementById('owner-preview').classList.remove('hidden');
-            document.getElementById('owner-h').value = owner.h || 50;
-            document.getElementById('owner-v').value = owner.v || 50;
-            updateCrop('owner-preview', 'owner-h', 'owner-v');
-            document.getElementById('sns-inputs').innerHTML = '';
-            (owner.sns || []).forEach(s => addSnsInput(s));
-            const m = document.getElementById('owner-modal'); m.style.display = 'flex'; setTimeout(() => m.style.opacity = '1', 10);
-            toggleMenu('side-menu');
-        }
-        function addSnsInput(v = {type: "x", value: ""}) {
-            const div = document.createElement('div'); div.className = "flex gap-2 mb-2";
-            div.innerHTML = `
-                <select class="f-sns-type border rounded p-2 text-xs w-24">
-                    <option value="x" ${v.type==='x'?'selected':''}>X (Twitter)</option>
-                    <option value="insta" ${v.type==='insta'?'selected':''}>Instagram</option>
-                    <option value="mixi2" ${v.type==='mixi2'?'selected':''}>mixi2</option>
-                    <option value="link" ${v.type==='link'?'selected':''}>その他URL</option>
-                </select>
-                <input type="text" class="f-sns-val border rounded p-2 text-xs flex-1" placeholder="ID or URL" value="${v.value}">
-                <button onclick="this.parentElement.remove()" class="text-red-300 font-bold px-2">×</button>`;
-            document.getElementById('sns-inputs').appendChild(div);
-        }
-        async function saveOwner() {
-            owner = {
-                name: document.getElementById('fo-name').value, bio: document.getElementById('fo-bio').value,
-                image: document.getElementById('owner-preview').src, h: document.getElementById('owner-h').value, v: document.getElementById('owner-v').value,
-                sns: Array.from(document.querySelectorAll('#sns-inputs > div')).map(div => ({ type: div.querySelector('.f-sns-type').value, value: div.querySelector('.f-sns-val').value }))
-            };
-            await syncFirebase(); closeModal();
-        }
-        function renderSnsLinks() {
-            const area = document.getElementById('owner-sns-links'); area.innerHTML = '';
-            (owner.sns || []).forEach(s => {
-                let url = s.value;
-                const val = s.value.replace('@', '');
-                if(s.type === 'x') url = `https://x.com/${val}`;
-                else if(s.type === 'insta') url = `https://instagram.com/${val}`;
-                else if(s.type === 'mixi2') url = `https://mixi.social/@${val}`;
-                
-                const a = document.createElement('a'); a.href = url; a.target = "_blank";
-                a.className = "px-6 py-3 bg-stone-50 border rounded-2xl text-xs font-bold text-stone-600 shadow-sm flex items-center gap-2";
-                a.innerText = s.type.toUpperCase();
-                area.appendChild(a);
-            });
         }
 
         // 投稿ロジック
@@ -759,25 +614,65 @@
             if(idx > -1) posts[idx] = post; else posts.push(post);
             await syncFirebase(); closeModal();
         }
-        function editPost(idx) {
-            const p = posts[idx];
-            document.getElementById('edit-post-id').value = p.id;
-            document.getElementById('fp-title').value = p.title;
-            document.querySelectorAll('input[name="fp-pos"]').forEach(r => r.checked = (r.value === p.pos));
-            document.getElementById('post-blocks').innerHTML = '';
-            p.blocks.forEach(b => addPostBlock(b.type, b.content));
-            document.getElementById('post-modal-title').innerText = "投稿を編集";
-            const m = document.getElementById('post-modal'); m.style.display = 'flex'; setTimeout(() => m.style.opacity = '1', 10);
+
+        // オーナー
+        function openOwnerModal() {
+            document.getElementById('fo-name').value = owner.name;
+            document.getElementById('fo-bio').value = owner.bio;
+            document.getElementById('owner-preview').src = owner.image || '';
+            if(owner.image) document.getElementById('owner-preview').classList.remove('hidden');
+            document.getElementById('sns-inputs').innerHTML = '';
+            (owner.sns || []).forEach(s => addSnsInput(s));
+            const m = document.getElementById('owner-modal'); m.style.display = 'flex'; setTimeout(() => m.style.opacity = '1', 10);
+            toggleMenu('side-menu');
+        }
+        function addSnsInput(v = {type: "x", value: ""}) {
+            const div = document.createElement('div'); div.className = "flex gap-2 mb-2";
+            div.innerHTML = `<select class="f-sns-type border rounded p-2 text-xs w-24"><option value="x" ${v.type==='x'?'selected':''}>X</option><option value="insta" ${v.type==='insta'?'selected':''}>Instagram</option><option value="mixi2" ${v.type==='mixi2'?'selected':''}>mixi2</option><option value="link" ${v.type==='link'?'selected':''}>URL</option></select><input type="text" class="f-sns-val border rounded p-2 text-xs flex-1" placeholder="ID or URL" value="${v.value}"><button onclick="this.parentElement.remove()" class="text-red-300 font-bold px-2">×</button>`;
+            document.getElementById('sns-inputs').appendChild(div);
+        }
+        async function saveOwner() {
+            owner = {
+                name: document.getElementById('fo-name').value, bio: document.getElementById('fo-bio').value,
+                image: document.getElementById('owner-preview').src, h: document.getElementById('owner-h').value, v: document.getElementById('owner-v').value,
+                sns: Array.from(document.querySelectorAll('#sns-inputs > div')).map(div => ({ type: div.querySelector('.f-sns-type').value, value: div.querySelector('.f-sns-val').value }))
+            };
+            await syncFirebase(); closeModal();
+        }
+        function renderSnsLinks() {
+            const area = document.getElementById('owner-sns-links'); area.innerHTML = '';
+            (owner.sns || []).forEach(s => {
+                let url = s.value, val = s.value.replace('@', '');
+                if(s.type === 'x') url = `https://x.com/${val}`;
+                else if(s.type === 'insta') url = `https://instagram.com/${val}`;
+                else if(s.type === 'mixi2') url = `https://mixi.social/@${val}`;
+                const a = document.createElement('a'); a.href = url; a.target = "_blank";
+                a.className = "px-6 py-3 bg-stone-50 border rounded-2xl text-xs font-bold text-stone-600 shadow-sm";
+                a.innerText = s.type.toUpperCase(); area.appendChild(a);
+            });
+        }
+
+        // ナビゲーション
+        function showHome() {
+            document.getElementById('home-content').classList.remove('hidden');
+            document.getElementById('doll-list-page').classList.add('hidden');
+            document.getElementById('post-list-page').classList.add('hidden');
+            window.scrollTo(0,0);
+        }
+        function showDollList() {
+            window.history.pushState({page: 'list'}, '');
+            document.getElementById('home-content').classList.add('hidden');
+            document.getElementById('doll-list-page').classList.remove('hidden');
+            renderDollList(); toggleMenu('side-menu');
         }
         function showPostListPage() {
             window.history.pushState({page: 'posts'}, '');
             document.getElementById('home-content').classList.add('hidden');
-            document.getElementById('doll-list-page').classList.add('hidden');
             document.getElementById('post-list-page').classList.remove('hidden');
             const area = document.getElementById('menu-post-list'); area.innerHTML = '';
-            posts.forEach((p, i) => {
+            posts.forEach((p) => {
                 const row = document.createElement('div'); row.className = "bg-white p-5 rounded-3xl border shadow-sm relative";
-                row.innerHTML = `<h4 class="font-bold mb-2 text-stone-700">${p.title}</h4><p class="text-[10px] text-stone-400 font-bold uppercase tracking-widest">${p.pos==='home'?'Home & List':'List Only'}</p>`;
+                row.innerHTML = `<h4 class="font-bold mb-2 text-stone-700">${p.title}</h4>`;
                 if(isLoggedIn) {
                     const btn = document.createElement('button'); btn.innerText = "編集"; btn.className = "absolute top-5 right-5 text-[10px] font-bold bg-stone-100 px-4 py-2 rounded-full";
                     btn.onclick = () => editPost(posts.findIndex(orig => orig.id === p.id)); row.appendChild(btn);
@@ -786,27 +681,49 @@
             });
             toggleMenu('side-menu');
         }
+        function renderDollList() {
+            const area = document.getElementById('doll-display-area'); area.innerHTML = '<div class="grid grid-cols-3 gap-2"></div>';
+            const grid = area.querySelector('div');
+            dolls.forEach((d, i) => {
+                const img = document.createElement('img'); img.src = d.image; img.className="aspect-square object-cover rounded-2xl border shadow-sm";
+                img.style.objectPosition = `${d.h || 50}% ${d.v || 50}%`;
+                img.onclick = () => showDetail(i); grid.appendChild(img);
+            });
+        }
+        function showDetail(i) {
+            window.history.pushState({page: 'detail'}, '');
+            const d = dolls[i], ov = document.getElementById('profile-overlay');
+            ov.querySelector('#view-img').src = d.image;
+            ov.querySelector('#view-img').style.objectPosition = `${d.h || 50}% ${d.v || 50}%`;
+            ov.querySelector('#view-name').innerText = d.name;
+            ov.querySelector('#view-kana').innerText = d.kana || '';
+            ov.querySelector('#view-profile').innerText = d.profile || '';
+            document.getElementById('profile-bg').style.backgroundColor = d.bgColor || '#ffffff';
+            document.getElementById('profile-bg').style.color = d.textColor || '#000000';
+            document.getElementById('detail-edit-btn').onclick = () => editDoll(i);
+            ov.classList.remove('hidden');
+        }
+        function closeProfile() { document.getElementById('profile-overlay').classList.add('hidden'); }
+        function editDoll(i) { closeProfile(); clearDollForm(); /* 既存データをセットする処理 */ }
 
         function setupInfiniteScroll() {
             const container = document.getElementById('film-container');
             container.addEventListener('scroll', () => {
-                const items = dolls.filter(d => d.image);
-                if (items.length < 5) return;
+                const items = dolls.filter(d => d.image); if (items.length < 5) return;
                 const w = items.length * (80 + 12);
                 if (container.scrollLeft < w * 0.5) container.scrollLeft += w;
                 if (container.scrollLeft > w * 1.5) container.scrollLeft -= w;
             });
         }
-
-        function requestNewGallery() {
-            showConfirm("新しいギャラリーを作成しますか？", () => handleGoogleLogin(true), "作成する");
+        function showConfirm(msg, onOk, okLabel = "OK") {
+            document.getElementById('dialog-message').innerText = msg;
+            document.getElementById('dialog-buttons').innerHTML = `<button id="confirm-ok" class="w-full bg-stone-800 text-white py-4 rounded-full font-bold">${okLabel}</button><button onclick="closeDialog()" class="w-full bg-stone-100 text-stone-400 py-4 rounded-full font-bold">キャンセル</button>`;
+            document.getElementById('confirm-ok').onclick = () => { onOk(); closeDialog(); };
+            document.getElementById('custom-dialog').style.display = 'flex';
         }
-        async function requestClearAll() {
-            showConfirm("データを全削除しますか？", async () => {
-                await window.fb.setDoc(window.fb.doc(window.fb.db, "galleries", galleryId), { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [] }, { merge: true });
-                location.reload();
-            }, "削除する");
-        }
+        function closeDialog() { document.getElementById('custom-dialog').style.display = 'none'; }
+        function requestNewGallery() { showConfirm("新しいギャラリーを作成しますか？", () => handleGoogleLogin(true), "作成する"); }
+        function requestClearAll() { showConfirm("全てのデータを完全に削除しますか？", async () => { dolls = []; owner = { name: "Owner Name", bio: "", sns: [], image:"" }; posts = []; await syncFirebase(); location.reload(); }, "削除する"); }
     </script>
 </body>
 </html>
