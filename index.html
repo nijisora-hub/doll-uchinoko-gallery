@@ -465,16 +465,32 @@
                 const ds = [{ type: 'birth', n: "誕生日", d: d.birthday }, { type: 'welcome', n: "お迎え日", d: d.welcomeDay }, ...(d.anniversaries || []).map(a => ({ type: 'custom', n: a.name, d: a.date }))];
                 ds.forEach(v => {
                     if(v.d) {
-                        const originDate = new Date(v.d), isToday = (originDate.getMonth() === now.getMonth() && originDate.getDate() === now.getDate()), diffYears = now.getFullYear() - originDate.getFullYear();
+                        const originDate = new Date(v.d), isDayMonthMatch = (originDate.getMonth() === now.getMonth() && originDate.getDate() === now.getDate());
+                        const totalDays = Math.floor((todayZero - new Date(originDate.getFullYear(), originDate.getMonth(), originDate.getDate())) / (1000 * 60 * 60 * 24));
+                        const diffYears = now.getFullYear() - originDate.getFullYear();
+                        
                         let next = new Date(now.getFullYear(), originDate.getMonth(), originDate.getDate());
                         if(next < todayZero) next.setFullYear(now.getFullYear() + 1);
                         const daysToNext = Math.ceil((next - todayZero) / (1000 * 60 * 60 * 24));
-                        if (isToday && diffYears >= 0) {
-                            if (v.type === 'birth') happyEvents.push({ text: `${d.name} の誕生日 ${diffYears}歳`, order: idx });
-                            else if (v.type === 'welcome') happyEvents.push({ text: diffYears === 0 ? `${d.name} と出会った日！` : `${d.name} と出会って ${diffYears}年`, order: idx });
-                            else happyEvents.push({ text: diffYears === 0 ? `${d.name} の ${v.n}` : `${d.name} の ${v.n} ${diffYears}年`, order: idx });
+
+                        let message = "";
+                        if (totalDays >= 0) {
+                            if (isDayMonthMatch) {
+                                // 記念日当日（年数祝い）
+                                if (totalDays === 0) {
+                                    message = (v.type === 'welcome') ? `${d.name} と出会った！` : `${d.name} の ${v.n}`;
+                                } else {
+                                    message = (v.type === 'birth') ? `${d.name} の誕生日 ${diffYears}歳` : 
+                                              (v.type === 'welcome') ? `${d.name} と出会って ${diffYears}年` : `${d.name} の ${v.n} ${diffYears}年`;
+                                }
+                            } else if (totalDays > 0 && totalDays % 100 === 0) {
+                                // キリ番（100日ごと）
+                                message = (v.type === 'welcome') ? `${d.name} と出会って ${totalDays}日` : `${d.name} の ${v.n} ${totalDays}日`;
+                            }
                         }
-                        list.push({ doll: d.name, title: v.n, color: d.calColor || '#E11D48', diff: daysToNext, isToday: isToday, order: idx });
+
+                        if (message) happyEvents.push({ text: message, order: idx });
+                        list.push({ doll: d.name, title: v.n, color: d.calColor || '#E11D48', diff: daysToNext, isToday: isDayMonthMatch, order: idx });
                     }
                 });
             });
