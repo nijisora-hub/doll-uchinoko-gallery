@@ -286,9 +286,9 @@
         (async () => {
             showLoading(true);
 
-            // ログイン状態の変化を監視（リダイレクト戻り対策）
+            // 1. 認証状態の変化をリアルタイム監視 (重要)
             supabase.auth.onAuthStateChange(async (event, session) => {
-                if (event === 'SIGNED_IN' && session) {
+                if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session) {
                     const pendingId = localStorage.getItem('pending_gallery_id');
                     if (pendingId) {
                         const { data: ex } = await supabase.from('galleries').select('id').eq('id', pendingId).maybeSingle();
@@ -300,15 +300,22 @@
                             });
                         }
                         localStorage.removeItem('pending_gallery_id');
-                        window.location.href = GITHUB_URL + "?id=" + pendingId;
+                        // トークン付きのURLを捨てて、ID付きのクリーンなURLへ強制遷移
+                        window.location.replace(GITHUB_URL + "?id=" + pendingId);
                         return;
                     }
                 }
             });
 
+            // 2. 現在のセッション確認
             const { data: { session } } = await supabase.auth.getSession();
 
             if (!galleryId || urlParams.get('mode') === 'new') { 
+                // セッションがある場合、もしpending_idがあれば上記監視で飛ばされるのでここでは何もしない
+                // セッションが確定していてpendingもなければ作成モーダル
+                if (session && !localStorage.getItem('pending_gallery_id')) {
+                   // 自分の管理ギャラリーを自動で探す等の拡張も可能
+                }
                 showLoading(false);
                 openCreationModal(); 
             } else { 
@@ -343,7 +350,7 @@
             document.getElementById('logout-btn').classList.toggle('hidden', !isAdmin);
         }
 
-        // 描画
+        // 描画関連
         function renderAll() {
             const film = document.getElementById('top-film-roll'); film.innerHTML = "";
             dolls.forEach((d, i) => { 
