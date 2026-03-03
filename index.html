@@ -416,10 +416,12 @@
             const id = document.getElementById('edit-id').value, h = document.getElementById('crop-h').value, v = document.getElementById('crop-v').value;
             let imgData = (id !== "" && dolls[id]) ? dolls[id].image : "";
             if(currentRawImg.doll) {
-                const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'); cvs.width = cvs.height = 800;
-                const s = Math.max(800/currentRawImg.doll.width, 800/currentRawImg.doll.height);
-                ctx.drawImage(currentRawImg.doll, (800-currentRawImg.doll.width*s)*(h/100), (800-currentRawImg.doll.height*s)*(v/100), currentRawImg.doll.width*s, currentRawImg.doll.height*s);
-                imgData = cvs.toDataURL('image/webp', 0.7);
+                const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d');
+                cvs.width = cvs.height = 1000;
+                const s = Math.max(1000/currentRawImg.doll.width, 1000/currentRawImg.doll.height);
+                ctx.fillStyle = "#fff"; ctx.fillRect(0,0,1000,1000);
+                ctx.drawImage(currentRawImg.doll, (1000-currentRawImg.doll.width*s)*(h/100), (1000-currentRawImg.doll.height*s)*(v/100), currentRawImg.doll.width*s, currentRawImg.doll.height*s);
+                imgData = cvs.toDataURL('image/webp', 0.8);
             }
             const data = { name: document.getElementById('f-name').value, kana: document.getElementById('f-kana').value, image: imgData, bodySize: document.getElementById('f-size-label').value, bodyMake: document.getElementById('f-body-make').value, head: document.getElementById('f-head').value, birthday: getDateValue('f-bday', 'f-bday-m', 'f-bday-d'), welcomeDay: getDateValue('f-welcome', 'f-welcome-m', 'f-welcome-d'), anniversaries: Array.from(document.querySelectorAll('#anniversary-inputs > div')).map(row => ({ name: row.querySelector('.f-anni-name').value, date: getDateValue(row.querySelector('.f-anni-date').id, row.querySelector('.f-anni-m').id, row.querySelector('.f-anni-d').id) })).filter(a => a.name), bgColor: document.getElementById('f-bg-color').value, textColor: document.getElementById('f-text-color').value, calColor: document.getElementById('f-cal-color').value, profile: document.getElementById('f-profile').value };
             if(id === "") dolls.push(data); else dolls[id] = data;
@@ -429,10 +431,12 @@
         async function saveOwner() {
             let img = owner.image; const h = document.getElementById('o-crop-h').value, v = document.getElementById('o-crop-v').value;
             if(currentRawImg.owner) {
-                const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'); cvs.width = cvs.height = 400;
-                const s = Math.max(400/currentRawImg.owner.width, 400/currentRawImg.owner.height);
-                ctx.drawImage(currentRawImg.owner, (400-currentRawImg.owner.width*s)*(h/100), (400-currentRawImg.owner.height*s)*(v/100), currentRawImg.owner.width*s, currentRawImg.owner.height*s);
-                img = cvs.toDataURL('image/webp', 0.7);
+                const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d');
+                cvs.width = cvs.height = 500;
+                const s = Math.max(500/currentRawImg.owner.width, 500/currentRawImg.owner.height);
+                ctx.fillStyle = "#fff"; ctx.fillRect(0,0,500,500);
+                ctx.drawImage(currentRawImg.owner, (500-currentRawImg.owner.width*s)*(h/100), (500-currentRawImg.owner.height*s)*(v/100), currentRawImg.owner.width*s, currentRawImg.owner.height*s);
+                img = cvs.toDataURL('image/webp', 0.8);
             }
             owner = { name: document.getElementById('o-name').value, bio: document.getElementById('o-bio').value, image: img, sns: Array.from(document.querySelectorAll('.sns-input-row')).map(row => ({ type: row.querySelector('.sns-type').value, val: row.querySelector('.sns-val').value })).filter(s => s.val) };
             await syncFirebase(); location.reload();
@@ -569,7 +573,29 @@
         function editPost(idx) { const p = posts[idx]; document.getElementById('edit-post-id').value = idx; document.getElementById('post-modal-title').innerText = "投稿編集"; document.getElementById('p-title').value = p.title; document.getElementById('post-blocks-container').innerHTML = ''; p.blocks.forEach(b => addPostBlock(b)); document.querySelector(`input[name="p-pos"][value="${p.pos}"]`).checked = true; document.getElementById('post-modal').style.display = 'flex'; }
         function openPostModal() { document.getElementById('edit-post-id').value = ""; document.getElementById('post-modal-title').innerText = "投稿作成"; document.getElementById('p-title').value = ""; document.getElementById('post-blocks-container').innerHTML = ''; addPostBlock(); document.querySelector(`input[name="p-pos"][value="home"]`).checked = true; document.getElementById('post-modal').style.display='flex'; toggleMenu('side-menu'); }
         function addPostBlock(data = {img: '', text: ''}) { const id = Date.now() + Math.random(), div = document.createElement('div'); div.className = "post-block p-4 border rounded-xl mb-4 bg-stone-50"; div.innerHTML = `<div class="preview-sq mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'}"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''}">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><textarea class="w-full text-sm p-3 border rounded-xl min-h-[60px] mt-2 outline-none" placeholder="文章を入力..." oninput="autoResize(this)">${data.text || ''}</textarea><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`; document.getElementById('post-blocks-container').appendChild(div); if(data.text) setTimeout(()=>autoResize(div.querySelector('textarea')),10); }
-        async function loadBlockImg(e, id) { const f = e.target.files[0]; if(!f) return; const rd = new FileReader(); rd.onload = (re) => { const img = new Image(); img.onload = () => { const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'), s = Math.min(1200/img.width, 1200/img.height, 1); cvs.width = img.width*s; cvs.height = img.height*s; ctx.drawImage(img, 0, 0, cvs.width, cvs.height); const t = document.getElementById('p-img-'+id); t.src = cvs.toDataURL('image/webp', 0.6); t.classList.remove('hidden'); document.getElementById('p-hint-'+id).classList.add('hidden'); }; img.src = re.target.result; }; rd.readAsDataURL(f); }
+        async function loadBlockImg(e, id) { 
+            const f = e.target.files[0]; if(!f) return; 
+            const rd = new FileReader(); 
+            rd.onload = (re) => { 
+                const img = new Image(); 
+                img.onload = () => { 
+                    const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'), 
+                    maxWidth = 1200, maxHeight = 1200;
+                    let width = img.width, height = img.height;
+                    if (width > height) { if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } } 
+                    else { if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; } }
+                    cvs.width = width; cvs.height = height; 
+                    ctx.fillStyle = "#fff"; ctx.fillRect(0,0,width,height);
+                    ctx.drawImage(img, 0, 0, width, height); 
+                    const t = document.getElementById('p-img-'+id); 
+                    t.src = cvs.toDataURL('image/webp', 0.8); 
+                    t.classList.remove('hidden'); 
+                    document.getElementById('p-hint-'+id).classList.add('hidden'); 
+                }; 
+                img.src = re.target.result; 
+            }; 
+            rd.readAsDataURL(f); 
+        }
         function viewPost(idx) { const p = posts[idx]; document.getElementById('art-title').innerText = p.title; const container = document.getElementById('art-content'); container.innerHTML = ''; p.blocks.forEach(b => { if(b.img) { const img = document.createElement('img'); img.src = b.img; img.className = "w-full rounded-2xl mb-4"; container.appendChild(img); } if(b.text) { const txt = document.createElement('p'); txt.className = "text-stone-700 whitespace-pre-wrap leading-relaxed mb-6"; txt.innerText = b.text; container.appendChild(txt); } }); document.getElementById('art-edit-btn').onclick = () => { closeArticle(); editPost(idx); }; document.getElementById('art-del-btn').onclick = () => showConfirm("この投稿を削除しますか？", async () => { posts.splice(idx, 1); await syncFirebase(); location.reload(); }); document.getElementById('article-page').style.display = 'block'; }
         function closeArticle() { document.getElementById('article-page').style.display = 'none'; }
         function setupInfiniteScroll() { const container = document.getElementById('film-container'); container.addEventListener('scroll', () => { const items = dolls.filter(d => d.image); if (items.length < 5) return; const w = items.length * (80 + 12); if (container.scrollLeft < w * 0.5) container.scrollLeft += w; if (container.scrollLeft > w * 1.5) container.scrollLeft -= w; }); }
