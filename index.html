@@ -266,7 +266,7 @@
             return colors.slice(0, 100);
         })();
 
-        // ログイン処理: IDを保持してから飛ばす
+        // 認証
         window.handleLogin = async function() {
             const inputId = document.getElementById('auth-gallery-id').value || galleryId;
             if(inputId) localStorage.setItem('pending_gallery_id', inputId);
@@ -282,28 +282,31 @@
             location.href = GITHUB_URL; 
         };
 
-        // メイン初期化
+        // 初期化ロジック
         (async () => {
             showLoading(true);
-            const { data: { session } } = await supabase.auth.getSession();
-            const p = localStorage.getItem('pending_gallery_id');
 
-            // ログインリダイレクト直後の処理
-            if(p && session) {
-                // ギャラリーが存在するか確認
-                const { data: ex } = await supabase.from('galleries').select('id').eq('id', p).maybeSingle();
-                if(!ex) {
-                    // 新規作成
-                    await supabase.from('galleries').insert({ 
-                        id: p, 
-                        admin_email: session.user.email, 
-                        data: { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image: "" }, posts: [] } 
-                    });
+            // ログイン状態の変化を監視（リダイレクト戻り対策）
+            supabase.auth.onAuthStateChange(async (event, session) => {
+                if (event === 'SIGNED_IN' && session) {
+                    const pendingId = localStorage.getItem('pending_gallery_id');
+                    if (pendingId) {
+                        const { data: ex } = await supabase.from('galleries').select('id').eq('id', pendingId).maybeSingle();
+                        if (!ex) {
+                            await supabase.from('galleries').insert({ 
+                                id: pendingId, 
+                                admin_email: session.user.email, 
+                                data: { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image: "" }, posts: [] } 
+                            });
+                        }
+                        localStorage.removeItem('pending_gallery_id');
+                        window.location.href = GITHUB_URL + "?id=" + pendingId;
+                        return;
+                    }
                 }
-                localStorage.removeItem('pending_gallery_id');
-                window.location.href = GITHUB_URL + "?id=" + p; // 確実にID付きでリダイレクト
-                return;
-            }
+            });
+
+            const { data: { session } } = await supabase.auth.getSession();
 
             if (!galleryId || urlParams.get('mode') === 'new') { 
                 showLoading(false);
@@ -340,7 +343,7 @@
             document.getElementById('logout-btn').classList.toggle('hidden', !isAdmin);
         }
 
-        // 表示系
+        // 描画
         function renderAll() {
             const film = document.getElementById('top-film-roll'); film.innerHTML = "";
             dolls.forEach((d, i) => { 
@@ -363,16 +366,28 @@
             renderAnniversaries(); renderCalendar(); renderHomePosts();
         }
 
-        // --- 以降、登録・編集ロジック等は元コードと同様 ---
-        window.saveData = async () => { /* ...省略(画像処理含む) ... */ 
-            const id = document.getElementById('edit-id').value; let imgData = (id !== "" && dolls[id]) ? dolls[id].image : "";
+        window.saveData = async () => {
+            const id = document.getElementById('edit-id').value; 
+            let imgData = (id !== "" && dolls[id]) ? dolls[id].image : "";
             if(currentRawImg.doll) {
                 const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'); cvs.width = cvs.height = 1000;
                 const s = Math.max(1000/currentRawImg.doll.width, 1000/currentRawImg.doll.height);
                 ctx.drawImage(currentRawImg.doll, (1000-currentRawImg.doll.width*s)*(document.getElementById('crop-h').value/100), (1000-currentRawImg.doll.height*s)*(document.getElementById('crop-v').value/100), currentRawImg.doll.width*s, currentRawImg.doll.height*s);
                 imgData = await uploadImage(await new Promise(r => cvs.toBlob(r, 'image/webp', 0.8)), "doll");
             }
-            const d = { name: document.getElementById('f-name').value, kana: document.getElementById('f-kana').value, image: imgData, bodySize: document.getElementById('f-size-label').value, bodyMake: document.getElementById('f-body-make').value, head: document.getElementById('f-head').value, anniversaries: Array.from(document.querySelectorAll('#anniversary-inputs > div')).map(row => ({ name: row.querySelector('.f-anni-name').value, date: row.querySelector('.f-anni-date').value })).filter(a => a.name), bgColor: document.getElementById('f-bg-color').value, textColor: document.getElementById('f-text-color').value, calColor: document.getElementById('f-cal-color').value, profile: document.getElementById('f-profile').value };
+            const d = { 
+                name: document.getElementById('f-name').value, 
+                kana: document.getElementById('f-kana').value, 
+                image: imgData, 
+                bodySize: document.getElementById('f-size-label').value, 
+                bodyMake: document.getElementById('f-body-make').value, 
+                head: document.getElementById('f-head').value, 
+                anniversaries: Array.from(document.querySelectorAll('#anniversary-inputs > div')).map(row => ({ name: row.querySelector('.f-anni-name').value, date: row.querySelector('.f-anni-date').value })).filter(a => a.name), 
+                bgColor: document.getElementById('f-bg-color').value, 
+                textColor: document.getElementById('f-text-color').value, 
+                calColor: document.getElementById('f-cal-color').value, 
+                profile: document.getElementById('f-profile').value 
+            };
             if(id === "") dolls.push(d); else dolls[id] = d;
             await syncData(); location.reload();
         };
@@ -401,11 +416,23 @@
             ['bg','text','cal'].forEach(type => {
                 const grid = document.getElementById(`${type}-color-grid`);
                 if(!grid) return;
-                palette100.forEach(c => { const chip = document.createElement('div'); chip.className = "color-chip"; chip.style.background = c; chip.onclick = () => { document.getElementById(`f-${type}-color`).value = c; document.getElementById(`${type}-select-icon`).style.backgroundColor = c; grid.classList.remove('grid-open'); }; grid.appendChild(chip); });
+                palette100.forEach(c => { 
+                    const chip = document.createElement('div'); chip.className = "color-chip"; chip.style.background = c; 
+                    chip.onclick = () => { 
+                        document.getElementById(`f-${type}-color`).value = c; 
+                        document.getElementById(`${type}-select-icon`).style.backgroundColor = c; 
+                        grid.style.display = 'none'; 
+                    }; 
+                    grid.appendChild(chip); 
+                });
             });
         })();
 
-        // カレンダー、記念日、投稿、ダイアログなどの関数群
+        window.toggleColorGrid = (t) => {
+            const g = document.getElementById(`${t}-color-grid`);
+            g.style.display = (g.style.display === 'grid') ? 'none' : 'grid';
+        };
+
         function renderCalendar() {
             const container = document.getElementById('cal-days'), monthLabel = document.getElementById('cal-month'), eventBox = document.getElementById('day-events');
             if(!container) return; container.innerHTML = ""; eventBox.innerHTML = "";
