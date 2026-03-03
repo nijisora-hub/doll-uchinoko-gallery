@@ -181,7 +181,7 @@
                 <div id="anniversary-inputs" class="space-y-3"></div>
                 <button onclick="addAnniversaryInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-400 font-bold">+ 記念日を追加</button>
                 <textarea id="f-profile" class="w-full border p-4 rounded-2xl min-h-[120px] text-sm outline-none" placeholder="プロフィール" oninput="autoResize(this)"></textarea>
-                <button onclick="saveData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg shadow-xl">保存する</button>
+                <button id="save-doll-btn" onclick="saveData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg shadow-xl">保存する</button>
             </div>
         </div>
     </div>
@@ -262,6 +262,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         let galleryId = urlParams.get('id');
 
+        // Cloudflare WorkerのURL (ご自身のものに置き換えてください)
+        const WORKER_URL = "https://your-worker-name.your-subdomain.workers.dev";
+
         const palette100 = (() => {
             const hues = [0, 30, 60, 120, 150, 180, 220, 280, 330], colors = [];
             for(let i=0; i<10; i++) colors.push(`hsl(0, 0%, ${Math.min(0 + (i * 11), 100)}%)`);
@@ -270,7 +273,6 @@
         })();
 
         window.onload = async () => {
-            // 画像の右クリックとドラッグをグローバルに禁止
             document.addEventListener('contextmenu', (e) => {
                 if (e.target.tagName === 'IMG' || e.target.closest('.preview-sq') || e.target.closest('.film-frame')) {
                     e.preventDefault();
@@ -386,6 +388,26 @@
             dialog.style.display = 'flex';
         }
 
+        // 共通：画像をWorker経由でR2にアップロードする関数
+        async function uploadToR2(base64Data, fileName) {
+            try {
+                const response = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image: base64Data,
+                        fileName: `${galleryId}/${Date.now()}_${fileName}.webp`
+                    })
+                });
+                const result = await response.json();
+                if (result.url) return result.url;
+                throw new Error("Upload failed");
+            } catch (e) {
+                console.error("R2 Upload Error:", e);
+                return null;
+            }
+        }
+
         function renderAll() {
             document.body.classList.toggle('is-admin', isLoggedIn);
             document.getElementById('login-btn').style.display = isLoggedIn ? 'none' : 'block';
@@ -431,20 +453,29 @@
         }
 
         async function saveData() {
+            const btn = document.getElementById('save-doll-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "アップロード中...";
+            btn.disabled = true;
+
             const id = document.getElementById('edit-id').value, h = document.getElementById('crop-h').value, v = document.getElementById('crop-v').value;
             let imgData = (id !== "" && dolls[id]) ? dolls[id].image : "";
+            
             if(currentRawImg.doll) {
                 const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d');
-                // 高画質を維持しつつ1000px程度にリサイズ
                 const maxSide = 1000;
                 cvs.width = cvs.height = maxSide;
                 const s = Math.max(maxSide/currentRawImg.doll.width, maxSide/currentRawImg.doll.height);
                 ctx.imageSmoothingEnabled = true;
                 ctx.imageSmoothingQuality = 'high';
                 ctx.drawImage(currentRawImg.doll, (maxSide-currentRawImg.doll.width*s)*(h/100), (maxSide-currentRawImg.doll.height*s)*(v/100), currentRawImg.doll.width*s, currentRawImg.doll.height*s);
-                // 高画質なwebp形式で軽量化
-                imgData = cvs.toDataURL('image/webp', 0.85);
+                const base64 = cvs.toDataURL('image/webp', 0.85);
+                
+                // R2へアップロードしてURLを取得
+                const uploadedUrl = await uploadToR2(base64, "doll");
+                if (uploadedUrl) imgData = uploadedUrl;
             }
+            
             const data = { name: document.getElementById('f-name').value, kana: document.getElementById('f-kana').value, image: imgData, bodySize: document.getElementById('f-size-label').value, bodyMake: document.getElementById('f-body-make').value, head: document.getElementById('f-head').value, birthday: getDateValue('f-bday', 'f-bday-m', 'f-bday-d'), welcomeDay: getDateValue('f-welcome', 'f-welcome-m', 'f-welcome-d'), anniversaries: Array.from(document.querySelectorAll('#anniversary-inputs > div')).map(row => ({ name: row.querySelector('.f-anni-name').value, date: getDateValue(row.querySelector('.f-anni-date').id, row.querySelector('.f-anni-m').id, row.querySelector('.f-anni-d').id) })).filter(a => a.name), bgColor: document.getElementById('f-bg-color').value, textColor: document.getElementById('f-text-color').value, calColor: document.getElementById('f-cal-color').value, profile: document.getElementById('f-profile').value };
             if(id === "") dolls.push(data); else dolls[id] = data;
             await syncFirebase(); location.reload();
@@ -460,14 +491,35 @@
                 ctx.imageSmoothingEnabled = true;
                 ctx.imageSmoothingQuality = 'high';
                 ctx.drawImage(currentRawImg.owner, (maxSide-currentRawImg.owner.width*s)*(h/100), (maxSide-currentRawImg.owner.height*s)*(v/100), currentRawImg.owner.width*s, currentRawImg.owner.height*s);
-                img = cvs.toDataURL('image/webp', 0.85);
+                const base64 = cvs.toDataURL('image/webp', 0.85);
+                const uploadedUrl = await uploadToR2(base64, "owner");
+                if (uploadedUrl) img = uploadedUrl;
             }
             owner = { name: document.getElementById('o-name').value, bio: document.getElementById('o-bio').value, image: img, sns: Array.from(document.querySelectorAll('.sns-input-row')).map(row => ({ type: row.querySelector('.sns-type').value, val: row.querySelector('.sns-val').value })).filter(s => s.val) };
             await syncFirebase(); location.reload();
         }
 
         async function savePost() {
-            const blocks = []; document.querySelectorAll('.post-block').forEach(el => { const imgEl = el.querySelector('img'), text = el.querySelector('textarea').value; if(!imgEl.classList.contains('hidden') || text) blocks.push({img: imgEl.classList.contains('hidden') ? '' : imgEl.src, text}); });
+            const blocks = [];
+            const blockElements = document.querySelectorAll('.post-block');
+            
+            for (const el of blockElements) {
+                const imgEl = el.querySelector('img'), text = el.querySelector('textarea').value;
+                let finalImgUrl = "";
+                
+                // もし新しく選択された画像（Base64）があればR2へ
+                if (!imgEl.classList.contains('hidden')) {
+                    if (imgEl.src.startsWith('data:')) {
+                        const uploadedUrl = await uploadToR2(imgEl.src, "post");
+                        finalImgUrl = uploadedUrl || "";
+                    } else {
+                        finalImgUrl = imgEl.src;
+                    }
+                }
+                
+                if(finalImgUrl || text) blocks.push({img: finalImgUrl, text});
+            }
+            
             const idx = document.getElementById('edit-post-id').value, data = { title: document.getElementById('p-title').value, blocks, pos: document.querySelector('input[name="p-pos"]:checked').value };
             if(idx === "") posts.push(data); else posts[idx] = data;
             await syncFirebase(); location.reload();
