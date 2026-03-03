@@ -12,10 +12,7 @@
         
         /* 画像保存防止 */
         img, .preview-sq, .film-frame, .film-outer { 
-            -webkit-touch-callout: none; 
-            -webkit-user-select: none; 
-            user-select: none; 
-            -webkit-user-drag: none;
+            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-user-drag: none;
         }
 
         .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
@@ -55,6 +52,8 @@
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 114, 182, 0); }
         }
         .animate-anni { animation: pulse-anni 2s infinite ease-in-out; border: 2px solid #f472b6 !important; }
+
+        .date-input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
     </style>
 </head>
 <body class="text-stone-800 pb-20">
@@ -88,10 +87,10 @@
     <div id="side-menu" class="modal-base" onclick="toggleMenu('side-menu')">
         <div class="bg-white w-72 h-full ml-auto p-6 flex flex-col overflow-y-auto shadow-2xl" onclick="event.stopPropagation()">
             <div class="space-y-1">
-                <button onclick="showHome(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">🏠 ホーム</button>
-                <button onclick="openModalWithClear(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b text-blue-600 w-full admin-only">✨ うちの子を登録する</button>
-                <button onclick="showDollList()" class="text-left py-4 font-bold border-b w-full text-stone-800">📸 うちの子一覧</button>
-                <button onclick="showPostListPage()" class="text-left py-4 font-bold border-b w-full text-stone-800">📝 投稿一覧</button>
+                <button onclick="showHome(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full">🏠 ホーム</button>
+                <button onclick="openModalWithClear(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b text-blue-600 w-full admin-only">✨ うちの子を登録</button>
+                <button onclick="showDollList()" class="text-left py-4 font-bold border-b w-full">📸 うちの子一覧</button>
+                <button onclick="showPostListPage()" class="text-left py-4 font-bold border-b w-full">📝 投稿一覧</button>
             </div>
             <div class="py-6 space-y-2 border-b">
                 <button id="login-btn" onclick="handleLogin()" class="w-full py-4 bg-stone-800 rounded-xl text-sm font-bold text-white shadow-lg">Googleでログイン</button>
@@ -100,11 +99,14 @@
             <div class="py-10 space-y-4 admin-only">
                 <button onclick="openOwnerModal()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm">👤 オーナー設定</button>
                 <button onclick="openPostModal()" class="w-full py-4 bg-stone-800 text-white rounded-2xl text-sm font-bold shadow-lg">📝 投稿を追加</button>
-                <button onclick="requestClearAll()" class="w-full py-4 bg-red-50 text-red-400 rounded-2xl text-[10px] font-bold">⚠️ データを全て消去</button>
+                <button onclick="copyURL()" class="w-full py-3 bg-stone-50 rounded-xl text-xs font-bold text-stone-500">URLをコピー</button>
+                <div class="flex gap-2">
+                    <button onclick="shareSNS('x')" class="flex-1 py-3 bg-stone-800 text-white rounded-xl text-[10px] font-bold">Xでシェア</button>
+                    <button onclick="shareSNS('line')" class="flex-1 py-3 bg-green-500 text-white rounded-xl text-[10px] font-bold">LINE</button>
+                </div>
+                <button onclick="requestClearAll()" class="w-full py-4 bg-red-50 text-red-400 rounded-2xl text-[10px] font-bold">⚠️ データ消去</button>
             </div>
-            <div class="mt-auto pt-10 space-y-4">
-                <button onclick="requestNewGallery()" class="w-full py-3 bg-cyan-50 text-cyan-500 rounded-xl text-xs font-bold border border-cyan-100 shadow-sm">🆕 新規ギャラリー作成</button>
-            </div>
+            <button onclick="location.href='?mode=new'" class="mt-auto py-3 text-cyan-500 text-xs font-bold">🆕 新規ギャラリー作成</button>
         </div>
     </div>
 
@@ -138,88 +140,6 @@
         <div id="home-posts" class="p-6 space-y-8"></div>
     </main>
 
-    <div id="doll-list-page" class="max-w-md mx-auto hidden p-6">
-        <button onclick="showHome()" class="text-sm font-bold bg-stone-100 px-4 py-2 rounded-full mb-6">戻る</button>
-        <div id="doll-display-area"></div>
-    </div>
-
-    <div id="post-list-page" class="max-w-md mx-auto hidden p-6">
-        <button onclick="showHome()" class="text-sm font-bold bg-stone-100 px-4 py-2 rounded-full mb-6">戻る</button>
-        <h2 class="text-xl font-bold mb-6">投稿一覧</h2>
-        <div id="menu-post-list" class="space-y-2"></div>
-    </div>
-
-    <div id="modal" class="modal-base" onclick="closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
-            <h3 id="modal-title" class="text-xl font-bold mb-6">うちの子登録</h3>
-            <div class="crop-area">
-                <div class="preview-sq" onclick="document.getElementById('doll-file').click()"><img id="crop-preview" class="hidden"><span id="doll-hint" class="text-stone-300 text-xs font-bold">画像を選択</span></div>
-                <div class="v-bar-box"><input type="range" id="crop-v" min="0" max="100" class="vertical-range" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')"></div>
-            </div>
-            <input type="range" id="crop-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')">
-            <div class="space-y-6">
-                <input type="file" id="doll-file" accept="image/*" class="hidden" onchange="loadImg(event, 'doll')">
-                <input type="hidden" id="edit-id">
-                <input type="text" id="f-name" class="w-full border-b p-2 font-bold text-lg outline-none" placeholder="お名前">
-                <input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none" placeholder="ふりがな">
-                <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
-                    <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE">
-                    <input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="BODY">
-                    <input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="HEAD">
-                </div>
-                <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
-                    <div class="flex items-center justify-between cursor-pointer" onclick="toggleColorGrid('bg')"><span class="text-xs font-bold">背景色</span><div id="bg-select-icon" class="color-select-btn"></div></div>
-                    <div id="bg-color-grid" class="color-grid"></div><input type="hidden" id="f-bg-color" value="#ffffff">
-                    <div class="flex items-center justify-between cursor-pointer" onclick="toggleColorGrid('text')"><span class="text-xs font-bold">文字色</span><div id="text-select-icon" class="color-select-btn"></div></div>
-                    <div id="text-color-grid" class="color-grid"></div><input type="hidden" id="f-text-color" value="#000000">
-                    <div class="flex items-center justify-between cursor-pointer" onclick="toggleColorGrid('cal')"><span class="text-xs font-bold">カレンダー色</span><div id="cal-select-icon" class="color-select-btn"></div></div>
-                    <div id="cal-color-grid" class="color-grid"></div><input type="hidden" id="f-cal-color" value="#E11D48">
-                </div>
-                <div id="anniversary-inputs" class="space-y-3"></div>
-                <button onclick="addAnniversaryInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs font-bold text-stone-400">+ 記念日を追加</button>
-                <textarea id="f-profile" class="w-full border p-4 rounded-2xl min-h-[120px] text-sm outline-none" placeholder="プロフィール" oninput="autoResize(this)"></textarea>
-                <button onclick="saveData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg">保存する</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="owner-modal" class="modal-base" onclick="closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
-            <h3 class="text-xl font-bold mb-6">オーナー設定</h3>
-            <div class="crop-area">
-                <div class="preview-sq" onclick="document.getElementById('owner-file').click()"><img id="owner-preview" class="hidden"><span id="owner-hint" class="text-stone-300 text-xs font-bold">画像を選択</span></div>
-                <div class="v-bar-box"><input type="range" id="o-crop-v" min="0" max="100" class="vertical-range" oninput="updateCrop('owner-preview', 'o-crop-h', 'o-crop-v')"></div>
-            </div>
-            <input type="range" id="o-crop-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('owner-preview', 'o-crop-h', 'o-crop-v')">
-            <div class="space-y-4">
-                <input type="file" id="owner-file" accept="image/*" class="hidden" onchange="loadImg(event, 'owner')">
-                <input type="text" id="o-name" class="w-full border-b p-2 font-bold" placeholder="オーナー名">
-                <textarea id="o-bio" class="w-full border p-3 rounded-xl min-h-[80px] text-sm" placeholder="自己紹介"></textarea>
-                <div id="sns-inputs-container" class="space-y-3"></div>
-                <button onclick="addSnsInput()" class="w-full py-2 bg-stone-100 rounded text-xs font-bold">+ SNSリンクを追加</button>
-                <button onclick="saveOwner()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">保存</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="post-modal" class="modal-base" onclick="closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
-            <h3 id="post-modal-title" class="text-xl font-bold mb-4">投稿作成</h3>
-            <input type="hidden" id="edit-post-id">
-            <input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-4 outline-none" placeholder="タイトル">
-            <div id="post-blocks-container" class="space-y-4"></div>
-            <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ ブロック追加</button>
-            <div class="flex gap-4 p-4 bg-stone-50 rounded-2xl text-xs mt-6 items-center">
-                <label><input type="radio" name="p-pos" value="home" checked> ホーム</label>
-                <label><input type="radio" name="p-pos" value="menu"> メニュー</label>
-            </div>
-            <button onclick="savePost()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold mt-6">保存</button>
-        </div>
-    </div>
-
     <div id="profile-overlay" class="fixed inset-0 bg-white z-[10000] hidden overflow-y-auto">
         <div id="profile-bg" class="min-h-full p-6 pb-32">
             <button onclick="closeProfile()" class="bg-white shadow px-6 py-2 rounded-full text-xs font-bold mb-6">閉じる</button>
@@ -236,14 +156,84 @@
 
     <div id="article-page" style="display:none; position:fixed; inset:0; background:white; z-index:10001; overflow-y:auto;">
         <div class="max-w-2xl mx-auto p-6 pb-20">
-            <div class="flex justify-between items-center py-6 mb-10 border-b">
-                <button onclick="closeArticle()" class="text-sm font-bold text-stone-400">← 戻る</button>
-                <div class="flex gap-4 admin-only-flex hidden">
-                    <button id="art-edit-btn" class="text-xs font-bold bg-stone-100 px-4 py-2 rounded-full">編集</button>
-                    <button id="art-del-btn" class="text-xs font-bold bg-red-50 text-red-400 px-4 py-2 rounded-full">削除</button>
+            <button onclick="closeArticle()" class="text-sm font-bold text-stone-400 py-6">← 戻る</button>
+            <h2 id="art-title" class="text-3xl font-bold text-center mb-12"></h2>
+            <div id="art-content" class="space-y-6"></div>
+        </div>
+    </div>
+
+    <div id="doll-list-page" class="max-w-md mx-auto hidden p-6">
+        <button onclick="showHome()" class="text-sm font-bold bg-stone-100 px-4 py-2 rounded-full mb-6">戻る</button>
+        <div id="doll-display-area" class="space-y-4"></div>
+    </div>
+
+    <div id="post-list-page" class="max-w-md mx-auto hidden p-6">
+        <button onclick="showHome()" class="text-sm font-bold bg-stone-100 px-4 py-2 rounded-full mb-6">戻る</button>
+        <div id="menu-post-list" class="space-y-4"></div>
+    </div>
+
+    <div id="modal" class="modal-base" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
+            <h3 id="modal-title" class="text-xl font-bold mb-6">うちの子登録</h3>
+            <div class="crop-area">
+                <div class="preview-sq" onclick="document.getElementById('doll-file').click()">
+                    <img id="crop-preview" class="hidden">
+                    <span id="doll-hint" class="text-stone-300 text-xs font-bold">画像を選択</span>
+                </div>
+                <div class="v-bar-box">
+                    <input type="range" id="crop-v" min="0" max="100" class="vertical-range" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')">
                 </div>
             </div>
-            <h2 id="art-title" class="text-3xl font-bold text-center mb-12"></h2><div id="art-content" class="space-y-6"></div>
+            <input type="range" id="crop-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')">
+            <div class="space-y-6">
+                <input type="file" id="doll-file" accept="image/*" class="hidden" onchange="loadImg(event, 'doll')">
+                <input type="hidden" id="edit-id">
+                <input type="text" id="f-name" class="w-full border-b p-2 font-bold text-lg outline-none" placeholder="お名前">
+                <input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none" placeholder="ふりがな">
+                <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
+                    <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE">
+                    <input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="BODY">
+                    <input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="HEAD">
+                </div>
+                <div id="anniversary-inputs" class="space-y-3"></div>
+                <button onclick="addAnniversaryInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-400">+ 記念日追加</button>
+                <div class="p-4 bg-stone-50 rounded-2xl space-y-2">
+                    <div class="flex justify-between items-center" onclick="toggleColorGrid('bg')"><span class="text-xs">背景</span><div id="bg-select-icon" class="color-select-btn"></div></div><div id="bg-color-grid" class="color-grid"></div><input type="hidden" id="f-bg-color" value="#ffffff">
+                    <div class="flex justify-between items-center" onclick="toggleColorGrid('text')"><span class="text-xs">文字</span><div id="text-select-icon" class="color-select-btn"></div></div><div id="text-color-grid" class="color-grid"></div><input type="hidden" id="f-text-color" value="#000000">
+                    <div class="flex justify-between items-center" onclick="toggleColorGrid('cal')"><span class="text-xs">カレンダー</span><div id="cal-select-icon" class="color-select-btn"></div></div><div id="cal-color-grid" class="color-grid"></div><input type="hidden" id="f-cal-color" value="#E11D48">
+                </div>
+                <textarea id="f-profile" class="w-full border p-4 rounded-2xl min-h-[120px] text-sm" placeholder="プロフィール"></textarea>
+                <button onclick="saveData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="owner-modal" class="modal-base" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
+            <h3 class="text-xl font-bold mb-6">オーナー設定</h3>
+            <div class="preview-sq mx-auto mb-4" onclick="document.getElementById('owner-file').click()"><img id="owner-preview" class="hidden"></div>
+            <input type="file" id="owner-file" accept="image/*" class="hidden" onchange="loadImg(event, 'owner')">
+            <input type="text" id="o-name" class="w-full border-b p-2 font-bold mb-4" placeholder="オーナー名">
+            <textarea id="o-bio" class="w-full border p-3 rounded-xl min-h-[80px] text-sm mb-4" placeholder="自己紹介"></textarea>
+            <div id="sns-inputs-container" class="space-y-2 mb-4"></div>
+            <button onclick="addSnsInput()" class="w-full py-2 bg-stone-50 text-xs mb-4">+ SNSリンク</button>
+            <button onclick="saveOwner()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">保存</button>
+        </div>
+    </div>
+
+    <div id="post-modal" class="modal-base" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
+            <input type="hidden" id="edit-post-id"><input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-4" placeholder="タイトル">
+            <div id="post-blocks-container" class="space-y-4"></div>
+            <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ ブロック追加</button>
+            <div class="flex gap-4 p-4 text-xs font-bold">
+                <label><input type="radio" name="p-pos" value="home" checked> Home</label>
+                <label><input type="radio" name="p-pos" value="menu"> Menu</label>
+            </div>
+            <button onclick="savePost()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold mt-4">投稿を保存</button>
         </div>
     </div>
 
@@ -256,76 +246,37 @@
 
         let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"" }, posts = [], calOffset = 0;
         let adminEmail = "", currentRawImg = { doll: null, owner: null };
-        const urlParams = new URLSearchParams(window.location.search);
-        let galleryId = urlParams.get('id');
+        const params = new URLSearchParams(window.location.search);
+        let galleryId = params.get('id');
 
-        const palette100 = (() => {
-            const hues = [0, 30, 60, 120, 150, 180, 220, 280, 330], colors = [];
-            for(let i=0; i<10; i++) colors.push(`hsl(0, 0%, ${Math.min(0 + (i * 11), 100)}%)`);
-            hues.forEach(h => { for(let i=0; i<10; i++) colors.push(`hsl(${h}, 80%, ${Math.min(30 + (i * 7.2), 95)}%)`); });
-            return colors.slice(0, 100);
-        })();
-
-        // 認証
-        window.handleLogin = async function() {
-            const inputId = document.getElementById('auth-gallery-id').value || galleryId;
-            if(inputId) localStorage.setItem('pending_gallery_id', inputId);
-            await supabase.auth.signInWithOAuth({ 
-                provider: 'google', 
-                options: { redirectTo: GITHUB_URL, queryParams: { prompt: 'select_account' } } 
-            });
-        };
-
-        window.handleLogout = async function() { 
-            await supabase.auth.signOut(); 
-            localStorage.clear(); 
-            location.href = GITHUB_URL; 
-        };
-
-        // 初期化ロジック
+        // --- 初期化 ---
         (async () => {
             showLoading(true);
-
-            // 1. 認証状態の変化をリアルタイム監視 (重要)
-            supabase.auth.onAuthStateChange(async (event, session) => {
-                if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session) {
-                    const pendingId = localStorage.getItem('pending_gallery_id');
-                    if (pendingId) {
-                        const { data: ex } = await supabase.from('galleries').select('id').eq('id', pendingId).maybeSingle();
-                        if (!ex) {
-                            await supabase.from('galleries').insert({ 
-                                id: pendingId, 
-                                admin_email: session.user.email, 
-                                data: { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image: "" }, posts: [] } 
-                            });
-                        }
-                        localStorage.removeItem('pending_gallery_id');
-                        // トークン付きのURLを捨てて、ID付きのクリーンなURLへ強制遷移
-                        window.location.replace(GITHUB_URL + "?id=" + pendingId);
-                        return;
-                    }
-                }
-            });
-
-            // 2. 現在のセッション確認
             const { data: { session } } = await supabase.auth.getSession();
-
-            if (!galleryId || urlParams.get('mode') === 'new') { 
-                // セッションがある場合、もしpending_idがあれば上記監視で飛ばされるのでここでは何もしない
-                // セッションが確定していてpendingもなければ作成モーダル
-                if (session && !localStorage.getItem('pending_gallery_id')) {
-                   // 自分の管理ギャラリーを自動で探す等の拡張も可能
+            
+            // ログインリダイレクト後の自動処理
+            const p = localStorage.getItem('pending_gallery_id');
+            if(session && p) {
+                const { data: ex } = await supabase.from('galleries').select('id').eq('id', p).maybeSingle();
+                if(!ex) {
+                    await supabase.from('galleries').insert({ 
+                        id: p, admin_email: session.user.email, 
+                        data: { dolls: [], owner: { name: "New Owner", bio: "", sns: [], image: "" }, posts: [] } 
+                    });
                 }
-                showLoading(false);
-                openCreationModal(); 
-            } else { 
-                await loadData();
-                checkUser(session?.user);
-                renderAll();
-                showLoading(false);
+                localStorage.removeItem('pending_gallery_id');
+                window.location.replace(GITHUB_URL + "?id=" + p);
+                return;
+            }
+
+            if (!galleryId || params.get('mode') === 'new') {
+                showLoading(false); openCreationModal();
+            } else {
+                await loadData(); checkUser(session?.user); renderAll(); showLoading(false);
             }
         })();
 
+        // --- データ同期 ---
         async function loadData() {
             const { data } = await supabase.from('galleries').select('*').eq('id', galleryId).maybeSingle();
             if (data) { 
@@ -335,14 +286,9 @@
                 adminEmail = data.admin_email || ""; 
             }
         }
-
         async function syncData() {
-            if(!galleryId) return; 
-            showLoading(true);
             await supabase.from('galleries').upsert({ id: galleryId, data: { dolls, owner, posts }, admin_email: adminEmail });
-            showLoading(false);
         }
-
         function checkUser(user) {
             const isAdmin = (user && adminEmail && user.email === adminEmail);
             document.body.classList.toggle('is-admin', isAdmin);
@@ -350,314 +296,377 @@
             document.getElementById('logout-btn').classList.toggle('hidden', !isAdmin);
         }
 
-        // 描画関連
+        // --- メイン描画 ---
         function renderAll() {
-            const film = document.getElementById('top-film-roll'); film.innerHTML = "";
-            dolls.forEach((d, i) => { 
-                const img = document.createElement('img'); img.className = "film-frame"; img.src = d.image; 
-                img.onclick = () => showDetail(i); film.appendChild(img); 
+            const roll = document.getElementById('top-film-roll'); roll.innerHTML = "";
+            dolls.forEach((d, i) => {
+                const img = document.createElement('img'); img.className = "film-frame"; img.src = d.image; img.onclick = () => showDetail(i);
+                roll.appendChild(img);
             });
             document.getElementById('empty-msg').style.display = dolls.length ? 'none' : 'flex';
             if(owner.image) {
-                const oImg = document.getElementById('display-owner-img'); oImg.src = owner.image; oImg.classList.remove('hidden');
+                const o = document.getElementById('display-owner-img');
+                o.src = owner.image; o.classList.remove('hidden');
             }
-            document.getElementById('owner-name').innerText = owner.name || "";
-            document.getElementById('owner-bio').innerText = owner.bio || "";
-            const snsBox = document.getElementById('owner-sns-links'); snsBox.innerHTML = "";
+            document.getElementById('owner-name').innerText = owner.name;
+            document.getElementById('owner-bio').innerText = owner.bio;
+            const sns = document.getElementById('owner-sns-links'); sns.innerHTML = "";
             (owner.sns || []).forEach(s => {
-                const b = document.createElement('button'); b.className = "text-xs font-bold bg-stone-100 px-6 py-2 rounded-full";
-                b.innerText = `${s.type}: ${s.val}`;
-                b.onclick = () => window.open(s.val.startsWith('http') ? s.val : `https://${s.type}.com/${s.val}`, '_blank');
-                snsBox.appendChild(b);
+                const b = document.createElement('button');
+                b.className = "text-[10px] bg-stone-100 px-4 py-2 rounded-full font-bold uppercase tracking-wider shadow-sm";
+                b.innerText = s.type; b.onclick = () => window.open(s.val);
+                sns.appendChild(b);
             });
-            renderAnniversaries(); renderCalendar(); renderHomePosts();
+            renderCalendar(); renderAnniversaries(); renderHomePosts();
+        }
+
+        // --- 記念日UIロジック ---
+        window.addAnniversaryInput = (v = {name:"", date:""}) => {
+            const id = Date.now() + Math.random();
+            const div = document.createElement('div');
+            div.className = "p-4 bg-white border rounded-2xl space-y-3";
+            div.innerHTML = `
+                <input type="text" class="f-anni-name w-full border-b text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}">
+                <div class="flex gap-2">
+                    <select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none" onchange="updateDateInput('${id}')">
+                        <option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}
+                    </select>
+                    <select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none" onchange="updateDateInput('${id}')">
+                        <option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}
+                    </select>
+                </div>
+                <input type="date" id="date-${id}" class="date-input f-anni-date" value="${v.date}">
+            `;
+            document.getElementById('anniversary-inputs').appendChild(div);
+            if(v.date) {
+                const [_, m, d] = v.date.split('-').map(Number);
+                document.getElementById(`m-${id}`).value = m;
+                document.getElementById(`d-${id}`).value = d;
+            }
+        };
+        window.updateDateInput = (id) => {
+            const m = document.getElementById(`m-${id}`).value;
+            const d = document.getElementById(`d-${id}`).value;
+            if(m && d) document.getElementById(`date-${id}`).value = `2000-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+        };
+
+        // --- カレンダー描画 ---
+        window.renderCalendar = () => {
+            const days = document.getElementById('cal-days'), mon = document.getElementById('cal-month'), evs = document.getElementById('day-events');
+            days.innerHTML = ""; evs.innerHTML = "";
+            let d = new Date(); d.setMonth(d.getMonth() + calOffset);
+            mon.innerText = `${d.getFullYear()} / ${d.getMonth()+1}`;
+            let first = new Date(d.getFullYear(), d.getMonth(), 1).getDay();
+            let last = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+            for(let i=0; i<first; i++) days.appendChild(document.createElement('div'));
+            for(let i=1; i<=last; i++) {
+                const cell = document.createElement('div'); cell.className = "cal-day"; cell.innerText = i;
+                const dots = document.createElement('div'); dots.className = "cal-dots";
+                dolls.forEach(doll => { (doll.anniversaries || []).forEach(a => {
+                    if(!a.date) return;
+                    const [_, am, ad] = a.date.split('-').map(Number);
+                    if(am === d.getMonth()+1 && ad === i) {
+                        const dot = document.createElement('div'); dot.className = "cal-dot"; dot.style.background = doll.calColor || "#E11D48"; dots.appendChild(dot);
+                        cell.onclick = () => { 
+                            const div = document.createElement('div'); div.className = "p-4 rounded-2xl text-xs font-bold shadow-sm";
+                            div.style.backgroundColor = doll.bgColor; div.style.color = doll.textColor;
+                            div.innerText = `${doll.name}: ${a.name}`; evs.appendChild(div);
+                        };
+                    }
+                })});
+                cell.appendChild(dots); days.appendChild(cell);
+            }
+        };
+
+        // --- 記念日計算 ---
+        window.renderAnniversaries = () => {
+            const list = document.getElementById('happy-anniversary-list'), close = document.getElementById('closest-anniversary');
+            list.innerHTML = ""; let today = new Date(), all = [];
+            today.setHours(0,0,0,0);
+            dolls.forEach((d, di) => { (d.anniversaries || []).forEach(a => {
+                if(!a.date) return;
+                let [_, m, d_] = a.date.split('-').map(Number);
+                let dt = new Date(today.getFullYear(), m-1, d_);
+                if(dt < today) dt.setFullYear(today.getFullYear()+1);
+                const isToday = (today.getMonth()+1 === m && today.getDate() === d_);
+                if(isToday) {
+                    list.innerHTML += `<div class="bg-white p-6 rounded-3xl animate-anni mb-4" onclick="showDetail(${di})"><p class="text-pink-400 text-[10px] font-bold tracking-widest uppercase mb-1">Happy Anniversary!</p><p class="text-xl font-bold">${d.name}: ${a.name}</p></div>`;
+                }
+                all.push({ ...a, doll: d, diff: Math.ceil((dt-today)/(1000*60*60*24)) % 365 });
+            })});
+            document.getElementById('happy-anniversary').classList.toggle('hidden', !list.innerHTML);
+            all.sort((a,b) => a.diff - b.diff);
+            if(all.length) {
+                close.innerHTML = `<div class="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm"><div><p class="text-[10px] text-stone-400 font-bold uppercase tracking-widest mb-1">${all[0].name}</p><p class="font-bold text-lg">${all[0].doll.name}</p></div><div class="text-right"><p class="text-[10px] text-stone-300 font-bold mb-1">あと</p><p class="text-2xl font-bold text-stone-800">${all[0].diff}<span class="text-xs ml-1">日</span></p></div></div>`;
+            }
+        };
+
+        // --- 画像処理・保存 ---
+        async function uploadImage(blob, prefix) {
+            const name = `${galleryId}/${prefix}_${Date.now()}.webp`;
+            await supabase.storage.from('doll-images').upload(name, blob);
+            return supabase.storage.from('doll-images').getPublicUrl(name).data.publicUrl;
         }
 
         window.saveData = async () => {
-            const id = document.getElementById('edit-id').value; 
-            let imgData = (id !== "" && dolls[id]) ? dolls[id].image : "";
+            showLoading(true);
+            const id = document.getElementById('edit-id').value;
+            let img = (id !== "" && dolls[id]) ? dolls[id].image : "";
             if(currentRawImg.doll) {
                 const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'); cvs.width = cvs.height = 1000;
                 const s = Math.max(1000/currentRawImg.doll.width, 1000/currentRawImg.doll.height);
                 ctx.drawImage(currentRawImg.doll, (1000-currentRawImg.doll.width*s)*(document.getElementById('crop-h').value/100), (1000-currentRawImg.doll.height*s)*(document.getElementById('crop-v').value/100), currentRawImg.doll.width*s, currentRawImg.doll.height*s);
-                imgData = await uploadImage(await new Promise(r => cvs.toBlob(r, 'image/webp', 0.8)), "doll");
+                img = await uploadImage(await new Promise(r => cvs.toBlob(r, 'image/webp')), "doll");
             }
-            const d = { 
-                name: document.getElementById('f-name').value, 
-                kana: document.getElementById('f-kana').value, 
-                image: imgData, 
-                bodySize: document.getElementById('f-size-label').value, 
-                bodyMake: document.getElementById('f-body-make').value, 
-                head: document.getElementById('f-head').value, 
-                anniversaries: Array.from(document.querySelectorAll('#anniversary-inputs > div')).map(row => ({ name: row.querySelector('.f-anni-name').value, date: row.querySelector('.f-anni-date').value })).filter(a => a.name), 
-                bgColor: document.getElementById('f-bg-color').value, 
-                textColor: document.getElementById('f-text-color').value, 
-                calColor: document.getElementById('f-cal-color').value, 
-                profile: document.getElementById('f-profile').value 
+            const d = {
+                name: document.getElementById('f-name').value,
+                kana: document.getElementById('f-kana').value,
+                image: img,
+                bodySize: document.getElementById('f-size-label').value,
+                bodyMake: document.getElementById('f-body-make').value,
+                head: document.getElementById('f-head').value,
+                anniversaries: Array.from(document.querySelectorAll('#anniversary-inputs > div')).map(r => ({
+                    name: r.querySelector('.f-anni-name').value,
+                    date: r.querySelector('.f-anni-date').value
+                })).filter(a => a.name),
+                bgColor: document.getElementById('f-bg-color').value,
+                textColor: document.getElementById('f-text-color').value,
+                calColor: document.getElementById('f-cal-color').value,
+                profile: document.getElementById('f-profile').value
             };
             if(id === "") dolls.push(d); else dolls[id] = d;
             await syncData(); location.reload();
         };
 
-        async function uploadImage(blob, prefix) {
-            const fileName = `${galleryId}/${prefix}_${Date.now()}.webp`;
-            await supabase.storage.from('doll-images').upload(fileName, blob);
-            return supabase.storage.from('doll-images').getPublicUrl(fileName).data.publicUrl;
-        }
-
-        window.loadImg = (e, type) => {
-            const f = e.target.files[0]; if(!f) return;
-            const r = new FileReader(); r.onload = (ev) => {
-                const img = new Image(); img.onload = () => {
-                    currentRawImg[type] = img;
-                    const pre = document.getElementById(type === 'doll' ? 'crop-preview' : 'owner-preview');
-                    pre.src = ev.target.result; pre.classList.remove('hidden');
-                    document.getElementById(type === 'doll' ? 'doll-hint' : 'owner-hint').classList.add('hidden');
-                };
-                img.src = ev.target.result;
-            };
-            r.readAsDataURL(f);
-        };
-
-        window.initColorPalettes = (() => {
-            ['bg','text','cal'].forEach(type => {
-                const grid = document.getElementById(`${type}-color-grid`);
-                if(!grid) return;
-                palette100.forEach(c => { 
-                    const chip = document.createElement('div'); chip.className = "color-chip"; chip.style.background = c; 
-                    chip.onclick = () => { 
-                        document.getElementById(`f-${type}-color`).value = c; 
-                        document.getElementById(`${type}-select-icon`).style.backgroundColor = c; 
-                        grid.style.display = 'none'; 
-                    }; 
-                    grid.appendChild(chip); 
-                });
-            });
-        })();
-
-        window.toggleColorGrid = (t) => {
-            const g = document.getElementById(`${t}-color-grid`);
-            g.style.display = (g.style.display === 'grid') ? 'none' : 'grid';
-        };
-
-        function renderCalendar() {
-            const container = document.getElementById('cal-days'), monthLabel = document.getElementById('cal-month'), eventBox = document.getElementById('day-events');
-            if(!container) return; container.innerHTML = ""; eventBox.innerHTML = "";
-            let d = new Date(); d.setMonth(d.getMonth() + calOffset);
-            monthLabel.innerText = `${d.getFullYear()} / ${d.getMonth()+1}`;
-            let last = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
-            const firstDay = new Date(d.getFullYear(), d.getMonth(), 1).getDay();
-            for(let i=0; i<firstDay; i++) container.appendChild(document.createElement('div'));
-            for(let i=1; i<=last; i++) {
-                const day = document.createElement('div'); day.className = "cal-day"; day.innerText = i;
-                const dots = document.createElement('div'); dots.className = "cal-dots";
-                let dayAnnis = [];
-                dolls.forEach(doll => { (doll.anniversaries || []).forEach(a => {
-                    const [_, am, ad] = a.date.split('-').map(Number);
-                    if(am === d.getMonth()+1 && ad === i) {
-                        dayAnnis.push({ ...a, doll });
-                        const dot = document.createElement('div'); dot.className = "cal-dot"; dot.style.background = doll.calColor || '#E11D48'; dots.appendChild(dot);
-                    }
-                })});
-                day.appendChild(dots);
-                day.onclick = () => { eventBox.innerHTML = dayAnnis.length ? dayAnnis.map(a => `<div class="p-4 rounded-xl text-xs font-bold" style="background:${a.doll.bgColor}; color:${a.doll.textColor}">${a.doll.name}: ${a.name}</div>`).join('') : ""; };
-                container.appendChild(day);
-            }
-        }
-
-        function renderAnniversaries() {
-            const list = document.getElementById('happy-anniversary-list'), closest = document.getElementById('closest-anniversary');
-            if(!list) return; list.innerHTML = ""; closest.innerHTML = "";
-            let today = new Date(), annis = [];
-            dolls.forEach((d, di) => { (d.anniversaries || []).forEach(a => {
-                let [_, m, d_] = a.date.split('-').map(Number), date = new Date(today.getFullYear(), m-1, d_);
-                if(date < new Date(today.getFullYear(), today.getMonth(), today.getDate())) date.setFullYear(today.getFullYear()+1);
-                annis.push({ ...a, dollName: d.name, dollIdx: di, fullDate: date, isToday: (today.getMonth()+1 === m && today.getDate() === d_) });
-            })});
-            const todayAnnis = annis.filter(a => a.isToday);
-            document.getElementById('happy-anniversary').classList.toggle('hidden', !todayAnnis.length);
-            todayAnnis.forEach(a => { 
-                const div = document.createElement('div'); div.className = "bg-white p-6 rounded-3xl shadow-sm border-2 border-pink-100 mb-4 animate-anni"; 
-                div.innerHTML = `<p class="text-xs font-bold text-pink-400">${a.name}</p><p class="text-xl font-bold">${a.dollName}</p>`; 
-                div.onclick = () => showDetail(a.dollIdx); list.appendChild(div); 
-            });
-            annis.sort((a,b) => a.fullDate - b.fullDate);
-            if(annis.length) { 
-                const a = annis[0], days = Math.ceil((a.fullDate - today)/(1000*60*60*24)); 
-                closest.innerHTML = `<div class="bg-white p-5 rounded-2xl shadow-sm flex justify-between"><div><p class="text-[10px] text-stone-400">${a.name}</p><p class="font-bold">${a.dollName}</p></div><div class="text-right"><p class="text-[10px]">あと</p><p class="text-xl font-bold">${days}日</p></div></div>`; 
-            }
-        }
-
-        function renderHomePosts() {
-            const container = document.getElementById('home-posts'); if(!container) return; container.innerHTML = "";
-            posts.filter(p => p.pos === 'home').forEach(p => {
-                const art = document.createElement('article'); art.className = "space-y-4 mb-10";
-                art.onclick = () => openArticle(posts.indexOf(p));
-                if(p.blocks[0]?.img) art.innerHTML += `<img src="${p.blocks[0].img}" class="w-full aspect-[4/3] object-cover rounded-3xl shadow-sm">`;
-                art.innerHTML += `<div class="px-2"><h4 class="font-bold text-xl">${p.title}</h4><p class="text-sm text-stone-500 line-clamp-2">${p.blocks[0]?.text || ""}</p></div>`;
-                container.appendChild(art);
-            });
-        }
-
-        window.openArticle = (i) => {
-            const p = posts[i]; if(!p) return;
-            document.getElementById('art-title').innerText = p.title;
-            const cont = document.getElementById('art-content'); cont.innerHTML = "";
-            p.blocks.forEach(b => {
-                if(b.img) cont.innerHTML += `<img src="${b.img}" class="w-full rounded-3xl shadow-lg mb-4">`;
-                if(b.text) cont.innerHTML += `<p class="whitespace-pre-wrap leading-relaxed px-2 mb-6">${b.text}</p>`;
-            });
-            document.getElementById('art-edit-btn').onclick = () => { closeArticle(); openPostModal(i); };
-            document.getElementById('art-del-btn').onclick = () => { if(confirm("削除しますか？")) { posts.splice(i, 1); syncData().then(() => location.reload()); } };
-            document.getElementById('article-page').style.display = 'block';
-        };
-
-        window.showHome = () => { document.getElementById('home-content').classList.remove('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); };
-        window.showDollList = () => { document.getElementById('home-content').classList.add('hidden'); document.getElementById('doll-list-page').classList.remove('hidden'); toggleMenu('side-menu'); renderDollList(); };
-        window.renderDollList = () => {
-            const container = document.getElementById('doll-display-area'); container.innerHTML = "";
-            const grid = document.createElement('div'); grid.className = "grid grid-cols-3 gap-2";
-            dolls.forEach((d, i) => { const img = document.createElement('img'); img.className = "w-full aspect-square object-cover rounded-xl"; img.src = d.image; img.onclick = () => showDetail(i); grid.appendChild(img); });
-            container.appendChild(grid);
-        };
-        window.showPostListPage = () => { document.getElementById('home-content').classList.add('hidden'); document.getElementById('post-list-page').classList.remove('hidden'); toggleMenu('side-menu'); renderPostListMenu(); };
-        window.renderPostListMenu = () => {
-            const container = document.getElementById('menu-post-list'); container.innerHTML = "";
-            posts.filter(p => p.pos === 'menu').forEach(p => {
-                const d = document.createElement('div'); d.className = "p-6 bg-white rounded-3xl shadow-sm mb-4";
-                d.onclick = () => openArticle(posts.indexOf(p));
-                d.innerHTML = `<h4 class="font-bold">${p.title}</h4>`;
-                container.appendChild(d);
-            });
-        };
-
-        window.openModal = (i = "") => {
-            document.getElementById('edit-id').value = i;
-            const d = (i === "" ? { name:"", kana:"", image:"", bodySize:"", bodyMake:"", head:"", anniversaries:[], bgColor:"#ffffff", textColor:"#000000", calColor:"#E11D48", profile:"" } : dolls[i]);
-            document.getElementById('f-name').value = d.name; document.getElementById('f-kana').value = d.kana;
-            document.getElementById('f-size-label').value = d.bodySize || ""; document.getElementById('f-body-make').value = d.bodyMake || "";
-            document.getElementById('f-head').value = d.head || ""; document.getElementById('f-bg-color').value = d.bgColor;
-            document.getElementById('f-text-color').value = d.textColor; document.getElementById('f-cal-color').value = d.calColor;
-            document.getElementById('f-profile').value = d.profile; document.getElementById('anniversary-inputs').innerHTML = "";
-            (d.anniversaries || []).forEach(a => addAnniversaryInput(a));
-            const cp = document.getElementById('crop-preview'); cp.src = d.image; cp.classList.toggle('hidden', !d.image);
-            document.getElementById('doll-hint').classList.toggle('hidden', !!d.image);
-            document.getElementById('modal').style.display = 'flex';
-        };
-
-        window.showDetail = (i) => {
-            const d = dolls[i]; if(!d) return;
-            document.getElementById('view-img').src = d.image;
-            document.getElementById('view-name').innerText = d.name;
-            document.getElementById('view-kana').innerText = d.kana;
-            document.getElementById('view-profile').innerText = d.profile;
-            const bg = document.getElementById('profile-bg'); bg.style.backgroundColor = d.bgColor; bg.style.color = d.textColor;
-            const det = document.getElementById('detail-box');
-            let html = "";
-            if(d.bodySize) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Size</p><p class="font-bold">${d.bodySize}</p></div>`;
-            if(d.bodyMake) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Body</p><p class="font-bold">${d.bodyMake}</p></div>`;
-            if(d.head) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Head</p><p class="font-bold">${d.head}</p></div>`;
-            det.innerHTML = html; det.classList.toggle('hidden', !html);
-            document.getElementById('detail-edit-btn').onclick = () => { closeProfile(); openModal(i); };
-            document.getElementById('detail-del-btn').onclick = () => { if(confirm("削除しますか？")) { dolls.splice(i, 1); syncData().then(() => location.reload()); } };
-            document.getElementById('profile-overlay').style.display = 'block';
-        };
-
-        window.openOwnerModal = () => {
-            document.getElementById('o-name').value = owner.name; document.getElementById('o-bio').value = owner.bio;
-            const container = document.getElementById('sns-inputs-container'); container.innerHTML = "";
-            (owner.sns || []).forEach(s => addSnsInput(s));
-            const op = document.getElementById('owner-preview'); op.src = owner.image; op.classList.toggle('hidden', !owner.image);
-            document.getElementById('owner-hint').classList.toggle('hidden', !!owner.image);
-            document.getElementById('owner-modal').style.display = 'flex';
-        };
-
+        // --- オーナー・投稿管理 ---
         window.saveOwner = async () => {
+            showLoading(true);
             let img = owner.image;
             if(currentRawImg.owner) {
                 const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'); cvs.width = cvs.height = 400;
                 ctx.drawImage(currentRawImg.owner, 0, 0, 400, 400);
                 img = await uploadImage(await new Promise(r => cvs.toBlob(r, 'image/webp')), "owner");
             }
-            owner = { name: document.getElementById('o-name').value, bio: document.getElementById('o-bio').value, image: img, sns: Array.from(document.querySelectorAll('.sns-input-row')).map(row => ({ type: row.querySelector('.sns-type').value, val: row.querySelector('.sns-val').value })).filter(s => s.val) };
+            owner = {
+                name: document.getElementById('o-name').value,
+                bio: document.getElementById('o-bio').value,
+                image: img,
+                sns: Array.from(document.querySelectorAll('.sns-input-row')).map(r => ({
+                    type: r.querySelector('.sns-type').value,
+                    val: r.querySelector('.sns-val').value
+                })).filter(s => s.val)
+            };
             await syncData(); location.reload();
         };
 
-        window.openPostModal = (i = "") => {
-            document.getElementById('edit-post-id').value = i;
-            const p = i === "" ? { title:"", blocks:[], pos:"home" } : posts[i];
-            document.getElementById('p-title').value = p.title; document.querySelector(`input[name="p-pos"][value="${p.pos}"]`).checked = true;
-            const cont = document.getElementById('post-blocks-container'); cont.innerHTML = "";
-            if(p.blocks.length) p.blocks.forEach(b => addPostBlock(b)); else addPostBlock();
-            document.getElementById('post-modal').style.display = 'flex';
-        };
-
-        window.savePost = async () => {
-            const blocks = [];
-            for (const el of document.querySelectorAll('.post-block')) {
-                const imgEl = el.querySelector('img'), text = el.querySelector('textarea').value;
-                let url = "";
-                if (!imgEl.classList.contains('hidden')) {
-                    if (imgEl.src.startsWith('data:')) url = await uploadImage(await (await fetch(imgEl.src)).blob(), "post");
-                    else url = imgEl.src;
-                }
-                if(url || text) blocks.push({img: url, text});
-            }
-            const idx = document.getElementById('edit-post-id').value, d = { title: document.getElementById('p-title').value, blocks, pos: document.querySelector('input[name="p-pos"]:checked').value };
-            if(idx === "") posts.push(d); else posts[idx] = d;
-            await syncData(); location.reload();
-        };
-
-        window.addAnniversaryInput = (v = {name:"", date:""}) => {
-            const div = document.createElement('div'), id = Math.random().toString(36).substr(2, 9);
-            div.className = "p-4 bg-white rounded-2xl border border-stone-100 mb-2";
-            div.innerHTML = `<input type="text" class="f-anni-name w-full border-b mb-2 text-sm" placeholder="記念日名" value="${v.name}"><div class="flex gap-2"><select id="m-${id}" onchange="updateDateInput('${id}')" class="border rounded p-2 text-xs flex-1"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" onchange="updateDateInput('${id}')" class="border rounded p-2 text-xs flex-1"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" class="f-anni-date hidden" value="${v.date}">`;
-            document.getElementById('anniversary-inputs').appendChild(div);
-            if(v.date) { const [_,m,d] = v.date.split('-'); document.getElementById(`m-${id}`).value = parseInt(m); document.getElementById(`d-${id}`).value = parseInt(d); }
-        };
-
-        window.updateDateInput = (id) => {
-            const m = document.getElementById(`m-${id}`).value, d = document.getElementById(`d-${id}`).value;
-            if(m && d) { const row = document.getElementById(`m-${id}`).closest('div').parentElement; row.querySelector('.f-anni-date').value = `2000-${m.padStart(2,'0')}-${d.padStart(2,'0')}`; }
-        };
-
-        window.addSnsInput = (s = {type:"x", val:""}) => {
-            const div = document.createElement('div'); div.className = "sns-input-row flex gap-2 mb-2";
-            div.innerHTML = `<select class="sns-type border rounded p-2 text-xs"><option value="x" ${s.type==='x'?'selected':''}>X</option><option value="instagram" ${s.type==='instagram'?'selected':''}>Instagram</option><option value="link" ${s.type==='link'?'selected':''}>Link</option></select><input type="text" class="sns-val border rounded p-2 text-xs flex-1" placeholder="ID/URL" value="${s.val}">`;
+        window.addSnsInput = (v = {type:"X", val:""}) => {
+            const div = document.createElement('div'); div.className = "flex gap-2 sns-input-row";
+            div.innerHTML = `<input type="text" class="sns-type w-20 border rounded p-2 text-xs" value="${v.type}"><input type="text" class="sns-val flex-1 border rounded p-2 text-xs" placeholder="URL" value="${v.val}">`;
             document.getElementById('sns-inputs-container').appendChild(div);
         };
 
-        window.addPostBlock = (b = {img:"", text:""}) => {
-            const div = document.createElement('div'); div.className = "post-block p-4 bg-stone-50 rounded-2xl mb-4";
-            div.innerHTML = `<div class="aspect-video bg-stone-200 rounded-xl mb-2 flex items-center justify-center cursor-pointer" onclick="this.nextElementSibling.click()"><img src="${b.img}" class="${b.img?'':'hidden'} w-full h-full object-cover"><span class="${b.img?'hidden':''} text-xs">画像</span></div><input type="file" accept="image/*" class="hidden" onchange="const img=this.previousElementSibling.querySelector('img'),f=this.files[0]; if(f){const r=new FileReader(); r.onload=e=>{img.src=e.target.result; img.classList.remove('hidden');}; r.readAsDataURL(f);}\"><textarea class=\"w-full bg-transparent p-2 text-sm\" placeholder=\"本文\">${b.text}</textarea>`;
+        window.addPostBlock = (v = {text:"", img:""}) => {
+            const id = Date.now() + Math.random();
+            const div = document.createElement('div'); div.className = "post-block p-4 bg-stone-50 rounded-2xl space-y-3";
+            div.innerHTML = `<div class="preview-sq w-20 h-20" onclick="document.getElementById('file-${id}').click()"><img id="prev-${id}" src="${v.img}" class="${v.img?'':'hidden'}"><span class="${v.img?'hidden':''} text-[10px]">画像</span></div><input type="file" id="file-${id}" class="hidden" onchange="loadPostImg(event, '${id}')"><textarea class="post-text w-full border rounded p-3 text-sm" placeholder="本文...">${v.text}</textarea>`;
             document.getElementById('post-blocks-container').appendChild(div);
         };
 
+        window.savePost = async () => {
+            showLoading(true);
+            const pid = document.getElementById('edit-post-id').value;
+            const blocks = [];
+            for(const r of document.querySelectorAll('.post-block')) {
+                let bimg = r.querySelector('img').src;
+                if(bimg.startsWith('data:')) {
+                    const res = await fetch(bimg);
+                    bimg = await uploadImage(await res.blob(), "post");
+                }
+                blocks.push({ text: r.querySelector('.post-text').value, img: bimg });
+            }
+            const p = { title: document.getElementById('p-title').value, blocks, pos: document.querySelector('input[name="p-pos"]:checked').value, date: new Date().toISOString() };
+            if(pid === "") posts.push(p); else posts[pid] = p;
+            await syncData(); location.reload();
+        };
+
+        // --- 認証 ---
+        window.handleLogin = async () => {
+            const id = document.getElementById('auth-gallery-id').value || galleryId;
+            if(id) localStorage.setItem('pending_gallery_id', id);
+            await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: GITHUB_URL } });
+        };
+        window.handleLogout = async () => { await supabase.auth.signOut(); localStorage.clear(); location.href = GITHUB_URL; };
+
+        // --- UIユーティリティ ---
+        window.showLoading = (s) => document.getElementById('loading').style.display = s ? 'flex' : 'none';
         window.toggleMenu = (id) => { const m = document.getElementById(id); m.style.display = (window.getComputedStyle(m).display === 'none') ? 'flex' : 'none'; };
         window.closeModal = () => document.querySelectorAll('.modal-base').forEach(m => m.style.display = 'none');
-        window.closeProfile = () => document.getElementById('profile-overlay').style.display = 'none';
-        window.closeArticle = () => document.getElementById('article-page').style.display = 'none';
-        window.showLoading = (s) => document.getElementById('loading').style.display = s ? 'flex' : 'none';
-        window.updateCrop = (id, hid, vid) => { const img = document.getElementById(id); img.style.objectPosition = `${document.getElementById(hid).value}% ${document.getElementById(vid).value}%`; };
-        window.autoResize = (el) => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; };
-        window.openModalWithClear = () => { currentRawImg.doll = null; openModal(); };
-
-        function openCreationModal() {
-            const d = document.getElementById('custom-dialog');
-            document.getElementById('dialog-message').innerText = "ギャラリーIDを入力してください\n(既存ギャラリーの閲覧、または新規作成)";
-            document.getElementById('dialog-inputs').classList.remove('hidden');
-            document.getElementById('dialog-buttons').innerHTML = `
-                <button onclick="handleInit()" class="w-full bg-stone-800 text-white py-4 rounded-full font-bold">ログインして管理/作成</button>
-                <button onclick="viewOnly()" class="w-full bg-stone-100 text-stone-600 py-3 rounded-full text-xs">閲覧のみ</button>`;
-            d.style.display = 'flex';
-        }
-        window.handleInit = () => { const id = document.getElementById('auth-gallery-id').value; if(id) { localStorage.setItem('pending_gallery_id', id); handleLogin(); } else { alert("IDを入力してください"); } };
-        window.viewOnly = () => { const id = document.getElementById('auth-gallery-id').value; if(id) location.href = GITHUB_URL + "?id=" + id; else alert("IDを入力してください"); };
+        window.showHome = () => { location.href = GITHUB_URL + "?id=" + galleryId; };
+        window.changeMonth = (n) => { calOffset += n; renderCalendar(); };
         window.copyURL = () => { navigator.clipboard.writeText(window.location.href); alert("URLをコピーしました"); };
         window.shareSNS = (type) => { const u = encodeURIComponent(window.location.href); window.open(type === 'x' ? `https://twitter.com/intent/tweet?url=${u}` : `https://social-plugins.line.me/lineit/share?url=${u}`, '_blank'); };
-        window.requestNewGallery = () => { if(confirm("新しいギャラリーを作成しますか？")) location.href = GITHUB_URL + "?mode=new"; };
-        window.requestClearAll = () => { if(confirm("全てのデータを完全に削除しますか？")) { dolls = []; owner = { name: "Owner Name", bio: "", sns: [], image:"" }; posts = []; syncData().then(() => location.reload()); } };
-        window.changeMonth = (n) => { calOffset += n; renderCalendar(); };
+
+        window.openCreationModal = () => {
+            const d = document.getElementById('custom-dialog');
+            document.getElementById('dialog-message').innerText = "ギャラリーIDを入力してください\n(英数字のみ)";
+            document.getElementById('dialog-inputs').classList.remove('hidden');
+            document.getElementById('dialog-buttons').innerHTML = `<button onclick="handleInit()" class="w-full bg-stone-800 text-white py-4 rounded-full font-bold">ログインして管理</button><button onclick="viewOnly()" class="w-full text-xs text-stone-400">閲覧のみ</button>`;
+            d.style.display = 'flex';
+        };
+        window.handleInit = () => { const id = document.getElementById('auth-gallery-id').value; if(id) { localStorage.setItem('pending_gallery_id', id); handleLogin(); } };
+        window.viewOnly = () => { const id = document.getElementById('auth-gallery-id').value; if(id) location.href = "?id=" + id; };
+
+        window.loadImg = (e, type) => {
+            const f = e.target.files[0]; if(!f) return;
+            const r = new FileReader(); r.onload = (ev) => {
+                const img = new Image(); img.onload = () => { 
+                    currentRawImg[type] = img; 
+                    const p = document.getElementById(type === 'doll' ? 'crop-preview' : 'owner-preview');
+                    p.src = ev.target.result; p.classList.remove('hidden');
+                    if(type==='doll') document.getElementById('doll-hint').classList.add('hidden');
+                };
+                img.src = ev.target.result;
+            }; r.readAsDataURL(f);
+        };
+        window.loadPostImg = (e, id) => {
+            const f = e.target.files[0]; if(!f) return;
+            const r = new FileReader(); r.onload = (ev) => { document.getElementById(`prev-${id}`).src = ev.target.result; document.getElementById(`prev-${id}`).classList.remove('hidden'); };
+            r.readAsDataURL(f);
+        };
+
+        window.updateCrop = (id, hid, vid) => {
+            const img = document.getElementById(id);
+            img.style.objectPosition = `${document.getElementById(hid).value}% ${document.getElementById(vid).value}%`;
+        };
+
+        window.showDetail = (i) => {
+            const d = dolls[i];
+            document.getElementById('view-img').src = d.image;
+            document.getElementById('view-name').innerText = d.name;
+            document.getElementById('view-kana').innerText = d.kana || "";
+            document.getElementById('view-profile').innerText = d.profile || "";
+            const bg = document.getElementById('profile-bg');
+            bg.style.backgroundColor = d.bgColor; bg.style.color = d.textColor;
+            const det = document.getElementById('detail-box');
+            det.innerHTML = `
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div><p class="text-[10px] opacity-50 font-bold uppercase">Size</p><p class="font-bold">${d.bodySize||'-'}</p></div>
+                    <div><p class="text-[10px] opacity-50 font-bold uppercase">Head</p><p class="font-bold text-sm">${d.head||'-'}</p></div>
+                </div>
+            `;
+            det.classList.remove('hidden');
+            document.getElementById('detail-edit-btn').onclick = () => { closeProfile(); openModal(i); };
+            document.getElementById('detail-del-btn').onclick = async () => { if(confirm("消去しますか？")) { dolls.splice(i, 1); await syncData(); location.reload(); } };
+            document.getElementById('profile-overlay').style.display = 'block';
+        };
+
+        window.closeProfile = () => document.getElementById('profile-overlay').style.display = 'none';
+
+        // 投稿表示ロジック
+        window.renderHomePosts = () => {
+            const cont = document.getElementById('home-posts'); cont.innerHTML = "";
+            posts.filter(p => p.pos === 'home').forEach((p, i) => {
+                const a = document.createElement('article'); a.className = "space-y-4 border-b pb-8";
+                a.onclick = () => openArticle(posts.indexOf(p));
+                if(p.blocks[0]?.img) a.innerHTML += `<img src="${p.blocks[0].img}" class="w-full aspect-[4/3] object-cover rounded-3xl shadow-sm">`;
+                a.innerHTML += `<h4 class="font-bold text-xl px-2">${p.title}</h4>`;
+                cont.appendChild(a);
+            });
+        };
+
+        window.openArticle = (i) => {
+            const p = posts[i]; document.getElementById('art-title').innerText = p.title;
+            const c = document.getElementById('art-content'); c.innerHTML = "";
+            p.blocks.forEach(b => {
+                if(b.img) c.innerHTML += `<img src="${b.img}" class="w-full rounded-3xl shadow-lg">`;
+                if(b.text) c.innerHTML += `<p class="whitespace-pre-wrap leading-loose text-stone-600 px-2">${b.text}</p>`;
+            });
+            document.getElementById('article-page').style.display = 'block';
+        };
+        window.closeArticle = () => document.getElementById('article-page').style.display = 'none';
+
+        // --- カラーグリッド生成 ---
+        const palette = ["#ffffff", "#000000", "#f43f5e", "#fb923c", "#facc15", "#4ade80", "#2dd4bf", "#38bdf8", "#818cf8", "#c084fc", "#fdf2f8", "#ecfdf5", "#eff6ff"];
+        ['bg','text','cal'].forEach(t => {
+            const g = document.getElementById(`${t}-color-grid`);
+            palette.forEach(c => {
+                const chip = document.createElement('div'); chip.className="color-chip"; chip.style.background=c;
+                chip.onclick=()=>{ 
+                    document.getElementById(`f-${t}-color`).value=c; 
+                    document.getElementById(`${t}-select-icon`).style.backgroundColor=c;
+                    g.style.display='none'; 
+                };
+                g.appendChild(chip);
+            });
+        });
+        window.toggleColorGrid = (t) => {
+            const g = document.getElementById(`${t}-color-grid`);
+            g.style.display = (g.style.display === 'grid') ? 'none' : 'grid';
+        };
+
+        // --- その他の関数 ---
+        window.openModalWithClear = () => { openModal(""); };
+        window.openModal = (i = "") => {
+            document.getElementById('edit-id').value = i;
+            document.getElementById('anniversary-inputs').innerHTML = "";
+            if(i === "") {
+                document.getElementById('f-name').value = "";
+                document.getElementById('f-kana').value = "";
+                document.getElementById('f-profile').value = "";
+                document.getElementById('f-bg-color').value = "#ffffff";
+            } else {
+                const d = dolls[i];
+                document.getElementById('f-name').value = d.name;
+                document.getElementById('f-kana').value = d.kana || "";
+                document.getElementById('f-profile').value = d.profile || "";
+                (d.anniversaries || []).forEach(a => addAnniversaryInput(a));
+            }
+            document.getElementById('modal').style.display = 'flex';
+        };
+
+        window.openOwnerModal = () => {
+            document.getElementById('o-name').value = owner.name;
+            document.getElementById('o-bio').value = owner.bio;
+            document.getElementById('sns-inputs-container').innerHTML = "";
+            (owner.sns || []).forEach(s => addSnsInput(s));
+            document.getElementById('owner-modal').style.display = 'flex';
+        };
+
+        window.openPostModal = () => {
+            document.getElementById('edit-post-id').value = "";
+            document.getElementById('p-title').value = "";
+            document.getElementById('post-blocks-container').innerHTML = "";
+            addPostBlock();
+            document.getElementById('post-modal').style.display = 'flex';
+        };
+
+        window.showDollList = () => {
+            document.getElementById('home-content').classList.add('hidden');
+            document.getElementById('doll-list-page').classList.remove('hidden');
+            const area = document.getElementById('doll-display-area'); area.innerHTML = "";
+            dolls.forEach((d, i) => {
+                area.innerHTML += `<div class="bg-white p-4 rounded-3xl flex items-center gap-4 shadow-sm" onclick="showDetail(${i})"><img src="${d.image}" class="w-20 h-20 rounded-2xl object-cover"><div><p class="text-[10px] opacity-50">${d.kana||''}</p><p class="font-bold text-lg">${d.name}</p></div></div>`;
+            });
+            toggleMenu('side-menu');
+        };
+
+        window.showPostListPage = () => {
+            document.getElementById('home-content').classList.add('hidden');
+            document.getElementById('post-list-page').classList.remove('hidden');
+            const area = document.getElementById('menu-post-list'); area.innerHTML = "";
+            posts.forEach((p, i) => {
+                area.innerHTML += `<div class="bg-white p-4 rounded-3xl shadow-sm" onclick="openArticle(${i})"><h4 class="font-bold">${p.title}</h4><p class="text-[10px] text-stone-400">${new Date(p.date).toLocaleDateString()}</p></div>`;
+            });
+            toggleMenu('side-menu');
+        };
+
+        window.requestClearAll = async () => {
+            if(confirm("データを全て削除しますか？")) {
+                await supabase.from('galleries').update({ data: { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image: "" }, posts: [] } }).eq('id', galleryId);
+                location.reload();
+            }
+        };
+
     </script>
 </body>
 </html>
