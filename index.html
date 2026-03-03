@@ -25,7 +25,7 @@
         
         /* モーダル基本設定 */
         .modal-base { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 10px; }
-        #side-menu { justify-content: flex-end; padding: 0; } /* 右側に寄せる */
+        #side-menu { justify-content: flex-end; padding: 0; }
         
         .modal-content { background: white; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; border-radius: 24px; padding: 24px; position: relative; }
         #custom-dialog { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100000; align-items: center; justify-content: center; padding: 20px; }
@@ -83,7 +83,7 @@
 
     <header class="p-4 bg-white border-b sticky top-0 z-[100] flex justify-between items-center">
         <h1 onclick="showHome()" class="logo-font text-3xl cursor-pointer">Doll Uchinoko Gallery</h1>
-        <div onclick="toggleMenu('side-menu')" class="p-2 cursor-pointer">
+        <div onclick="toggleMenu('side-menu')" class="p-2 cursor-pointer relative z-[10001]">
             <div class="w-6 h-0.5 bg-stone-800 mb-1.5"></div>
             <div class="w-6 h-0.5 bg-stone-800 mb-1.5"></div>
             <div class="w-6 h-0.5 bg-stone-800"></div>
@@ -91,7 +91,7 @@
     </header>
 
     <div id="side-menu" class="modal-base" onclick="toggleMenu('side-menu')">
-        <div class="bg-white w-72 h-full ml-auto p-6 flex flex-col overflow-y-auto" onclick="event.stopPropagation()">
+        <div class="bg-white w-72 h-full ml-auto p-6 flex flex-col overflow-y-auto shadow-2xl" onclick="event.stopPropagation()">
             <div class="space-y-1">
                 <button onclick="showHome(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">🏠 ホーム</button>
                 <button onclick="openModalWithClear(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b text-blue-600 w-full admin-only">✨ うちの子を登録する</button>
@@ -99,7 +99,7 @@
                 <button onclick="showPostListPage()" class="text-left py-4 font-bold border-b w-full text-stone-800">📝 投稿一覧</button>
             </div>
             <div class="py-6 space-y-2 border-b">
-                <button id="login-btn" onclick="handleLogin()" class="w-full py-3 bg-stone-800 rounded-xl text-xs font-bold text-white">Googleでログイン</button>
+                <button id="login-btn" onclick="handleLogin()" class="w-full py-4 bg-stone-800 rounded-xl text-sm font-bold text-white shadow-lg">Googleでログイン</button>
                 <button id="logout-btn" onclick="handleLogout()" class="w-full py-3 bg-red-50 rounded-xl text-xs font-bold text-red-400 hidden">ログアウト</button>
             </div>
             <div class="py-10 space-y-4 admin-only">
@@ -145,9 +145,9 @@
         <section class="p-10 bg-stone-100 mt-10 text-center border-t">
             <p class="text-[10px] font-bold text-stone-400 mb-8 tracking-widest uppercase">Share this gallery</p>
             <div class="flex flex-col gap-4 max-w-[280px] mx-auto">
-                <button onclick="shareSNS('x')" class="share-btn w-full h-14 bg-black rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">X (旧Twitter)</span></button>
-                <button onclick="shareSNS('line')" class="share-btn w-full h-14 bg-[#06C755] rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">LINE</span></button>
-                <button onclick="copyURL()" class="share-btn w-full h-14 bg-stone-400 rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">URL Copy</span></button>
+                <button onclick="shareSNS('x')" class="w-full h-14 bg-black rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">X (旧Twitter)</span></button>
+                <button onclick="shareSNS('line')" class="w-full h-14 bg-[#06C755] rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">LINE</span></button>
+                <button onclick="copyURL()" class="w-full h-14 bg-stone-400 rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">URL Copy</span></button>
             </div>
         </section>
     </main>
@@ -183,25 +183,22 @@
                 <input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none" placeholder="ふりがな">
                 
                 <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
-                    <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE (例: 1/6, 20cmなど)">
+                    <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE (1/6, 20cm等)">
                     <input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="BODY">
                     <input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="HEAD">
                 </div>
 
                 <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
-                    <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">カラー設定</p>
-                    <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('bg')"><span class="text-xs text-stone-500 font-bold">背景色</span><div id="bg-select-icon" class="color-select-btn"></div></div>
+                    <div class="flex items-center justify-between cursor-pointer" onclick="toggleColorGrid('bg')"><span class="text-xs font-bold">背景色</span><div id="bg-select-icon" class="color-select-btn"></div></div>
                     <div id="bg-color-grid" class="color-grid"></div><input type="hidden" id="f-bg-color" value="#ffffff">
-                    
-                    <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('text')"><span class="text-xs text-stone-500 font-bold">文字色</span><div id="text-select-icon" class="color-select-btn"></div></div>
+                    <div class="flex items-center justify-between cursor-pointer" onclick="toggleColorGrid('text')"><span class="text-xs font-bold">文字色</span><div id="text-select-icon" class="color-select-btn"></div></div>
                     <div id="text-color-grid" class="color-grid"></div><input type="hidden" id="f-text-color" value="#000000">
-                    
-                    <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('cal')"><span class="text-xs text-stone-500 font-bold">カレンダー強調色</span><div id="cal-select-icon" class="color-select-btn"></div></div>
+                    <div class="flex items-center justify-between cursor-pointer" onclick="toggleColorGrid('cal')"><span class="text-xs font-bold">カレンダー強調色</span><div id="cal-select-icon" class="color-select-btn"></div></div>
                     <div id="cal-color-grid" class="color-grid"></div><input type="hidden" id="f-cal-color" value="#E11D48">
                 </div>
 
                 <div id="anniversary-inputs" class="space-y-3"></div>
-                <button onclick="addAnniversaryInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-400 font-bold">+ 記念日を追加</button>
+                <button onclick="addAnniversaryInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs font-bold text-stone-400">+ 記念日を追加</button>
                 <textarea id="f-profile" class="w-full border p-4 rounded-2xl min-h-[120px] text-sm outline-none" placeholder="プロフィール" oninput="autoResize(this)"></textarea>
                 <button id="save-doll-btn" onclick="saveData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg shadow-xl">保存する</button>
             </div>
@@ -213,8 +210,8 @@
             <button onclick="closeProfile()" class="bg-white shadow px-6 py-2 rounded-full text-xs font-bold mb-6">閉じる</button>
             <img id="view-img" class="w-full aspect-square object-cover rounded-3xl shadow-xl mb-8">
             <div class="text-center mb-8"><p id="view-kana" class="text-sm opacity-70 mb-1"></p><h2 id="view-name" class="text-3xl font-bold"></h2></div>
-            <div id="detail-box" class="bg-white/20 backdrop-blur-md p-6 rounded-3xl space-y-4 mb-8 text-[16px] hidden"></div>
-            <p id="view-profile" class="whitespace-pre-wrap leading-relaxed px-2 text-[18px] font-medium"></p>
+            <div id="detail-box" class="bg-white/20 backdrop-blur-md p-6 rounded-3xl space-y-4 mb-8 hidden"></div>
+            <p id="view-profile" class="whitespace-pre-wrap leading-relaxed px-2 text-[18px]"></p>
             <div class="fixed bottom-6 inset-x-0 px-6 flex gap-4 max-w-md mx-auto admin-only-flex hidden">
                 <button id="detail-edit-btn" class="flex-1 bg-stone-800 text-white py-4 rounded-full font-bold">編集</button>
                 <button id="detail-del-btn" class="flex-1 bg-red-50 text-red-400 py-4 rounded-full font-bold border border-red-100">削除</button>
@@ -233,8 +230,11 @@
             <input type="range" id="o-crop-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('owner-preview', 'o-crop-h', 'o-crop-v')">
             <div class="space-y-4">
                 <input type="file" id="owner-file" accept="image/*" class="hidden" onchange="loadImg(event, 'owner')">
-                <input type="text" id="o-name" class="w-full border-b p-2 font-bold" placeholder="オーナー名"><textarea id="o-bio" class="w-full border p-3 rounded-xl min-h-[80px] text-sm outline-none" placeholder="自己紹介" oninput="autoResize(this)"></textarea>
-                <div id="sns-inputs-container" class="space-y-3"></div><button onclick="addSnsInput()" class="w-full py-2 bg-stone-100 rounded text-xs font-bold">+ SNSリンクを追加</button><button onclick="saveOwner()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">保存</button>
+                <input type="text" id="o-name" class="w-full border-b p-2 font-bold" placeholder="オーナー名">
+                <textarea id="o-bio" class="w-full border p-3 rounded-xl min-h-[80px] text-sm outline-none" placeholder="自己紹介" oninput="autoResize(this)"></textarea>
+                <div id="sns-inputs-container" class="space-y-3"></div>
+                <button onclick="addSnsInput()" class="w-full py-2 bg-stone-100 rounded text-xs font-bold">+ SNSリンクを追加</button>
+                <button onclick="saveOwner()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">保存</button>
             </div>
         </div>
     </div>
@@ -243,14 +243,27 @@
         <div class="modal-content" onclick="event.stopPropagation()">
             <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
             <h3 id="post-modal-title" class="text-xl font-bold mb-4">投稿作成</h3>
-            <input type="hidden" id="edit-post-id"><input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-4 outline-none" placeholder="タイトル"><div id="post-blocks-container" class="space-y-4"></div><button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ 追加</button>
-            <div class="flex gap-4 p-4 bg-stone-50 rounded-2xl text-xs mt-6 items-center"><label><input type="radio" name="p-pos" value="home" checked> ホーム</label><label><input type="radio" name="p-pos" value="menu"> メニュー</label></div><button onclick="savePost()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold mt-6">保存</button>
+            <input type="hidden" id="edit-post-id">
+            <input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-4 outline-none" placeholder="タイトル">
+            <div id="post-blocks-container" class="space-y-4"></div>
+            <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ ブロック追加</button>
+            <div class="flex gap-4 p-4 bg-stone-50 rounded-2xl text-xs mt-6 items-center">
+                <label><input type="radio" name="p-pos" value="home" checked> ホーム</label>
+                <label><input type="radio" name="p-pos" value="menu"> メニュー</label>
+            </div>
+            <button onclick="savePost()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold mt-6">保存</button>
         </div>
     </div>
 
     <div id="article-page" style="display:none; position:fixed; inset:0; background:white; z-index:10001; overflow-y:auto;">
         <div class="max-w-2xl mx-auto p-6 pb-20">
-            <div class="flex justify-between items-center py-6 mb-10 border-b"><button onclick="closeArticle()" class="text-sm font-bold text-stone-400">← 戻る</button><div class="flex gap-4 admin-only-flex hidden"><button id="art-edit-btn" class="text-xs font-bold bg-stone-100 px-4 py-2 rounded-full">編集</button><button id="art-del-btn" class="text-xs font-bold bg-red-50 text-red-400 px-4 py-2 rounded-full">削除</button></div></div>
+            <div class="flex justify-between items-center py-6 mb-10 border-b">
+                <button onclick="closeArticle()" class="text-sm font-bold text-stone-400">← 戻る</button>
+                <div class="flex gap-4 admin-only-flex hidden">
+                    <button id="art-edit-btn" class="text-xs font-bold bg-stone-100 px-4 py-2 rounded-full">編集</button>
+                    <button id="art-del-btn" class="text-xs font-bold bg-red-50 text-red-400 px-4 py-2 rounded-full">削除</button>
+                </div>
+            </div>
             <h2 id="art-title" class="text-3xl font-bold text-center mb-12"></h2><div id="art-content" class="space-y-6"></div>
         </div>
     </div>
@@ -263,8 +276,7 @@
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"" }, posts = [], calOffset = 0;
-        let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null };
-        let isAdminStatus = false, adminEmail = "";
+        let adminEmail = "", dollViewMode = 'grid', currentRawImg = { doll: null, owner: null };
         const urlParams = new URLSearchParams(window.location.search);
         let galleryId = urlParams.get('id');
 
@@ -275,178 +287,94 @@
             return colors.slice(0, 100);
         })();
 
-        window.onload = async () => {
-            initColorPalettes();
-            
-            // ギャラリーデータのロードを待機
-            if (!galleryId || urlParams.get('mode') === 'new') { 
-                openCreationModal(); 
-            } else { 
-                showLoading(true);
-                await loadGalleryData(); 
-                showLoading(false);
-            }
-
-            // セッションと権限の確認
-            const { data: { session } } = await supabase.auth.getSession();
-            checkUser(session?.user);
-            
-            supabase.auth.onAuthStateChange((_event, session) => {
-                checkUser(session?.user);
-                renderAll(); // 権限変更時に再描画
-            });
-
-            renderAll(); 
-            setupInfiniteScroll();
-        };
-
-        // --- コア機能 ---
-        function checkUser(user) {
-            isAdminStatus = (user && adminEmail && user.email === adminEmail);
-            if(isAdminStatus) { 
-                document.body.classList.add('is-admin'); 
-                document.getElementById('login-btn').classList.add('hidden'); 
-                document.getElementById('logout-btn').classList.remove('hidden'); 
-            } else { 
-                document.body.classList.remove('is-admin'); 
-                document.getElementById('login-btn').classList.remove('hidden'); 
-                document.getElementById('logout-btn').classList.add('hidden'); 
-            }
-        }
-
-        async function handleLogin() {
+        window.handleLogin = async function() {
             const { error } = await supabase.auth.signInWithOAuth({ 
                 provider: 'google', 
                 options: { redirectTo: window.location.href } 
             });
             if (error) alert("ログインエラー: " + error.message);
-        }
+        };
 
-        async function handleLogout() { await supabase.auth.signOut(); location.reload(); }
+        window.handleLogout = async function() { await supabase.auth.signOut(); location.reload(); };
+
+        window.toggleMenu = (id) => { 
+            const m = document.getElementById(id); if(!m) return;
+            m.style.display = window.getComputedStyle(m).display === 'none' ? 'flex' : 'none';
+        };
+
+        window.onload = async () => {
+            initColorPalettes();
+            if (!galleryId || urlParams.get('mode') === 'new') { openCreationModal(); } 
+            else { 
+                showLoading(true);
+                await loadGalleryData(); 
+                showLoading(false);
+            }
+            const { data: { session } } = await supabase.auth.getSession();
+            checkUser(session?.user);
+            supabase.auth.onAuthStateChange((_e, s) => { checkUser(s?.user); renderAll(); });
+            renderAll(); 
+        };
 
         async function loadGalleryData() {
-            const { data, error } = await supabase.from('galleries').select('*').eq('id', galleryId).single();
+            const { data } = await supabase.from('galleries').select('*').eq('id', galleryId).single();
             if (data) { 
-                dolls = data.data.dolls || []; 
-                owner = data.data.owner || owner; 
-                posts = data.data.posts || []; 
-                adminEmail = data.admin_email || ""; 
+                dolls = data.data.dolls || []; owner = data.data.owner || owner; 
+                posts = data.data.posts || []; adminEmail = data.admin_email || ""; 
             }
         }
 
         async function syncData() {
-            if(!galleryId) return;
-            showLoading(true);
-            const { error } = await supabase.from('galleries').upsert({ 
-                id: galleryId, 
-                data: { dolls, owner, posts }, 
-                admin_email: adminEmail 
-            });
+            if(!galleryId) return; showLoading(true);
+            await supabase.from('galleries').upsert({ id: galleryId, data: { dolls, owner, posts }, admin_email: adminEmail });
             showLoading(false);
-            if (error) alert("保存エラー: " + error.message);
         }
 
         async function uploadImage(blob, prefix) {
             const fileName = `${galleryId}/${prefix}_${Date.now()}.webp`;
-            const { data, error } = await supabase.storage.from('doll-images').upload(fileName, blob);
-            if (error) throw error;
-            const { data: { publicUrl } } = supabase.storage.from('doll-images').getPublicUrl(fileName);
-            return publicUrl;
+            await supabase.storage.from('doll-images').upload(fileName, blob);
+            return supabase.storage.from('doll-images').getPublicUrl(fileName).data.publicUrl;
         }
 
-        // --- 描画系 ---
+        function checkUser(user) {
+            const isAdmin = (user && adminEmail && user.email === adminEmail);
+            document.body.classList.toggle('is-admin', isAdmin);
+            document.getElementById('login-btn').classList.toggle('hidden', isAdmin);
+            document.getElementById('logout-btn').classList.toggle('hidden', !isAdmin);
+        }
+
         function renderAll() {
             const film = document.getElementById('top-film-roll'); film.innerHTML = "";
             dolls.forEach((d, i) => { 
-                const img = document.createElement('img'); 
-                img.className = "film-frame"; 
-                img.src = d.image; 
-                img.onclick = () => showDetail(i); 
-                film.appendChild(img); 
+                const img = document.createElement('img'); img.className = "film-frame"; img.src = d.image; 
+                img.onclick = () => showDetail(i); film.appendChild(img); 
             });
             document.getElementById('empty-msg').style.display = dolls.length ? 'none' : 'flex';
-            
-            const ownerImg = document.getElementById('display-owner-img');
-            ownerImg.src = owner.image;
-            ownerImg.classList.toggle('hidden', !owner.image);
+            const oImg = document.getElementById('display-owner-img'); oImg.src = owner.image; oImg.classList.toggle('hidden', !owner.image);
             document.getElementById('owner-name').innerText = owner.name || "";
             document.getElementById('owner-bio').innerText = owner.bio || "";
-            
             const snsBox = document.getElementById('owner-sns-links'); snsBox.innerHTML = "";
-            (owner.sns || []).forEach(s => { 
-                const b = document.createElement('button'); 
-                b.className = "text-xs font-bold bg-stone-100 px-6 py-2 rounded-full"; 
-                b.innerText = `${s.type}: ${s.val}`; 
-                b.onclick = () => window.open(s.val.startsWith('http') ? s.val : `https://${s.type}.com/${s.val}`, '_blank'); 
-                snsBox.appendChild(b); 
+            (owner.sns || []).forEach(s => {
+                const b = document.createElement('button'); b.className = "text-xs font-bold bg-stone-100 px-6 py-2 rounded-full";
+                b.innerText = `${s.type}: ${s.val}`;
+                b.onclick = () => window.open(s.val.startsWith('http') ? s.val : `https://${s.type}.com/${s.val}`, '_blank');
+                snsBox.appendChild(b);
             });
-            
-            renderAnniversaries(); 
-            renderCalendar(); 
-            renderHomePosts();
+            renderAnniversaries(); renderCalendar(); renderHomePosts();
         }
 
-        // --- UI操作 ---
-        window.toggleMenu = (id) => { 
-            const m = document.getElementById(id); 
-            if(!m) return;
-            const isHidden = window.getComputedStyle(m).display === 'none';
-            m.style.display = isHidden ? 'flex' : 'none'; 
-        };
-
-        window.showHome = () => { 
-            document.getElementById('home-content').classList.remove('hidden'); 
-            document.getElementById('doll-list-page').classList.add('hidden'); 
-            document.getElementById('post-list-page').classList.add('hidden'); 
-        };
-
-        window.showDollList = () => { 
-            document.getElementById('home-content').classList.add('hidden'); 
-            document.getElementById('doll-list-page').classList.remove('hidden'); 
-            document.getElementById('post-list-page').classList.add('hidden'); 
-            toggleMenu('side-menu'); 
-            renderDollList(); 
-        };
-
-        window.showPostListPage = () => { 
-            document.getElementById('home-content').classList.add('hidden'); 
-            document.getElementById('doll-list-page').classList.add('hidden'); 
-            document.getElementById('post-list-page').classList.remove('hidden'); 
-            toggleMenu('side-menu'); 
-            renderPostListMenu(); 
-        };
-
-        // --- 保存処理 (Data, Owner, Post) ---
         window.saveData = async () => {
             const btn = document.getElementById('save-doll-btn'); btn.innerText = "保存中..."; btn.disabled = true;
             try {
                 const id = document.getElementById('edit-id').value, h = document.getElementById('crop-h').value, v = document.getElementById('crop-v').value;
                 let imgData = (id !== "" && dolls[id]) ? dolls[id].image : "";
-                
                 if(currentRawImg.doll) {
                     const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'); cvs.width = cvs.height = 1000;
                     const s = Math.max(1000/currentRawImg.doll.width, 1000/currentRawImg.doll.height);
                     ctx.drawImage(currentRawImg.doll, (1000-currentRawImg.doll.width*s)*(h/100), (1000-currentRawImg.doll.height*s)*(v/100), currentRawImg.doll.width*s, currentRawImg.doll.height*s);
                     imgData = await uploadImage(await new Promise(r => cvs.toBlob(r, 'image/webp', 0.85)), "doll");
                 }
-                
-                const d = { 
-                    name: document.getElementById('f-name').value, 
-                    kana: document.getElementById('f-kana').value, 
-                    image: imgData, 
-                    bodySize: document.getElementById('f-size-label').value, 
-                    bodyMake: document.getElementById('f-body-make').value, 
-                    head: document.getElementById('f-head').value, 
-                    anniversaries: Array.from(document.querySelectorAll('#anniversary-inputs > div')).map(row => ({ 
-                        name: row.querySelector('.f-anni-name').value, 
-                        date: row.querySelector('.f-anni-date').value 
-                    })).filter(a => a.name), 
-                    bgColor: document.getElementById('f-bg-color').value, 
-                    textColor: document.getElementById('f-text-color').value, 
-                    calColor: document.getElementById('f-cal-color').value, 
-                    profile: document.getElementById('f-profile').value 
-                };
-                
+                const d = { name: document.getElementById('f-name').value, kana: document.getElementById('f-kana').value, image: imgData, bodySize: document.getElementById('f-size-label').value, bodyMake: document.getElementById('f-body-make').value, head: document.getElementById('f-head').value, anniversaries: Array.from(document.querySelectorAll('#anniversary-inputs > div')).map(row => ({ name: row.querySelector('.f-anni-name').value, date: row.querySelector('.f-anni-date').value })).filter(a => a.name), bgColor: document.getElementById('f-bg-color').value, textColor: document.getElementById('f-text-color').value, calColor: document.getElementById('f-cal-color').value, profile: document.getElementById('f-profile').value };
                 if(id === "") dolls.push(d); else dolls[id] = d;
                 await syncData(); location.reload();
             } catch (e) { alert(e.message); btn.innerText = "保存する"; btn.disabled = false; }
@@ -461,15 +389,7 @@
                     ctx.drawImage(currentRawImg.owner, (600-currentRawImg.owner.width*s)*(h/100), (600-currentRawImg.owner.height*s)*(v/100), currentRawImg.owner.width*s, currentRawImg.owner.height*s);
                     img = await uploadImage(await new Promise(r => cvs.toBlob(r, 'image/webp', 0.85)), "owner");
                 }
-                owner = { 
-                    name: document.getElementById('o-name').value, 
-                    bio: document.getElementById('o-bio').value, 
-                    image: img, 
-                    sns: Array.from(document.querySelectorAll('.sns-input-row')).map(row => ({ 
-                        type: row.querySelector('.sns-type').value, 
-                        val: row.querySelector('.sns-val').value 
-                    })).filter(s => s.val) 
-                };
+                owner = { name: document.getElementById('o-name').value, bio: document.getElementById('o-bio').value, image: img, sns: Array.from(document.querySelectorAll('.sns-input-row')).map(row => ({ type: row.querySelector('.sns-type').value, val: row.querySelector('.sns-val').value })).filter(s => s.val) };
                 await syncData(); location.reload();
             } catch (e) { alert(e.message); }
         };
@@ -481,32 +401,33 @@
                     const imgEl = el.querySelector('img'), text = el.querySelector('textarea').value;
                     let url = "";
                     if (!imgEl.classList.contains('hidden')) {
-                        if (imgEl.src.startsWith('data:')) {
-                            url = await uploadImage(await (await fetch(imgEl.src)).blob(), "post");
-                        } else { url = imgEl.src; }
+                        if (imgEl.src.startsWith('data:')) url = await uploadImage(await (await fetch(imgEl.src)).blob(), "post");
+                        else url = imgEl.src;
                     }
                     if(url || text) blocks.push({img: url, text});
                 }
-                const idx = document.getElementById('edit-post-id').value, 
-                      d = { 
-                          title: document.getElementById('p-title').value, 
-                          blocks, 
-                          pos: document.querySelector('input[name="p-pos"]:checked').value 
-                      };
+                const idx = document.getElementById('edit-post-id').value, d = { title: document.getElementById('p-title').value, blocks, pos: document.querySelector('input[name="p-pos"]:checked').value };
                 if(idx === "") posts.push(d); else posts[idx] = d;
                 await syncData(); location.reload();
             } catch (e) { alert(e.message); }
         };
 
-        // --- ユーティリティ ---
-        window.showLoading = (show) => { document.getElementById('loading').style.display = show ? 'flex' : 'none'; };
-        window.closeModal = () => { document.querySelectorAll('.modal-base').forEach(m => m.style.display = 'none'); };
-        window.closeProfile = () => { document.getElementById('profile-overlay').style.display = 'none'; };
-        window.closeArticle = () => { document.getElementById('article-page').style.display = 'none'; };
-        window.autoResize = (el) => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; };
-        window.updateCrop = (id, hid, vid) => {
-            const img = document.getElementById(id), h = document.getElementById(hid).value, v = document.getElementById(vid).value;
-            img.style.objectPosition = `${h}% ${v}%`;
+        window.showDetail = (i) => {
+            const d = dolls[i]; if(!d) return;
+            document.getElementById('view-img').src = d.image;
+            document.getElementById('view-name').innerText = d.name;
+            document.getElementById('view-kana').innerText = d.kana;
+            document.getElementById('view-profile').innerText = d.profile;
+            const bg = document.getElementById('profile-bg'); bg.style.backgroundColor = d.bgColor; bg.style.color = d.textColor;
+            const det = document.getElementById('detail-box');
+            let html = "";
+            if(d.bodySize) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Size</p><p class="font-bold">${d.bodySize}</p></div>`;
+            if(d.bodyMake) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Body</p><p class="font-bold">${d.bodyMake}</p></div>`;
+            if(d.head) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Head</p><p class="font-bold">${d.head}</p></div>`;
+            det.innerHTML = html; det.classList.toggle('hidden', !html);
+            document.getElementById('detail-edit-btn').onclick = () => { closeProfile(); openModal(i); };
+            document.getElementById('detail-del-btn').onclick = () => { showConfirm("この子を削除しますか？", async () => { dolls.splice(i, 1); await syncData(); location.reload(); }); };
+            document.getElementById('profile-overlay').style.display = 'block';
         };
 
         window.loadImg = (e, type) => {
@@ -523,33 +444,50 @@
             r.readAsDataURL(f);
         };
 
-        // --- 記念日・カレンダー ---
-        function renderAnniversaries() {
-            const list = document.getElementById('happy-anniversary-list'), closest = document.getElementById('closest-anniversary');
-            list.innerHTML = ""; closest.innerHTML = "";
-            let today = new Date(), annis = [];
-            dolls.forEach((d, di) => { d.anniversaries.forEach(a => {
-                let [y, m, d_] = a.date.split('-').map(Number), date = new Date(today.getFullYear(), m-1, d_);
-                if(date < new Date(today.getFullYear(), today.getMonth(), today.getDate())) date.setFullYear(today.getFullYear()+1);
-                annis.push({ ...a, dollName: d.name, dollIdx: di, fullDate: date, isToday: (today.getMonth()+1 === m && today.getDate() === d_) });
-            })});
-            const todayAnnis = annis.filter(a => a.isToday);
-            document.getElementById('happy-anniversary').classList.toggle('hidden', !todayAnnis.length);
-            todayAnnis.forEach(a => { 
-                const d = document.createElement('div'); 
-                d.className = "bg-white p-6 rounded-3xl shadow-sm border-2 border-pink-100 mb-4 animate-anni cursor-pointer"; 
-                d.innerHTML = `<p class="text-xs font-bold text-pink-400 mb-1">${a.name}</p><p class="text-xl font-bold">${a.dollName}</p>`; 
-                d.onclick = () => showDetail(a.dollIdx); 
-                list.appendChild(d); 
-            });
-            annis.sort((a,b) => a.fullDate - b.fullDate);
-            if(annis.length) { 
-                const a = annis[0], days = Math.ceil((a.fullDate - today)/(1000*60*60*24)); 
-                closest.innerHTML = `<div class="flex justify-between items-center bg-white p-5 rounded-2xl shadow-sm"><div><p class="text-[10px] font-bold text-stone-400 mb-1">${a.date.replace(/-/g,'.')} ${a.name}</p><p class="font-bold">${a.dollName}</p></div><div class="text-right"><p class="text-[10px] font-bold text-stone-300 uppercase">あと</p><p class="text-xl font-bold text-stone-800">${days}日</p></div></div>`; 
-            }
-        }
+        window.addAnniversaryInput = (v = {name:"", date:""}) => {
+            const div = document.createElement('div'), id = Math.random().toString(36).substr(2, 9);
+            div.className = "flex flex-col gap-2 p-4 bg-white rounded-2xl border border-stone-100";
+            div.innerHTML = `<input type="text" class="f-anni-name w-full border-b py-1 text-sm outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2"><select id="m-${id}" onchange="updateDateInput('${id}')" class="border rounded p-2 text-xs flex-1"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" onchange="updateDateInput('${id}')" class="border rounded p-2 text-xs flex-1"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" class="f-anni-date hidden" value="${v.date}">`;
+            document.getElementById('anniversary-inputs').appendChild(div);
+            if(v.date) { const [y,m,d] = v.date.split('-'); document.getElementById(`m-${id}`).value = parseInt(m); document.getElementById(`d-${id}`).value = parseInt(d); }
+        };
 
-        window.renderCalendar = () => {
+        window.updateDateInput = (id) => {
+            const m = document.getElementById(`m-${id}`).value, d = document.getElementById(`d-${id}`).value;
+            if(m && d) { const row = document.getElementById(`m-${id}`).closest('div').parentElement; row.querySelector('.f-anni-date').value = `2000-${m.padStart(2,'0')}-${d.padStart(2,'0')}`; }
+        };
+
+        window.addSnsInput = (s = {type:"x", val:""}) => {
+            const div = document.createElement('div'); div.className = "sns-input-row flex gap-2";
+            div.innerHTML = `<select class="sns-type border rounded p-2 text-xs"><option value="x" ${s.type==='x'?'selected':''}>X</option><option value="instagram" ${s.type==='instagram'?'selected':''}>Instagram</option><option value="link" ${s.type==='link'?'selected':''}>Link</option></select><input type="text" class="sns-val border rounded p-2 text-xs flex-1" placeholder="IDまたはURL" value="${s.val}">`;
+            document.getElementById('sns-inputs-container').appendChild(div);
+        };
+
+        window.addPostBlock = (b = {img:"", text:""}) => {
+            const div = document.createElement('div'); div.className = "post-block p-4 bg-stone-50 rounded-2xl space-y-3";
+            div.innerHTML = `<div class="aspect-video bg-stone-200 rounded-xl overflow-hidden cursor-pointer flex items-center justify-center" onclick="this.nextElementSibling.click()"><img src="${b.img}" class="${b.img?'':'hidden'} w-full h-full object-cover"><span class="${b.img?'hidden':''} text-[10px] font-bold text-stone-400">画像を選択</span></div><input type="file" accept="image/*" class="hidden" onchange="const img=this.previousElementSibling.querySelector('img'),span=this.previousElementSibling.querySelector('span'),f=this.files[0]; if(f){const r=new FileReader(); r.onload=e=>{img.src=e.target.result; img.classList.remove('hidden'); span.classList.add('hidden');}; r.readAsDataURL(f);}"><textarea class="w-full bg-transparent p-2 text-sm outline-none" placeholder="本文" oninput="autoResize(this)">${b.text}</textarea>`;
+            document.getElementById('post-blocks-container').appendChild(div);
+        };
+
+        window.initColorPalettes = () => {
+            ['bg','text','cal'].forEach(type => {
+                const grid = document.getElementById(`${type}-color-grid`);
+                palette100.forEach(c => { const chip = document.createElement('div'); chip.className = "color-chip"; chip.style.background = c; chip.onclick = () => { document.getElementById(`f-${type}-color`).value = c; document.getElementById(`${type}-select-icon`).style.backgroundColor = c; grid.classList.remove('grid-open'); }; grid.appendChild(chip); });
+            });
+        };
+        window.toggleColorGrid = (type) => document.getElementById(`${type}-color-grid`).classList.toggle('grid-open');
+
+        window.showHome = () => { document.getElementById('home-content').classList.remove('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); };
+        window.showDollList = () => { document.getElementById('home-content').classList.add('hidden'); document.getElementById('doll-list-page').classList.remove('hidden'); document.getElementById('post-list-page').classList.add('hidden'); toggleMenu('side-menu'); renderDollList(); };
+        window.showPostListPage = () => { document.getElementById('home-content').classList.add('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.remove('hidden'); toggleMenu('side-menu'); renderPostListMenu(); };
+        window.closeModal = () => document.querySelectorAll('.modal-base').forEach(m => m.style.display = 'none');
+        window.closeProfile = () => document.getElementById('profile-overlay').style.display = 'none';
+        window.closeArticle = () => document.getElementById('article-page').style.display = 'none';
+        window.showLoading = (s) => document.getElementById('loading').style.display = s ? 'flex' : 'none';
+        window.updateCrop = (id, hid, vid) => { const img = document.getElementById(id); img.style.objectPosition = `${document.getElementById(hid).value}% ${document.getElementById(vid).value}%`; };
+        window.autoResize = (el) => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; };
+
+        function renderCalendar() {
             const container = document.getElementById('cal-days'), monthLabel = document.getElementById('cal-month'), eventBox = document.getElementById('day-events');
             container.innerHTML = ""; eventBox.innerHTML = "";
             let d = new Date(); d.setMonth(d.getMonth() + calOffset);
@@ -572,46 +510,35 @@
                 };
                 container.appendChild(day);
             }
-        };
-
+        }
         window.changeMonth = (n) => { calOffset += n; renderCalendar(); };
 
-        // --- 詳細・リスト表示 ---
-        window.showDetail = (i) => {
-            const d = dolls[i]; if(!d) return;
-            document.getElementById('view-img').src = d.image;
-            document.getElementById('view-name').innerText = d.name;
-            document.getElementById('view-kana').innerText = d.kana;
-            document.getElementById('view-profile').innerText = d.profile;
-            const bg = document.getElementById('profile-bg'); bg.style.backgroundColor = d.bgColor; bg.style.color = d.textColor;
-            const det = document.getElementById('detail-box');
-            let html = "";
-            if(d.bodySize) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Size</p><p class="font-bold">${d.bodySize}</p></div>`;
-            if(d.bodyMake) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Body</p><p class="font-bold">${d.bodyMake}</p></div>`;
-            if(d.head) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Head</p><p class="font-bold">${d.head}</p></div>`;
-            det.innerHTML = html; det.classList.toggle('hidden', !html);
-            document.getElementById('detail-edit-btn').onclick = () => { closeProfile(); openModal(i); };
-            document.getElementById('detail-del-btn').onclick = () => { showConfirm("この子を削除しますか？", async () => { dolls.splice(i, 1); await syncData(); location.reload(); }); };
-            document.getElementById('profile-overlay').style.display = 'block';
-        };
-
-        function renderDollList() {
-            const container = document.getElementById('doll-display-area'); container.innerHTML = "";
-            if(dollViewMode === 'grid') {
-                const grid = document.createElement('div'); grid.className = "grid grid-cols-3 gap-2";
-                dolls.forEach((d, i) => { const img = document.createElement('img'); img.className = "w-full aspect-square object-cover rounded-xl"; img.src = d.image; img.onclick = () => showDetail(i); grid.appendChild(img); });
-                container.appendChild(grid);
-            } else {
-                dolls.forEach((d, i) => { const item = document.createElement('div'); item.className = "flex items-center gap-4 py-3 border-b cursor-pointer"; item.onclick = () => showDetail(i); item.innerHTML = `<img src="${d.image}" class="w-12 h-12 rounded-full object-cover"><span class="font-bold text-sm">${d.name}</span>`; container.appendChild(item); });
+        function renderAnniversaries() {
+            const list = document.getElementById('happy-anniversary-list'), closest = document.getElementById('closest-anniversary');
+            list.innerHTML = ""; closest.innerHTML = "";
+            let today = new Date(), annis = [];
+            dolls.forEach((d, di) => { d.anniversaries.forEach(a => {
+                let [y, m, d_] = a.date.split('-').map(Number), date = new Date(today.getFullYear(), m-1, d_);
+                if(date < new Date(today.getFullYear(), today.getMonth(), today.getDate())) date.setFullYear(today.getFullYear()+1);
+                annis.push({ ...a, dollName: d.name, dollIdx: di, fullDate: date, isToday: (today.getMonth()+1 === m && today.getDate() === d_) });
+            })});
+            const todayAnnis = annis.filter(a => a.isToday);
+            document.getElementById('happy-anniversary').classList.toggle('hidden', !todayAnnis.length);
+            todayAnnis.forEach(a => { 
+                const div = document.createElement('div'); div.className = "bg-white p-6 rounded-3xl shadow-sm border-2 border-pink-100 mb-4 animate-anni cursor-pointer"; 
+                div.innerHTML = `<p class="text-xs font-bold text-pink-400 mb-1">${a.name}</p><p class="text-xl font-bold">${a.dollName}</p>`; 
+                div.onclick = () => showDetail(a.dollIdx); list.appendChild(div); 
+            });
+            annis.sort((a,b) => a.fullDate - b.fullDate);
+            if(annis.length) { 
+                const a = annis[0], days = Math.ceil((a.fullDate - today)/(1000*60*60*24)); 
+                closest.innerHTML = `<div class="flex justify-between items-center bg-white p-5 rounded-2xl shadow-sm"><div><p class="text-[10px] font-bold text-stone-400 mb-1">${a.date.replace(/-/g,'.')} ${a.name}</p><p class="font-bold">${a.dollName}</p></div><div class="text-right"><p class="text-[10px] font-bold text-stone-300 uppercase">あと</p><p class="text-xl font-bold text-stone-800">${days}日</p></div></div>`; 
             }
         }
 
-        window.toggleDollViewMode = () => { dollViewMode = (dollViewMode === 'grid' ? 'list' : 'grid'); document.getElementById('toggle-list-view').innerText = (dollViewMode === 'grid' ? '名前を表示' : '画像のみ表示'); renderDollList(); };
-
-        // --- 投稿系 ---
         function renderHomePosts() {
             const container = document.getElementById('home-posts'); container.innerHTML = "";
-            posts.filter(p => p.pos === 'home').forEach((p, i) => {
+            posts.filter(p => p.pos === 'home').forEach(p => {
                 const art = document.createElement('article'); art.className = "space-y-4 cursor-pointer";
                 art.onclick = () => openArticle(posts.indexOf(p));
                 if(p.blocks[0]?.img) art.innerHTML += `<img src="${p.blocks[0].img}" class="w-full aspect-[4/3] object-cover rounded-3xl shadow-sm">`;
@@ -622,7 +549,7 @@
 
         function renderPostListMenu() {
             const container = document.getElementById('menu-post-list'); container.innerHTML = "";
-            posts.filter(p => p.pos === 'menu').forEach((p, i) => {
+            posts.filter(p => p.pos === 'menu').forEach(p => {
                 const d = document.createElement('div'); d.className = "p-6 bg-white rounded-3xl shadow-sm border border-stone-100 mb-4 cursor-pointer";
                 d.onclick = () => openArticle(posts.indexOf(p));
                 d.innerHTML = `<h4 class="font-bold text-lg mb-2">${p.title}</h4><p class="text-xs text-stone-400 line-clamp-2">${p.blocks[0]?.text || ""}</p>`;
@@ -643,94 +570,58 @@
             document.getElementById('article-page').style.display = 'block';
         };
 
-        // --- モーダル表示初期化 ---
+        function renderDollList() {
+            const container = document.getElementById('doll-display-area'); container.innerHTML = "";
+            if(dollViewMode === 'grid') {
+                const grid = document.createElement('div'); grid.className = "grid grid-cols-3 gap-2";
+                dolls.forEach((d, i) => { const img = document.createElement('img'); img.className = "w-full aspect-square object-cover rounded-xl"; img.src = d.image; img.onclick = () => showDetail(i); grid.appendChild(img); });
+                container.appendChild(grid);
+            } else {
+                dolls.forEach((d, i) => { const item = document.createElement('div'); item.className = "flex items-center gap-4 py-3 border-b cursor-pointer"; item.onclick = () => showDetail(i); item.innerHTML = `<img src="${d.image}" class="w-12 h-12 rounded-full object-cover"><span class="font-bold text-sm">${d.name}</span>`; container.appendChild(item); });
+            }
+        }
+
+        window.toggleDollViewMode = () => { dollViewMode = (dollViewMode === 'grid' ? 'list' : 'grid'); document.getElementById('toggle-list-view').innerText = (dollViewMode === 'grid' ? '名前を表示' : '画像のみ表示'); renderDollList(); };
+
         window.openModal = (i = "") => {
             document.getElementById('modal-title').innerText = (i === "" ? "うちの子登録" : "うちの子編集");
             document.getElementById('edit-id').value = i;
             const d = (i === "" ? { name:"", kana:"", image:"", bodySize:"", bodyMake:"", head:"", anniversaries:[], bgColor:"#ffffff", textColor:"#000000", calColor:"#E11D48", profile:"" } : dolls[i]);
-            document.getElementById('f-name').value = d.name;
-            document.getElementById('f-kana').value = d.kana;
-            document.getElementById('f-size-label').value = d.bodySize || "";
-            document.getElementById('f-body-make').value = d.bodyMake || "";
-            document.getElementById('f-head').value = d.head || "";
-            document.getElementById('f-bg-color').value = d.bgColor;
-            document.getElementById('f-text-color').value = d.textColor;
-            document.getElementById('f-cal-color').value = d.calColor;
-            document.getElementById('f-profile').value = d.profile;
-            document.getElementById('anniversary-inputs').innerHTML = "";
+            document.getElementById('f-name').value = d.name; document.getElementById('f-kana').value = d.kana;
+            document.getElementById('f-size-label').value = d.bodySize || ""; document.getElementById('f-body-make').value = d.bodyMake || "";
+            document.getElementById('f-head').value = d.head || ""; document.getElementById('f-bg-color').value = d.bgColor;
+            document.getElementById('f-text-color').value = d.textColor; document.getElementById('f-cal-color').value = d.calColor;
+            document.getElementById('f-profile').value = d.profile; document.getElementById('anniversary-inputs').innerHTML = "";
             (d.anniversaries || []).forEach(a => addAnniversaryInput(a));
             document.getElementById('bg-select-icon').style.backgroundColor = d.bgColor;
             document.getElementById('text-select-icon').style.backgroundColor = d.textColor;
             document.getElementById('cal-select-icon').style.backgroundColor = d.calColor;
-            document.getElementById('crop-preview').src = d.image;
-            document.getElementById('crop-preview').classList.toggle('hidden', !d.image);
+            document.getElementById('crop-preview').src = d.image; document.getElementById('crop-preview').classList.toggle('hidden', !d.image);
             document.getElementById('doll-hint').classList.toggle('hidden', !!d.image);
-            currentRawImg.doll = null;
-            document.getElementById('modal').style.display = 'flex';
+            currentRawImg.doll = null; document.getElementById('modal').style.display = 'flex';
         };
 
         window.openModalWithClear = () => { currentRawImg.doll = null; openModal(); };
 
         window.openOwnerModal = () => {
-            document.getElementById('o-name').value = owner.name || "";
-            document.getElementById('o-bio').value = owner.bio || "";
-            document.getElementById('owner-preview').src = owner.image || "";
-            document.getElementById('owner-preview').classList.toggle('hidden', !owner.image);
+            document.getElementById('o-name').value = owner.name || ""; document.getElementById('o-bio').value = owner.bio || "";
+            document.getElementById('owner-preview').src = owner.image || ""; document.getElementById('owner-preview').classList.toggle('hidden', !owner.image);
             document.getElementById('owner-hint').classList.toggle('hidden', !!owner.image);
             const container = document.getElementById('sns-inputs-container'); container.innerHTML = "";
             (owner.sns || []).forEach(s => addSnsInput(s));
-            currentRawImg.owner = null;
-            document.getElementById('owner-modal').style.display = 'flex';
+            currentRawImg.owner = null; document.getElementById('owner-modal').style.display = 'flex';
         };
 
         window.openPostModal = (i = "") => {
             document.getElementById('post-modal-title').innerText = i === "" ? "投稿作成" : "投稿編集";
             document.getElementById('edit-post-id').value = i;
             const p = i === "" ? { title:"", blocks:[], pos:"home" } : posts[i];
-            document.getElementById('p-title').value = p.title;
-            document.querySelector(`input[name="p-pos"][value="${p.pos}"]`).checked = true;
+            document.getElementById('p-title').value = p.title; document.querySelector(`input[name="p-pos"][value="${p.pos}"]`).checked = true;
             const cont = document.getElementById('post-blocks-container'); cont.innerHTML = "";
             if(p.blocks.length) p.blocks.forEach(b => addPostBlock(b)); else addPostBlock();
             document.getElementById('post-modal').style.display = 'flex';
         };
 
-        // --- 動的入力追加 ---
-        window.addAnniversaryInput = (v = {name:"", date:""}) => {
-            const div = document.createElement('div'), id = Math.random().toString(36).substr(2, 9);
-            div.className = "flex flex-col gap-2 p-4 bg-white rounded-2xl border border-stone-100";
-            div.innerHTML = `<input type="text" class="f-anni-name w-full border-b py-1 text-sm outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2"><select id="m-${id}" onchange="updateDateInput('${id}')" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" onchange="updateDateInput('${id}')" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" class="f-anni-date hidden" value="${v.date}">`;
-            document.getElementById('anniversary-inputs').appendChild(div);
-            if(v.date) { const [y,m,d] = v.date.split('-'); document.getElementById(`m-${id}`).value = parseInt(m); document.getElementById(`d-${id}`).value = parseInt(d); }
-        };
-
-        window.updateDateInput = (id) => {
-            const m = document.getElementById(`m-${id}`).value, d = document.getElementById(`d-${id}`).value;
-            if(m && d) { const row = document.getElementById(`m-${id}`).closest('div').parentElement; row.querySelector('.f-anni-date').value = `2000-${m.padStart(2,'0')}-${d.padStart(2,'0')}`; }
-        };
-
-        window.addSnsInput = (s = {type:"x", val:""}) => {
-            const div = document.createElement('div'); div.className = "sns-input-row flex gap-2";
-            div.innerHTML = `<select class="sns-type border rounded p-2 text-xs"><option value="x" ${s.type==='x'?'selected':''}>X</option><option value="instagram" ${s.type==='instagram'?'selected':''}>Instagram</option><option value="link" ${s.type==='link'?'selected':''}>Link</option></select><input type="text" class="sns-val border rounded p-2 text-xs flex-1" placeholder="IDまたはURL" value="${s.val}">`;
-            document.getElementById('sns-inputs-container').appendChild(div);
-        };
-
-        window.addPostBlock = (b = {img:"", text:""}) => {
-            const div = document.createElement('div'); div.className = "post-block p-4 bg-stone-50 rounded-2xl space-y-3";
-            div.innerHTML = `<div class="aspect-video bg-stone-200 rounded-xl overflow-hidden cursor-pointer flex items-center justify-center relative" onclick="this.nextElementSibling.click()"><img src="${b.img}" class="${b.img?'':'hidden'} w-full h-full object-cover"><span class="${b.img?'hidden':''} text-[10px] font-bold text-stone-400">画像を選択</span></div><input type="file" accept="image/*" class="hidden" onchange="const img=this.previousElementSibling.querySelector('img'),span=this.previousElementSibling.querySelector('span'),f=this.files[0]; if(f){const r=new FileReader(); r.onload=e=>{img.src=e.target.result; img.classList.remove('hidden'); span.classList.add('hidden');}; r.readAsDataURL(f);}"><textarea class="w-full bg-transparent p-2 text-sm outline-none" placeholder="本文" oninput="autoResize(this)">${b.text}</textarea>`;
-            document.getElementById('post-blocks-container').appendChild(div);
-        };
-
-        // --- カラーパレット ---
-        window.initColorPalettes = () => {
-            ['bg','text','cal'].forEach(type => {
-                const grid = document.getElementById(`${type}-color-grid`);
-                palette100.forEach(c => { const chip = document.createElement('div'); chip.className = "color-chip"; chip.style.background = c; chip.onclick = () => selectColor(type, c); grid.appendChild(chip); });
-            });
-        };
-        window.toggleColorGrid = (type) => { document.getElementById(`${type}-color-grid`).classList.toggle('grid-open'); };
-        window.selectColor = (type, c) => { document.getElementById(`f-${type}-color`).value = c; document.getElementById(`${type}-select-icon`).style.backgroundColor = c; toggleColorGrid(type); };
-
-        // --- ダイアログ・新規作成 ---
         function showConfirm(m, onYes, yesText = "はい") {
             const d = document.getElementById('custom-dialog'), msg = document.getElementById('dialog-message'), btns = document.getElementById('dialog-buttons');
             msg.innerText = m; btns.innerHTML = "";
@@ -743,12 +634,11 @@
 
         async function openCreationModal() {
             const d = document.getElementById('custom-dialog'), msg = document.getElementById('dialog-message'), inputs = document.getElementById('dialog-inputs'), btns = document.getElementById('dialog-buttons');
-            const gid = document.getElementById('auth-gallery-id');
             inputs.classList.remove('hidden'); btns.innerHTML = "";
             msg.innerText = "新規ギャラリーの作成\n公開用IDを入力してログインしてください";
             const b = document.createElement('button'); b.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold"; b.innerText = "Googleでログインして作成";
             b.onclick = async () => {
-                const id = gid.value.trim(); if(!id) return alert("IDを入力してください");
+                const id = document.getElementById('auth-gallery-id').value.trim(); if(!id) return alert("IDを入力してください");
                 const { data } = await supabase.from('galleries').select('id').eq('id', id).single();
                 if(data) return alert("そのIDは既に使用されています");
                 localStorage.setItem('pending_gallery_id', id); handleLogin();
@@ -756,29 +646,21 @@
             btns.appendChild(b); d.style.display = 'flex';
         }
 
-        // 新規作成後のリダイレクト処理
         (async () => {
             const p = localStorage.getItem('pending_gallery_id');
             if(p) {
                 const { data: { session } } = await supabase.auth.getSession();
                 if(session) {
-                    await supabase.from('galleries').insert({ 
-                        id: p, 
-                        admin_email: session.user.email, 
-                        data: { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [] } 
-                    });
-                    localStorage.removeItem('pending_gallery_id'); 
-                    window.location.search = `?id=${p}`;
+                    await supabase.from('galleries').insert({ id: p, admin_email: session.user.email, data: { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [] } });
+                    localStorage.removeItem('pending_gallery_id'); window.location.search = `?id=${p}`;
                 }
             }
         })();
 
-        // --- その他 ---
         window.copyURL = () => { navigator.clipboard.writeText(window.location.href); alert("URLをコピーしました"); };
         window.shareSNS = (type) => { const u = encodeURIComponent(window.location.href); window.open(type === 'x' ? `https://twitter.com/intent/tweet?url=${u}` : `https://social-plugins.line.me/lineit/share?url=${u}`, '_blank'); };
         window.requestNewGallery = () => { showConfirm("新しいギャラリーを作成しますか？", () => window.open(window.location.origin + window.location.pathname + '?mode=new', '_blank'), "作成する"); };
-        window.requestClearAll = () => { showConfirm("全てのデータを完全に削除しますか？\nこの操作は取り消せません。", async () => { dolls = []; owner = { name: "Owner Name", bio: "", sns: [], image:"" }; posts = []; await syncData(); location.reload(); }, "削除する"); };
-        function setupInfiniteScroll() { /* 実装に応じて拡張 */ }
+        window.requestClearAll = () => { showConfirm("全てのデータを完全に削除しますか？", async () => { dolls = []; owner = { name: "Owner Name", bio: "", sns: [], image:"" }; posts = []; await syncData(); location.reload(); }, "削除する"); };
     </script>
 </body>
 </html>
