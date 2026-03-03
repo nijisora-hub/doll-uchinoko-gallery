@@ -23,7 +23,6 @@
         .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 20px; }
         .film-frame { width: 80px; height: 80px; background: #333; border: 2px solid #eee; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; position: relative; z-index: 10; }
         
-        /* モーダル基本 */
         .modal-base { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 10px; }
         #side-menu { justify-content: flex-end; padding: 0; }
         
@@ -36,13 +35,11 @@
         .preview-sq { flex: 1; aspect-ratio: 1/1; background: #f3f3f3; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid #eee; }
         .preview-sq img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; }
         
-        /* カレンダー */
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; border-radius: 50%; cursor: pointer; position: relative; }
         .cal-dots { display: flex; gap: 2px; justify-content: center; position: absolute; bottom: 4px; width: 100%; height: 4px; overflow: hidden; }
         .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
         
-        /* カラー選択 */
         .color-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 12px; padding: 4px; display: none; }
         .color-grid.grid-open { display: grid; }
         .color-chip { aspect-ratio: 1; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.1s; }
@@ -64,7 +61,7 @@
 <body class="text-stone-800 pb-20">
     <div id="loading">処理中...</div>
 
-    <div id="custom-dialog">
+    <div id="custom-dialog" class="modal-base">
         <div class="bg-white w-full max-w-xs p-8 rounded-3xl shadow-2xl text-center">
             <p id="dialog-message" class="text-[16px] mb-8 leading-relaxed font-bold whitespace-pre-wrap text-stone-700"></p>
             <div id="dialog-inputs" class="mb-6 space-y-4 hidden">
@@ -280,29 +277,32 @@
             return colors.slice(0, 100);
         })();
 
-        // --- 認証 & 無限ループ防止 ---
         window.handleLogin = async function() {
             const inputId = document.getElementById('auth-gallery-id').value || galleryId;
             if(inputId) localStorage.setItem('pending_gallery_id', inputId);
-            await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: GITHUB_URL } });
+            await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: GITHUB_URL, queryParams: { prompt: 'select_account' } } });
         };
         window.handleLogout = async function() { await supabase.auth.signOut(); localStorage.clear(); location.href = GITHUB_URL; };
 
         (async () => {
+            showLoading(true);
             const { data: { session } } = await supabase.auth.getSession();
             const p = localStorage.getItem('pending_gallery_id');
 
             if(p && session) {
-                const { data: ex } = await supabase.from('galleries').select('id').eq('id', p).single();
-                if(!ex) await supabase.from('galleries').insert({ id: p, admin_email: session.user.email, data: { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image:"" }, posts: [] } });
+                const { data: ex } = await supabase.from('galleries').select('id').eq('id', p).maybeSingle();
+                if(!ex) {
+                    await supabase.from('galleries').insert({ id: p, admin_email: session.user.email, data: { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image: "" }, posts: [] } });
+                }
                 localStorage.removeItem('pending_gallery_id');
                 window.location.href = GITHUB_URL + "?id=" + p;
                 return;
             }
 
-            if (!galleryId || urlParams.get('mode') === 'new') { openCreationModal(); } 
-            else { 
-                showLoading(true);
+            if (!galleryId || urlParams.get('mode') === 'new') { 
+                showLoading(false);
+                openCreationModal(); 
+            } else { 
                 await loadData();
                 checkUser(session?.user);
                 renderAll();
@@ -311,8 +311,10 @@
         })();
 
         async function loadData() {
-            const { data } = await supabase.from('galleries').select('*').eq('id', galleryId).single();
-            if (data) { dolls = data.data.dolls || []; owner = data.data.owner || owner; posts = data.data.posts || []; adminEmail = data.admin_email || ""; }
+            const { data, error } = await supabase.from('galleries').select('*').eq('id', galleryId).maybeSingle();
+            if (data) { 
+                dolls = data.data.dolls || []; owner = data.data.owner || owner; posts = data.data.posts || []; adminEmail = data.admin_email || ""; 
+            }
         }
 
         async function syncData() {
@@ -334,7 +336,6 @@
             document.getElementById('logout-btn').classList.toggle('hidden', !isAdmin);
         }
 
-        // --- 描画ロジック（フル機能） ---
         function renderAll() {
             const film = document.getElementById('top-film-roll'); film.innerHTML = "";
             dolls.forEach((d, i) => { 
@@ -342,7 +343,9 @@
                 img.onclick = () => showDetail(i); film.appendChild(img); 
             });
             document.getElementById('empty-msg').style.display = dolls.length ? 'none' : 'flex';
-            const oImg = document.getElementById('display-owner-img'); oImg.src = owner.image; oImg.classList.toggle('hidden', !owner.image);
+            if(owner.image) {
+                const oImg = document.getElementById('display-owner-img'); oImg.src = owner.image; oImg.classList.remove('hidden');
+            }
             document.getElementById('owner-name').innerText = owner.name || "";
             document.getElementById('owner-bio').innerText = owner.bio || "";
             const snsBox = document.getElementById('owner-sns-links'); snsBox.innerHTML = "";
@@ -355,7 +358,6 @@
             renderAnniversaries(); renderCalendar(); renderHomePosts();
         }
 
-        // --- 保存処理（クロップ対応） ---
         window.saveData = async () => {
             const id = document.getElementById('edit-id').value; let imgData = (id !== "" && dolls[id]) ? dolls[id].image : "";
             if(currentRawImg.doll) {
@@ -396,7 +398,6 @@
             await syncData(); location.reload();
         };
 
-        // --- ユーティリティ ---
         window.showDetail = (i) => {
             const d = dolls[i]; if(!d) return;
             document.getElementById('view-img').src = d.image;
@@ -463,14 +464,14 @@
         });
         window.toggleColorGrid = (type) => document.getElementById(`${type}-color-grid`).classList.toggle('grid-open');
 
-        // --- 画面遷移・カレンダー ---
         function renderCalendar() {
             const container = document.getElementById('cal-days'), monthLabel = document.getElementById('cal-month'), eventBox = document.getElementById('day-events');
-            if(!container) return;
-            container.innerHTML = ""; eventBox.innerHTML = "";
+            if(!container) return; container.innerHTML = ""; eventBox.innerHTML = "";
             let d = new Date(); d.setMonth(d.getMonth() + calOffset);
             monthLabel.innerText = `${d.getFullYear()} / ${d.getMonth()+1}`;
             let last = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+            const firstDay = new Date(d.getFullYear(), d.getMonth(), 1).getDay();
+            for(let i=0; i<firstDay; i++) container.appendChild(document.createElement('div'));
             for(let i=1; i<=last; i++) {
                 const day = document.createElement('div'); day.className = "cal-day"; day.innerText = i;
                 const dots = document.createElement('div'); dots.className = "cal-dots";
@@ -490,8 +491,7 @@
 
         function renderAnniversaries() {
             const list = document.getElementById('happy-anniversary-list'), closest = document.getElementById('closest-anniversary');
-            if(!list) return;
-            list.innerHTML = ""; closest.innerHTML = "";
+            if(!list) return; list.innerHTML = ""; closest.innerHTML = "";
             let today = new Date(), annis = [];
             dolls.forEach((d, di) => { (d.anniversaries || []).forEach(a => {
                 let [_, m, d_] = a.date.split('-').map(Number), date = new Date(today.getFullYear(), m-1, d_);
@@ -587,6 +587,7 @@
             document.getElementById('post-modal').style.display = 'flex';
         };
 
+        window.toggleMenu = (id) => { const m = document.getElementById(id); m.style.display = (window.getComputedStyle(m).display === 'none') ? 'flex' : 'none'; };
         window.closeModal = () => document.querySelectorAll('.modal-base').forEach(m => m.style.display = 'none');
         window.closeProfile = () => document.getElementById('profile-overlay').style.display = 'none';
         window.closeArticle = () => document.getElementById('article-page').style.display = 'none';
@@ -597,16 +598,19 @@
 
         function openCreationModal() {
             const d = document.getElementById('custom-dialog');
-            document.getElementById('dialog-message').innerText = "新規ギャラリー作成\nIDを入力してください";
+            document.getElementById('dialog-message').innerText = "ギャラリーIDを入力してください\n(既存ギャラリーの閲覧、または新規作成)";
             document.getElementById('dialog-inputs').classList.remove('hidden');
-            document.getElementById('dialog-buttons').innerHTML = `<button onclick="handleInit()" class="w-full bg-stone-800 text-white py-4 rounded-full font-bold">作成</button>`;
+            document.getElementById('dialog-buttons').innerHTML = `
+                <button onclick="handleInit()" class="w-full bg-stone-800 text-white py-4 rounded-full font-bold">ログインして管理/作成</button>
+                <button onclick="viewOnly()" class="w-full bg-stone-100 text-stone-600 py-3 rounded-full text-xs">閲覧のみ</button>`;
             d.style.display = 'flex';
         }
-        window.handleInit = () => { const id = document.getElementById('auth-gallery-id').value; if(id) { localStorage.setItem('pending_gallery_id', id); handleLogin(); } };
+        window.handleInit = () => { const id = document.getElementById('auth-gallery-id').value; if(id) { localStorage.setItem('pending_gallery_id', id); handleLogin(); } else { alert("IDを入力してください"); } };
+        window.viewOnly = () => { const id = document.getElementById('auth-gallery-id').value; if(id) location.href = GITHUB_URL + "?id=" + id; else alert("IDを入力してください"); };
 
         window.copyURL = () => { navigator.clipboard.writeText(window.location.href); alert("URLをコピーしました"); };
         window.shareSNS = (type) => { const u = encodeURIComponent(window.location.href); window.open(type === 'x' ? `https://twitter.com/intent/tweet?url=${u}` : `https://social-plugins.line.me/lineit/share?url=${u}`, '_blank'); };
-        window.requestNewGallery = () => { if(confirm("新しいギャラリーを作成しますか？")) window.open(GITHUB_URL + "?mode=new", "_blank"); };
+        window.requestNewGallery = () => { if(confirm("新しいギャラリーを作成しますか？")) location.href = GITHUB_URL + "?mode=new"; };
         window.requestClearAll = () => { if(confirm("全てのデータを完全に削除しますか？")) { dolls = []; owner = { name: "Owner Name", bio: "", sns: [], image:"" }; posts = []; syncData().then(() => location.reload()); } };
 
         window.changeMonth = (n) => { calOffset += n; renderCalendar(); };
