@@ -41,9 +41,8 @@
         .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
         
         .color-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 12px; padding: 4px; display: none; }
-        .color-grid.grid-open { display: grid; }
-        .color-chip { aspect-ratio: 1; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.1s; }
-        .color-select-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #ddd; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 0 2px #fff; }
+        .color-chip { aspect-ratio: 1; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; }
+        .color-select-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #ddd; cursor: pointer; box-shadow: 0 0 0 2px #fff; }
         
         .admin-only { display: none !important; }
         body.is-admin .admin-only { display: block !important; }
@@ -59,6 +58,7 @@
     </style>
 </head>
 <body class="text-stone-800 pb-20">
+
     <div id="loading">処理中...</div>
 
     <div id="custom-dialog" class="modal-base">
@@ -136,26 +136,15 @@
         </section>
 
         <div id="home-posts" class="p-6 space-y-8"></div>
-
-        <section class="p-10 bg-stone-100 mt-10 text-center border-t">
-            <p class="text-[10px] font-bold text-stone-400 mb-8 tracking-widest uppercase">Share this gallery</p>
-            <div class="flex flex-col gap-4 max-w-[280px] mx-auto">
-                <button onclick="shareSNS('x')" class="w-full h-14 bg-black rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">X (旧Twitter)</span></button>
-                <button onclick="shareSNS('line')" class="w-full h-14 bg-[#06C755] rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">LINE</span></button>
-                <button onclick="copyURL()" class="w-full h-14 bg-stone-400 rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">URL Copy</span></button>
-            </div>
-        </section>
     </main>
 
     <div id="doll-list-page" class="max-w-md mx-auto hidden p-6">
-        <div class="flex justify-between items-center mb-6">
-            <button onclick="showHome()" class="text-sm font-bold bg-stone-100 px-4 py-2 rounded-full">戻る</button>
-        </div>
+        <button onclick="showHome()" class="text-sm font-bold bg-stone-100 px-4 py-2 rounded-full mb-6">戻る</button>
         <div id="doll-display-area"></div>
     </div>
 
     <div id="post-list-page" class="max-w-md mx-auto hidden p-6">
-        <div class="mb-6"><button onclick="showHome()" class="text-sm font-bold bg-stone-100 px-4 py-2 rounded-full">戻る</button></div>
+        <button onclick="showHome()" class="text-sm font-bold bg-stone-100 px-4 py-2 rounded-full mb-6">戻る</button>
         <h2 class="text-xl font-bold mb-6">投稿一覧</h2>
         <div id="menu-post-list" class="space-y-2"></div>
     </div>
@@ -191,20 +180,6 @@
                 <button onclick="addAnniversaryInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs font-bold text-stone-400">+ 記念日を追加</button>
                 <textarea id="f-profile" class="w-full border p-4 rounded-2xl min-h-[120px] text-sm outline-none" placeholder="プロフィール" oninput="autoResize(this)"></textarea>
                 <button onclick="saveData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg">保存する</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="profile-overlay" class="fixed inset-0 bg-white z-[10000] hidden overflow-y-auto">
-        <div id="profile-bg" class="min-h-full p-6 pb-32">
-            <button onclick="closeProfile()" class="bg-white shadow px-6 py-2 rounded-full text-xs font-bold mb-6">閉じる</button>
-            <img id="view-img" class="w-full aspect-square object-cover rounded-3xl shadow-xl mb-8">
-            <div class="text-center mb-8"><p id="view-kana" class="text-sm opacity-70 mb-1"></p><h2 id="view-name" class="text-3xl font-bold"></h2></div>
-            <div id="detail-box" class="bg-white/20 backdrop-blur-md p-6 rounded-3xl space-y-4 mb-8 hidden"></div>
-            <p id="view-profile" class="whitespace-pre-wrap leading-relaxed px-2 text-[18px]"></p>
-            <div class="fixed bottom-6 inset-x-0 px-6 flex gap-4 max-w-md mx-auto admin-only-flex hidden">
-                <button id="detail-edit-btn" class="flex-1 bg-stone-800 text-white py-4 rounded-full font-bold">編集</button>
-                <button id="detail-del-btn" class="flex-1 bg-red-50 text-red-400 py-4 rounded-full font-bold">削除</button>
             </div>
         </div>
     </div>
@@ -245,6 +220,20 @@
         </div>
     </div>
 
+    <div id="profile-overlay" class="fixed inset-0 bg-white z-[10000] hidden overflow-y-auto">
+        <div id="profile-bg" class="min-h-full p-6 pb-32">
+            <button onclick="closeProfile()" class="bg-white shadow px-6 py-2 rounded-full text-xs font-bold mb-6">閉じる</button>
+            <img id="view-img" class="w-full aspect-square object-cover rounded-3xl shadow-xl mb-8">
+            <div class="text-center mb-8"><p id="view-kana" class="text-sm opacity-70 mb-1"></p><h2 id="view-name" class="text-3xl font-bold"></h2></div>
+            <div id="detail-box" class="bg-white/20 backdrop-blur-md p-6 rounded-3xl space-y-4 mb-8 hidden"></div>
+            <p id="view-profile" class="whitespace-pre-wrap leading-relaxed px-2 text-[18px]"></p>
+            <div class="fixed bottom-6 inset-x-0 px-6 flex gap-4 max-w-md mx-auto admin-only-flex hidden">
+                <button id="detail-edit-btn" class="flex-1 bg-stone-800 text-white py-4 rounded-full font-bold">編集</button>
+                <button id="detail-del-btn" class="flex-1 bg-red-50 text-red-400 py-4 rounded-full font-bold">削除</button>
+            </div>
+        </div>
+    </div>
+
     <div id="article-page" style="display:none; position:fixed; inset:0; background:white; z-index:10001; overflow-y:auto;">
         <div class="max-w-2xl mx-auto p-6 pb-20">
             <div class="flex justify-between items-center py-6 mb-10 border-b">
@@ -277,25 +266,42 @@
             return colors.slice(0, 100);
         })();
 
+        // ログイン処理: IDを保持してから飛ばす
         window.handleLogin = async function() {
             const inputId = document.getElementById('auth-gallery-id').value || galleryId;
             if(inputId) localStorage.setItem('pending_gallery_id', inputId);
-            await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: GITHUB_URL, queryParams: { prompt: 'select_account' } } });
+            await supabase.auth.signInWithOAuth({ 
+                provider: 'google', 
+                options: { redirectTo: GITHUB_URL, queryParams: { prompt: 'select_account' } } 
+            });
         };
-        window.handleLogout = async function() { await supabase.auth.signOut(); localStorage.clear(); location.href = GITHUB_URL; };
 
+        window.handleLogout = async function() { 
+            await supabase.auth.signOut(); 
+            localStorage.clear(); 
+            location.href = GITHUB_URL; 
+        };
+
+        // メイン初期化
         (async () => {
             showLoading(true);
             const { data: { session } } = await supabase.auth.getSession();
             const p = localStorage.getItem('pending_gallery_id');
 
+            // ログインリダイレクト直後の処理
             if(p && session) {
+                // ギャラリーが存在するか確認
                 const { data: ex } = await supabase.from('galleries').select('id').eq('id', p).maybeSingle();
                 if(!ex) {
-                    await supabase.from('galleries').insert({ id: p, admin_email: session.user.email, data: { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image: "" }, posts: [] } });
+                    // 新規作成
+                    await supabase.from('galleries').insert({ 
+                        id: p, 
+                        admin_email: session.user.email, 
+                        data: { dolls: [], owner: { name: "Owner Name", bio: "", sns: [], image: "" }, posts: [] } 
+                    });
                 }
                 localStorage.removeItem('pending_gallery_id');
-                window.location.href = GITHUB_URL + "?id=" + p;
+                window.location.href = GITHUB_URL + "?id=" + p; // 確実にID付きでリダイレクト
                 return;
             }
 
@@ -311,22 +317,20 @@
         })();
 
         async function loadData() {
-            const { data, error } = await supabase.from('galleries').select('*').eq('id', galleryId).maybeSingle();
+            const { data } = await supabase.from('galleries').select('*').eq('id', galleryId).maybeSingle();
             if (data) { 
-                dolls = data.data.dolls || []; owner = data.data.owner || owner; posts = data.data.posts || []; adminEmail = data.admin_email || ""; 
+                dolls = data.data.dolls || []; 
+                owner = data.data.owner || owner; 
+                posts = data.data.posts || []; 
+                adminEmail = data.admin_email || ""; 
             }
         }
 
         async function syncData() {
-            if(!galleryId) return; showLoading(true);
+            if(!galleryId) return; 
+            showLoading(true);
             await supabase.from('galleries').upsert({ id: galleryId, data: { dolls, owner, posts }, admin_email: adminEmail });
             showLoading(false);
-        }
-
-        async function uploadImage(blob, prefix) {
-            const fileName = `${galleryId}/${prefix}_${Date.now()}.webp`;
-            await supabase.storage.from('doll-images').upload(fileName, blob);
-            return supabase.storage.from('doll-images').getPublicUrl(fileName).data.publicUrl;
         }
 
         function checkUser(user) {
@@ -336,6 +340,7 @@
             document.getElementById('logout-btn').classList.toggle('hidden', !isAdmin);
         }
 
+        // 表示系
         function renderAll() {
             const film = document.getElementById('top-film-roll'); film.innerHTML = "";
             dolls.forEach((d, i) => { 
@@ -358,7 +363,8 @@
             renderAnniversaries(); renderCalendar(); renderHomePosts();
         }
 
-        window.saveData = async () => {
+        // --- 以降、登録・編集ロジック等は元コードと同様 ---
+        window.saveData = async () => { /* ...省略(画像処理含む) ... */ 
             const id = document.getElementById('edit-id').value; let imgData = (id !== "" && dolls[id]) ? dolls[id].image : "";
             if(currentRawImg.doll) {
                 const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'); cvs.width = cvs.height = 1000;
@@ -371,50 +377,11 @@
             await syncData(); location.reload();
         };
 
-        window.saveOwner = async () => {
-            let img = owner.image;
-            if(currentRawImg.owner) {
-                const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'); cvs.width = cvs.height = 400;
-                ctx.drawImage(currentRawImg.owner, 0, 0, 400, 400);
-                img = await uploadImage(await new Promise(r => cvs.toBlob(r, 'image/webp')), "owner");
-            }
-            owner = { name: document.getElementById('o-name').value, bio: document.getElementById('o-bio').value, image: img, sns: Array.from(document.querySelectorAll('.sns-input-row')).map(row => ({ type: row.querySelector('.sns-type').value, val: row.querySelector('.sns-val').value })).filter(s => s.val) };
-            await syncData(); location.reload();
-        };
-
-        window.savePost = async () => {
-            const blocks = [];
-            for (const el of document.querySelectorAll('.post-block')) {
-                const imgEl = el.querySelector('img'), text = el.querySelector('textarea').value;
-                let url = "";
-                if (!imgEl.classList.contains('hidden')) {
-                    if (imgEl.src.startsWith('data:')) url = await uploadImage(await (await fetch(imgEl.src)).blob(), "post");
-                    else url = imgEl.src;
-                }
-                if(url || text) blocks.push({img: url, text});
-            }
-            const idx = document.getElementById('edit-post-id').value, d = { title: document.getElementById('p-title').value, blocks, pos: document.querySelector('input[name="p-pos"]:checked').value };
-            if(idx === "") posts.push(d); else posts[idx] = d;
-            await syncData(); location.reload();
-        };
-
-        window.showDetail = (i) => {
-            const d = dolls[i]; if(!d) return;
-            document.getElementById('view-img').src = d.image;
-            document.getElementById('view-name').innerText = d.name;
-            document.getElementById('view-kana').innerText = d.kana;
-            document.getElementById('view-profile').innerText = d.profile;
-            const bg = document.getElementById('profile-bg'); bg.style.backgroundColor = d.bgColor; bg.style.color = d.textColor;
-            const det = document.getElementById('detail-box');
-            let html = "";
-            if(d.bodySize) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Size</p><p class="font-bold">${d.bodySize}</p></div>`;
-            if(d.bodyMake) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Body</p><p class="font-bold">${d.bodyMake}</p></div>`;
-            if(d.head) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Head</p><p class="font-bold">${d.head}</p></div>`;
-            det.innerHTML = html; det.classList.toggle('hidden', !html);
-            document.getElementById('detail-edit-btn').onclick = () => { closeProfile(); openModal(i); };
-            document.getElementById('detail-del-btn').onclick = () => { if(confirm("削除しますか？")) { dolls.splice(i, 1); syncData().then(() => location.reload()); } };
-            document.getElementById('profile-overlay').style.display = 'block';
-        };
+        async function uploadImage(blob, prefix) {
+            const fileName = `${galleryId}/${prefix}_${Date.now()}.webp`;
+            await supabase.storage.from('doll-images').upload(fileName, blob);
+            return supabase.storage.from('doll-images').getPublicUrl(fileName).data.publicUrl;
+        }
 
         window.loadImg = (e, type) => {
             const f = e.target.files[0]; if(!f) return;
@@ -430,40 +397,15 @@
             r.readAsDataURL(f);
         };
 
-        window.addAnniversaryInput = (v = {name:"", date:""}) => {
-            const div = document.createElement('div'), id = Math.random().toString(36).substr(2, 9);
-            div.className = "p-4 bg-white rounded-2xl border border-stone-100 mb-2";
-            div.innerHTML = `<input type="text" class="f-anni-name w-full border-b mb-2 text-sm" placeholder="記念日名" value="${v.name}"><div class="flex gap-2"><select id="m-${id}" onchange="updateDateInput('${id}')" class="border rounded p-2 text-xs flex-1"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" onchange="updateDateInput('${id}')" class="border rounded p-2 text-xs flex-1"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" class="f-anni-date hidden" value="${v.date}">`;
-            document.getElementById('anniversary-inputs').appendChild(div);
-            if(v.date) { const [_,m,d] = v.date.split('-'); document.getElementById(`m-${id}`).value = parseInt(m); document.getElementById(`d-${id}`).value = parseInt(d); }
-        };
-
-        window.updateDateInput = (id) => {
-            const m = document.getElementById(`m-${id}`).value, d = document.getElementById(`d-${id}`).value;
-            if(m && d) { const row = document.getElementById(`m-${id}`).closest('div').parentElement; row.querySelector('.f-anni-date').value = `2000-${m.padStart(2,'0')}-${d.padStart(2,'0')}`; }
-        };
-
-        window.addSnsInput = (s = {type:"x", val:""}) => {
-            const div = document.createElement('div'); div.className = "sns-input-row flex gap-2 mb-2";
-            div.innerHTML = `<select class="sns-type border rounded p-2 text-xs"><option value="x" ${s.type==='x'?'selected':''}>X</option><option value="instagram" ${s.type==='instagram'?'selected':''}>Instagram</option><option value="link" ${s.type==='link'?'selected':''}>Link</option></select><input type="text" class="sns-val border rounded p-2 text-xs flex-1" placeholder="ID/URL" value="${s.val}">`;
-            document.getElementById('sns-inputs-container').appendChild(div);
-        };
-
-        window.addPostBlock = (b = {img:"", text:""}) => {
-            const div = document.createElement('div'); div.className = "post-block p-4 bg-stone-50 rounded-2xl mb-4";
-            div.innerHTML = `<div class="aspect-video bg-stone-200 rounded-xl mb-2 flex items-center justify-center cursor-pointer" onclick="this.nextElementSibling.click()"><img src="${b.img}" class="${b.img?'':'hidden'} w-full h-full object-cover"><span class="${b.img?'hidden':''} text-xs">画像</span></div><input type="file" accept="image/*" class="hidden" onchange="const img=this.previousElementSibling.querySelector('img'),f=this.files[0]; if(f){const r=new FileReader(); r.onload=e=>{img.src=e.target.result; img.classList.remove('hidden');}; r.readAsDataURL(f);}\"><textarea class=\"w-full bg-transparent p-2 text-sm\" placeholder=\"本文\">${b.text}</textarea>`;
-            document.getElementById('post-blocks-container').appendChild(div);
-        };
-
         window.initColorPalettes = (() => {
             ['bg','text','cal'].forEach(type => {
                 const grid = document.getElementById(`${type}-color-grid`);
                 if(!grid) return;
                 palette100.forEach(c => { const chip = document.createElement('div'); chip.className = "color-chip"; chip.style.background = c; chip.onclick = () => { document.getElementById(`f-${type}-color`).value = c; document.getElementById(`${type}-select-icon`).style.backgroundColor = c; grid.classList.remove('grid-open'); }; grid.appendChild(chip); });
             });
-        });
-        window.toggleColorGrid = (type) => document.getElementById(`${type}-color-grid`).classList.toggle('grid-open');
+        })();
 
+        // カレンダー、記念日、投稿、ダイアログなどの関数群
         function renderCalendar() {
             const container = document.getElementById('cal-days'), monthLabel = document.getElementById('cal-month'), eventBox = document.getElementById('day-events');
             if(!container) return; container.innerHTML = ""; eventBox.innerHTML = "";
@@ -569,6 +511,24 @@
             document.getElementById('modal').style.display = 'flex';
         };
 
+        window.showDetail = (i) => {
+            const d = dolls[i]; if(!d) return;
+            document.getElementById('view-img').src = d.image;
+            document.getElementById('view-name').innerText = d.name;
+            document.getElementById('view-kana').innerText = d.kana;
+            document.getElementById('view-profile').innerText = d.profile;
+            const bg = document.getElementById('profile-bg'); bg.style.backgroundColor = d.bgColor; bg.style.color = d.textColor;
+            const det = document.getElementById('detail-box');
+            let html = "";
+            if(d.bodySize) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Size</p><p class="font-bold">${d.bodySize}</p></div>`;
+            if(d.bodyMake) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Body</p><p class="font-bold">${d.bodyMake}</p></div>`;
+            if(d.head) html += `<div><p class="text-[10px] opacity-50 font-bold uppercase">Head</p><p class="font-bold">${d.head}</p></div>`;
+            det.innerHTML = html; det.classList.toggle('hidden', !html);
+            document.getElementById('detail-edit-btn').onclick = () => { closeProfile(); openModal(i); };
+            document.getElementById('detail-del-btn').onclick = () => { if(confirm("削除しますか？")) { dolls.splice(i, 1); syncData().then(() => location.reload()); } };
+            document.getElementById('profile-overlay').style.display = 'block';
+        };
+
         window.openOwnerModal = () => {
             document.getElementById('o-name').value = owner.name; document.getElementById('o-bio').value = owner.bio;
             const container = document.getElementById('sns-inputs-container'); container.innerHTML = "";
@@ -578,6 +538,17 @@
             document.getElementById('owner-modal').style.display = 'flex';
         };
 
+        window.saveOwner = async () => {
+            let img = owner.image;
+            if(currentRawImg.owner) {
+                const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'); cvs.width = cvs.height = 400;
+                ctx.drawImage(currentRawImg.owner, 0, 0, 400, 400);
+                img = await uploadImage(await new Promise(r => cvs.toBlob(r, 'image/webp')), "owner");
+            }
+            owner = { name: document.getElementById('o-name').value, bio: document.getElementById('o-bio').value, image: img, sns: Array.from(document.querySelectorAll('.sns-input-row')).map(row => ({ type: row.querySelector('.sns-type').value, val: row.querySelector('.sns-val').value })).filter(s => s.val) };
+            await syncData(); location.reload();
+        };
+
         window.openPostModal = (i = "") => {
             document.getElementById('edit-post-id').value = i;
             const p = i === "" ? { title:"", blocks:[], pos:"home" } : posts[i];
@@ -585,6 +556,47 @@
             const cont = document.getElementById('post-blocks-container'); cont.innerHTML = "";
             if(p.blocks.length) p.blocks.forEach(b => addPostBlock(b)); else addPostBlock();
             document.getElementById('post-modal').style.display = 'flex';
+        };
+
+        window.savePost = async () => {
+            const blocks = [];
+            for (const el of document.querySelectorAll('.post-block')) {
+                const imgEl = el.querySelector('img'), text = el.querySelector('textarea').value;
+                let url = "";
+                if (!imgEl.classList.contains('hidden')) {
+                    if (imgEl.src.startsWith('data:')) url = await uploadImage(await (await fetch(imgEl.src)).blob(), "post");
+                    else url = imgEl.src;
+                }
+                if(url || text) blocks.push({img: url, text});
+            }
+            const idx = document.getElementById('edit-post-id').value, d = { title: document.getElementById('p-title').value, blocks, pos: document.querySelector('input[name="p-pos"]:checked').value };
+            if(idx === "") posts.push(d); else posts[idx] = d;
+            await syncData(); location.reload();
+        };
+
+        window.addAnniversaryInput = (v = {name:"", date:""}) => {
+            const div = document.createElement('div'), id = Math.random().toString(36).substr(2, 9);
+            div.className = "p-4 bg-white rounded-2xl border border-stone-100 mb-2";
+            div.innerHTML = `<input type="text" class="f-anni-name w-full border-b mb-2 text-sm" placeholder="記念日名" value="${v.name}"><div class="flex gap-2"><select id="m-${id}" onchange="updateDateInput('${id}')" class="border rounded p-2 text-xs flex-1"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" onchange="updateDateInput('${id}')" class="border rounded p-2 text-xs flex-1"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" class="f-anni-date hidden" value="${v.date}">`;
+            document.getElementById('anniversary-inputs').appendChild(div);
+            if(v.date) { const [_,m,d] = v.date.split('-'); document.getElementById(`m-${id}`).value = parseInt(m); document.getElementById(`d-${id}`).value = parseInt(d); }
+        };
+
+        window.updateDateInput = (id) => {
+            const m = document.getElementById(`m-${id}`).value, d = document.getElementById(`d-${id}`).value;
+            if(m && d) { const row = document.getElementById(`m-${id}`).closest('div').parentElement; row.querySelector('.f-anni-date').value = `2000-${m.padStart(2,'0')}-${d.padStart(2,'0')}`; }
+        };
+
+        window.addSnsInput = (s = {type:"x", val:""}) => {
+            const div = document.createElement('div'); div.className = "sns-input-row flex gap-2 mb-2";
+            div.innerHTML = `<select class="sns-type border rounded p-2 text-xs"><option value="x" ${s.type==='x'?'selected':''}>X</option><option value="instagram" ${s.type==='instagram'?'selected':''}>Instagram</option><option value="link" ${s.type==='link'?'selected':''}>Link</option></select><input type="text" class="sns-val border rounded p-2 text-xs flex-1" placeholder="ID/URL" value="${s.val}">`;
+            document.getElementById('sns-inputs-container').appendChild(div);
+        };
+
+        window.addPostBlock = (b = {img:"", text:""}) => {
+            const div = document.createElement('div'); div.className = "post-block p-4 bg-stone-50 rounded-2xl mb-4";
+            div.innerHTML = `<div class="aspect-video bg-stone-200 rounded-xl mb-2 flex items-center justify-center cursor-pointer" onclick="this.nextElementSibling.click()"><img src="${b.img}" class="${b.img?'':'hidden'} w-full h-full object-cover"><span class="${b.img?'hidden':''} text-xs">画像</span></div><input type="file" accept="image/*" class="hidden" onchange="const img=this.previousElementSibling.querySelector('img'),f=this.files[0]; if(f){const r=new FileReader(); r.onload=e=>{img.src=e.target.result; img.classList.remove('hidden');}; r.readAsDataURL(f);}\"><textarea class=\"w-full bg-transparent p-2 text-sm\" placeholder=\"本文\">${b.text}</textarea>`;
+            document.getElementById('post-blocks-container').appendChild(div);
         };
 
         window.toggleMenu = (id) => { const m = document.getElementById(id); m.style.display = (window.getComputedStyle(m).display === 'none') ? 'flex' : 'none'; };
@@ -607,14 +619,11 @@
         }
         window.handleInit = () => { const id = document.getElementById('auth-gallery-id').value; if(id) { localStorage.setItem('pending_gallery_id', id); handleLogin(); } else { alert("IDを入力してください"); } };
         window.viewOnly = () => { const id = document.getElementById('auth-gallery-id').value; if(id) location.href = GITHUB_URL + "?id=" + id; else alert("IDを入力してください"); };
-
         window.copyURL = () => { navigator.clipboard.writeText(window.location.href); alert("URLをコピーしました"); };
         window.shareSNS = (type) => { const u = encodeURIComponent(window.location.href); window.open(type === 'x' ? `https://twitter.com/intent/tweet?url=${u}` : `https://social-plugins.line.me/lineit/share?url=${u}`, '_blank'); };
         window.requestNewGallery = () => { if(confirm("新しいギャラリーを作成しますか？")) location.href = GITHUB_URL + "?mode=new"; };
         window.requestClearAll = () => { if(confirm("全てのデータを完全に削除しますか？")) { dolls = []; owner = { name: "Owner Name", bio: "", sns: [], image:"" }; posts = []; syncData().then(() => location.reload()); } };
-
         window.changeMonth = (n) => { calOffset += n; renderCalendar(); };
-        window.initColorPalettes();
     </script>
 </body>
 </html>
