@@ -7,6 +7,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+    /* 画像の長押し・ドラッグ・選択を禁止 */
+img {
+    -webkit-touch-callout: none;    /* iOSで長押しメニューを出さない */
+    -webkit-user-select: none;       /* テキスト選択を防ぐ */
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    user-drag: none;                 /* ドラッグを禁止 */
+    -webkit-user-drag: none;
+    pointer-events: auto;            /* クリック（詳細表示）は通す */
+}
+
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Dancing+Script:wght@700&display=swap');
         body { font-family: 'Noto Sans JP', sans-serif; background-color: #fcfaf8; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         .logo-font { font-family: 'Dancing Script', cursive; }
@@ -585,24 +598,134 @@
             } 
         }
 
-        function showDetail(idx) { 
+                        function showDetail(idx) { 
             const d = dolls[idx], overlay = document.getElementById('profile-overlay'), bg = document.getElementById('profile-bg');
-            bg.style.backgroundColor = d.bgColor || "#ffffff"; bg.style.color = d.textColor || "#000000"; 
-            document.getElementById('view-img').src = d.image; document.getElementById('view-name').innerText = d.name; document.getElementById('view-kana').innerText = d.kana || ""; 
-            const b = document.getElementById('detail-box'); b.innerHTML = ''; let hasInfo = false; 
-            const fmtDate = (s) => { if(!s) return ""; const dt = new Date(s); return dt.getFullYear() === 2000 ? `${dt.getMonth()+1}月${dt.getDate()}日` : s.replace(/-/g, '/'); };
-            if(d.bodySize) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block">SIZE</span><b>${d.bodySize}</b></div>`; hasInfo = true; } 
-            if(d.bodyMake) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block">BODY</span><b>${d.bodyMake}</b></div>`; hasInfo = true; } 
-            if(d.head) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block">HEAD</span><b>${d.head}</b></div>`; hasInfo = true; } 
-            if(d.birthday) { b.innerHTML += `<div class="flex flex-col mb-4"><span>🎂 誕生日</span><b>${fmtDate(d.birthday)}</b></div>`; hasInfo = true; } 
-            if(d.welcomeDay) { b.innerHTML += `<div class="flex flex-col mb-4"><span>🤝 お迎え日</span><b>${fmtDate(d.welcomeDay)}</b></div>`; hasInfo = true; } 
-            (d.anniversaries || []).forEach(a => { if(a.date) { b.innerHTML += `<div class="flex flex-col mb-4"><span>✨ ${a.name}</span><b>${fmtDate(a.date)}</b></div>`; hasInfo = true; } }); 
-            b.classList.toggle('hidden', !hasInfo);
-            const pArea = document.getElementById('view-profile'); pArea.innerText = d.profile || ""; pArea.classList.remove('hidden');
+            if(!d) return;
+
+            // 背景色と文字色の設定
+            bg.style.backgroundColor = d.bgColor || "#ffffff"; 
+            bg.style.color = d.textColor || "#000000"; 
+            
+            // 基本情報のセット
+            document.getElementById('view-img').src = d.image || ""; 
+            document.getElementById('view-name').innerText = d.name || "名前なし"; 
+            document.getElementById('view-kana').innerText = d.kana || ""; 
+
+            // 詳細情報の組み立て
+            const b = document.getElementById('detail-box'); 
+            b.innerHTML = ''; 
+
+            // 日付表示用の関数
+            const fmtDate = (s) => { 
+                if(!s) return ""; 
+                const parts = s.split('-');
+                if(parts.length < 3) return s;
+                const [y,m,day] = parts;
+                return y === "2000" ? `${parseInt(m)}月${parseInt(day)}日` : `${y}/${m}/${day}`;
+            };
+
+            const items = [];
+            if(d.bodySize)   items.push(`<div class="flex justify-between border-b border-black/5 pb-1"><span class="text-[10px] font-bold opacity-50 uppercase tracking-widest">Size</span><span class="font-bold">${d.bodySize}</span></div>`);
+            if(d.bodyMake)   items.push(`<div class="flex justify-between border-b border-black/5 pb-1"><span class="text-[10px] font-bold opacity-50 uppercase tracking-widest">Body</span><span class="font-bold">${d.bodyMake}</span></div>`);
+            if(d.head)       items.push(`<div class="flex justify-between border-b border-black/5 pb-1"><span class="text-[10px] font-bold opacity-50 uppercase tracking-widest">Head</span><span class="font-bold">${d.head}</span></div>`);
+            if(d.birthday)   items.push(`<div class="flex justify-between border-b border-black/5 pb-1"><span class="text-[10px] font-bold opacity-50 uppercase tracking-widest">Birth</span><span class="font-bold">${fmtDate(d.birthday)}</span></div>`);
+            if(d.welcomeDay) items.push(`<div class="flex justify-between border-b border-black/5 pb-1"><span class="text-[10px] font-bold opacity-50 uppercase tracking-widest">Welcome</span><span class="font-bold">${fmtDate(d.welcomeDay)}</span></div>`);
+
+            // 記念日の追加
+            (d.anniversaries || []).forEach(a => {
+                if(a.date) items.push(`<div class="flex justify-between border-b border-black/5 pb-1"><span class="text-[10px] font-bold opacity-50 uppercase tracking-widest">✨ ${a.name}</span><span class="font-bold">${fmtDate(a.date)}</span></div>`);
+            });
+
+            if (items.length > 0) {
+                b.innerHTML = `<div class="grid gap-3 mb-6">${items.join('')}</div>`;
+                b.classList.remove('hidden');
+            } else {
+                b.classList.add('hidden');
+            }
+
+            // プロフィール文のセット
+            const pArea = document.getElementById('view-profile');
+            if(pArea) {
+                pArea.innerText = d.profile || "";
+                pArea.classList.toggle('hidden', !d.profile);
+            }
+
+            // 編集ボタンのイベント
             document.getElementById('detail-edit-btn').onclick = () => editDoll(idx); 
-             
+            
+            // 削除ボタンのイベント
+            const delBtn = document.getElementById('detail-del-btn');
+            if(delBtn) {
+                delBtn.onclick = async () => {
+                    if (!confirm("この子をギャラリーから削除しますか？")) return;
+                    try {
+                        if (uid && d.id) {
+                            const { error } = await sb.from('dolls').delete().eq('id', d.id);
+                            if (error) throw error;
+                            await fetchDolls();
+                        } else {
+                            dolls.splice(idx, 1);
+                            await dbSet("dolls", dolls);
+                        }
+                        closeProfile();
+                        renderAll();
+                    } catch (err) { alert("削除エラー: " + err.message); }
+                };
+            }
+
             overlay.classList.remove('hidden'); 
         }
+
+
+            const pArea = document.getElementById('view-profile');
+            if(pArea) {
+                pArea.innerText = d.profile || "";
+                pArea.classList.toggle('hidden', !d.profile);
+            }
+
+            document.getElementById('detail-edit-btn').onclick = () => editDoll(idx); 
+            
+            // 削除ボタンの処理もここへ（安全のため）
+            const delBtn = document.getElementById('detail-del-btn');
+            if(delBtn) {
+                delBtn.onclick = async () => {
+                    if (!confirm("この子をギャラリーから削除しますか？")) return;
+                    try {
+                        if (uid && d.id) {
+                            await sb.from('dolls').delete().eq('id', d.id);
+                            await fetchDolls();
+                        } else {
+                            dolls.splice(idx, 1);
+                            await dbSet("dolls", dolls);
+                        }
+                        closeProfile();
+                        renderAll();
+                    } catch (err) { alert("削除エラー: " + err.message); }
+                };
+            }
+
+            overlay.classList.remove('hidden'); 
+        }
+
+            // 記念日の追加
+            (d.anniversaries || []).forEach(a => {
+                if(a.date) items.push(`<div class="flex justify-between border-b border-black/5 pb-1"><span class="text-[10px] font-bold opacity-50 uppercase tracking-widest">✨ ${a.name}</span><span class="font-bold">${fmtDate(a.date)}</span></div>`);
+            });
+
+            if (items.length > 0) {
+                b.innerHTML = `<div class="grid gap-3 mb-6">${items.join('')}</div>`;
+                b.classList.remove('hidden');
+            } else {
+                b.classList.add('hidden');
+            }
+
+            // 自己紹介文の表示
+            const pArea = document.getElementById('view-profile');
+            pArea.innerText = d.profile || "";
+            pArea.classList.toggle('hidden', !d.profile);
+
+            // 編集・削除ボタンのセットアップ
+            document.getElementById('detail-edit-btn').onclick = () => editDoll(idx);
 
         function shareSNS(type) { const url = window.location.href; if(type === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank'); else if(type === 'x') window.open(`https://twitter.com/intent/tweet?text=Doll Uchinoko Gallery&url=${encodeURIComponent(url)}`, '_blank'); }
         function copyURL() { navigator.clipboard.writeText(window.location.href).then(() => { showAlert("URLをコピーしました"); }); }
