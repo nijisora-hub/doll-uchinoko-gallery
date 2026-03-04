@@ -278,7 +278,39 @@
             <p id="view-profile" class="whitespace-pre-wrap leading-relaxed px-2 text-[18px] font-medium"></p>
             <div class="fixed bottom-6 inset-x-0 px-6 flex gap-4 max-w-md mx-auto admin-only-flex hidden">
                 <button id="detail-edit-btn" class="flex-1 bg-stone-800 text-white py-4 rounded-full font-bold">編集</button>
-                <button id="detail-del-btn" class="flex-1 bg-red-50 text-red-400 py-4 rounded-full font-bold border border-red-100">削除</button>
+                            // ---             // 編集ボタン
+            document.getElementById('detail-edit-btn').onclick = () => editDoll(idx); 
+
+            // 削除ボタン（Supabase連携版）
+            document.getElementById('detail-del-btn').onclick = async () => {
+                if (!confirm("この子をギャラリーから削除しますか？")) return;
+
+                try {
+                    const targetDoll = dolls[idx];
+                    // ログイン中かつ、Supabase上のID(targetDoll.id)を持っている場合
+                    if (uid && targetDoll && targetDoll.id) {
+                        const { error } = await sb.from('dolls').delete().eq('id', targetDoll.id);
+                        if (error) throw error;
+                        
+                        // 削除後、最新のデータを再取得して dolls 変数を更新する
+                        await fetchDolls();
+                    } else {
+                        // ログインしていない、またはIDがない場合はローカル(IndexedDB)のみ削除
+                        dolls.splice(idx, 1);
+                        await dbSet("dolls", dolls);
+                    }
+
+                    closeProfile();
+                    renderAll(); 
+                    if(typeof showAlert === 'function') showAlert("削除しました");
+
+                } catch (err) {
+                    console.error("Delete Error:", err);
+                    alert("削除に失敗しました: " + err.message);
+                }
+            };
+
+
             </div>
         </div>
     </div>
@@ -568,7 +600,7 @@
             b.classList.toggle('hidden', !hasInfo);
             const pArea = document.getElementById('view-profile'); pArea.innerText = d.profile || ""; pArea.classList.remove('hidden');
             document.getElementById('detail-edit-btn').onclick = () => editDoll(idx); 
-            document.getElementById('detail-del-btn').onclick = () => showConfirm("このデータを削除しますか？", async () => { dolls.splice(idx, 1); await dbSet("dolls", dolls); location.reload(); }); 
+             
             overlay.classList.remove('hidden'); 
         }
 
