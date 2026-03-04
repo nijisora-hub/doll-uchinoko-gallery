@@ -6,73 +6,47 @@
     <title>Doll Uchinoko Gallery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-    /* 画像の長押し・ドラッグ・選択を禁止 */
-img {
-    -webkit-touch-callout: none;    /* iOSで長押しメニューを出さない */
-    -webkit-user-select: none;       /* テキスト選択を防ぐ */
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    user-drag: none;                 /* ドラッグを禁止 */
-    -webkit-user-drag: none;
-    pointer-events: auto;            /* クリック（詳細表示）は通す */
-}
-
+      <style>
+        /* 1. フォントの読み込み（必ず先頭に書く） */
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Dancing+Script:wght@700&display=swap');
+
+        /* 2. 全体の設定 */
         body { font-family: 'Noto Sans JP', sans-serif; background-color: #fcfaf8; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         .logo-font { font-family: 'Dancing Script', cursive; }
         
-        img { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+        /* 3. 画像保護の設定 */
+        img {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            user-drag: none;
+            -webkit-user-drag: none;
+            pointer-events: auto;
+        }
 
+        /* 4. レイアウトの設定 */
         .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .film-outer::-webkit-scrollbar { display: none; }
-        .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 20px; }
-        .film-frame { width: 80px; height: 80px; background: #333; border: 2px solid #eee; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; position: relative; z-index: 10; }
+        .film-scroll-track { display: flex; gap: 12px; padding: 0 50vw; width: max-content; align-items: center; }
+        .film-item { flex: 0 0 auto; width: 60px; height: 80px; background: #333; border: 1px solid #444; position: relative; cursor: pointer; transition: all 0.3s; overflow: hidden; }
+        .film-item.active { width: 120px; height: 160px; border-color: #fff; z-index: 10; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .film-item img { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; transition: opacity 0.3s; }
+        .film-item.active img { opacity: 1; }
+        .film-item::before, .film-item::after { content: ''; position: absolute; left: 0; right: 0; height: 6px; background-image: radial-gradient(#555 2px, transparent 2px); background-size: 10px 10px; z-index: 5; }
+        .film-item::before { top: 2px; }
+        .film-item::after { bottom: 2px; }
 
-        .modal-base { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 10px; }
-        .modal-content { background: white; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; border-radius: 24px; padding: 24px; position: relative; }
-        #custom-dialog { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100000; align-items: center; justify-content: center; padding: 20px; }
+        .insta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #eee; }
+        .insta-item { aspect-ratio: 1; background: #fff; cursor: pointer; position: relative; overflow: hidden; }
+        .insta-item img { width: 100%; height: 100%; object-fit: cover; }
+
+        .nav-btn { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s; z-index: 100; }
+        .nav-btn:active { transform: scale(0.9); }
         
-        .crop-area { display: flex; flex-direction: row-reverse; gap: 10px; align-items: center; margin-bottom: 10px; }
-        .v-bar-box { width: 20px; height: 180px; display: flex; align-items: center; justify-content: center; }
-        .vertical-range { writing-mode: vertical-lr; direction: rtl; appearance: slider-vertical; width: 8px; height: 100%; }
-        .preview-sq { flex: 1; aspect-ratio: 1/1; background: #f3f3f3; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid #eee; }
-        .preview-sq img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; }
-
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; border-radius: 50%; cursor: pointer; position: relative; }
-        .cal-dots { display: flex; gap: 2px; justify-content: center; position: absolute; bottom: 4px; width: 100%; height: 4px; overflow: hidden; }
-        .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
-        
-        .color-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 12px; padding: 4px; display: none; }
-        .color-grid.grid-open { display: grid; }
-        .color-chip { aspect-ratio: 1; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.1s; }
-        .color-chip:active { transform: scale(0.9); }
-        .color-chip.selected { outline: 3px solid #000; outline-offset: 1px; z-index: 2; }
-
-        .color-select-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #ddd; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 0 2px #fff; }
-
-        .date-input { font-size: 16px !important; padding: 8px; border-radius: 8px; border: 1px solid #e5e7eb; width: 100%; }
-        .share-btn { transition: all 0.2s ease; }
-        .share-btn:active { transform: scale(0.96); opacity: 0.85; }
-
-        @keyframes pulse-anni {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 114, 182, 0.4); }
-            70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(244, 114, 182, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 114, 182, 0); }
-        }
-        .animate-anni { animation: pulse-anni 2s infinite ease-in-out; border: 2px solid #f472b6 !important; }
-
-        .admin-only { display: none !important; }
-        body.is-admin .admin-only { display: block !important; }
-        body.is-admin .admin-only-flex { display: flex !important; }
-        
-        /* 閲覧者用表示制御 */
-        .visitor-only { display: block; }
-        body.is-admin .visitor-only { display: none !important; }
+        .date-input::-webkit-calendar-picker-indicator { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: transparent; color: transparent; cursor: pointer; }
+        .date-input { position: relative; width: 100%; border: 1px solid #ddd; padding: 8px; border-radius: 4px; font-size: 14px; }
     </style>
+
 </head>
 <body class="text-stone-800 pb-20">
 
