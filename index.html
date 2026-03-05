@@ -15,7 +15,6 @@
             margin: 0; 
             padding: 0; 
             -webkit-tap-highlight-color: transparent; 
-            /* テキスト選択を許可（コピペ可能に） */
             -webkit-user-select: text;
             user-select: text;
         }
@@ -33,7 +32,6 @@
 
         .logo-font { font-family: 'Dancing Script', cursive; }
         
-        /* 画像のみ保護（長押し・右クリック禁止） */
         img { 
             -webkit-touch-callout: none;
             -webkit-user-select: none;
@@ -313,14 +311,31 @@
         let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"" }, posts = [], calOffset = 0;
         let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null }, isLoggedIn = false;
 
+        // 【修正箇所】ログイン状態の監視と初期化
         window.onload = async () => {
             initColorPalettes();
             initDateSelectors();
             setupTextareaAutoResize();
+
+            // 認証状態の変化を監視（リダイレクト後のトークン処理もここで行われます）
+            db.auth.onAuthStateChange(async (event, session) => {
+                isLoggedIn = !!session;
+                
+                // リダイレクト後のURLからハッシュ（#access_token...）を除去して見た目を綺麗にする
+                if (event === 'SIGNED_IN' && window.location.hash) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+
+                await loadAllData();
+                renderAll();
+            });
+
+            // 初期セッション確認
             try {
                 const { data: { session } } = await db.auth.getSession();
                 isLoggedIn = !!session;
             } catch (e) { }
+
             await loadAllData();
             renderAll();
         };
@@ -348,9 +363,15 @@
             }
         }
 
+        // 【修正箇所】リダイレクト先を明示的に指定
         async function handleGoogleLogin() {
-            await db.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
+            const redirectUrl = window.location.origin + window.location.pathname;
+            await db.auth.signInWithOAuth({ 
+                provider: 'google', 
+                options: { redirectTo: redirectUrl } 
+            });
         }
+
         async function handleLogout() { await db.auth.signOut(); location.reload(); }
 
         function setupTextareaAutoResize() {
@@ -523,7 +544,6 @@
                 imgData = cvs.toDataURL('image/webp', 0.7);
             }
             
-            // 日付取得の共通ロジック
             const getD = (mId, dId) => {
                 const m = document.getElementById(mId).value, d = document.getElementById(dId).value;
                 return (m && d) ? `2024-${m.padStart(2,'0')}-${d.padStart(2,'0')}` : "";
