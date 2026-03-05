@@ -211,14 +211,20 @@
                     <input type="hidden" id="f-cal-color" value="#E11D48">
                 </div>
 
-                <div class="space-y-4">
+                <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
                     <div>
                         <span class="text-[10px] font-bold text-stone-400 uppercase">誕生日</span>
-                        <input type="date" id="f-bday" class="w-full border p-2 rounded-lg mt-1">
+                        <div class="flex gap-2 items-center mt-1">
+                            <select id="f-bday-m" class="border rounded p-2 text-sm flex-1"><option value="">月</option></select>
+                            <select id="f-bday-d" class="border rounded p-2 text-sm flex-1"><option value="">日</option></select>
+                        </div>
                     </div>
                     <div>
                         <span class="text-[10px] font-bold text-stone-400 uppercase">お迎え日</span>
-                        <input type="date" id="f-welcome" class="w-full border p-2 rounded-lg mt-1">
+                        <div class="flex gap-2 items-center mt-1">
+                            <select id="f-welcome-m" class="border rounded p-2 text-sm flex-1"><option value="">月</option></select>
+                            <select id="f-welcome-d" class="border rounded p-2 text-sm flex-1"><option value="">日</option></select>
+                        </div>
                     </div>
                 </div>
                 
@@ -309,6 +315,7 @@
 
         window.onload = async () => {
             initColorPalettes();
+            initDateSelectors();
             setupTextareaAutoResize();
             try {
                 const { data: { session } } = await db.auth.getSession();
@@ -515,12 +522,22 @@
                 ctx.drawImage(currentRawImg.doll, (800-currentRawImg.doll.width*s)*(h/100), (800-currentRawImg.doll.height*s)*(v/100), currentRawImg.doll.width*s, currentRawImg.doll.height*s);
                 imgData = cvs.toDataURL('image/webp', 0.7);
             }
+            
+            // 日付取得の共通ロジック
+            const getD = (mId, dId) => {
+                const m = document.getElementById(mId).value, d = document.getElementById(dId).value;
+                return (m && d) ? `2024-${m.padStart(2,'0')}-${d.padStart(2,'0')}` : "";
+            };
+
             const data = { 
                 name: document.getElementById('f-name').value, kana: document.getElementById('f-kana').value, image: imgData,
                 bodySize: document.getElementById('f-size-label').value, bodyMake: document.getElementById('f-body-make').value, headMake: document.getElementById('f-head').value,
-                birthday: document.getElementById('f-bday').value, welcomeDay: document.getElementById('f-welcome').value,
+                birthday: getD('f-bday-m', 'f-bday-d'), welcomeDay: getD('f-welcome-m', 'f-welcome-d'),
                 profile: document.getElementById('f-profile').value, bgColor: document.getElementById('f-bg-color').value, textColor: document.getElementById('f-text-color').value, calColor: document.getElementById('f-cal-color').value,
-                anniversaries: Array.from(document.querySelectorAll('.f-anni-item')).map(el => ({ name: el.querySelector('.f-anni-name').value, date: el.querySelector('.f-anni-date').value }))
+                anniversaries: Array.from(document.querySelectorAll('.f-anni-item')).map(el => {
+                    const m = el.querySelector('.f-anni-m').value, d = el.querySelector('.f-anni-d').value;
+                    return { name: el.querySelector('.f-anni-name').value, date: (m && d) ? `2024-${m.padStart(2,'0')}-${d.padStart(2,'0')}` : "" };
+                })
             };
             if(id === "") dolls.push(data); else dolls[id] = data;
             await saveToSupabase('dolls', dolls); location.reload();
@@ -534,20 +551,43 @@
         }
 
         function addAnniversaryInput(v = {name:'', date:''}) {
+            const id = Date.now();
             const div = document.createElement('div'); div.className = "f-anni-item p-4 bg-white border rounded-xl space-y-2 relative";
-            div.innerHTML = `<button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-stone-300">✕</button><input type="text" class="f-anni-name w-full border-b text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><input type="date" class="f-anni-date w-full border p-2 rounded text-xs" value="${v.date}">`;
+            let mOpt = '<option value="">月</option>', dOpt = '<option value="">日</option>';
+            for(let i=1; i<=12; i++) mOpt += `<option value="${i}">${i}</option>`;
+            for(let i=1; i<=31; i++) dOpt += `<option value="${i}">${i}</option>`;
+            
+            div.innerHTML = `
+                <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-stone-300">✕</button>
+                <input type="text" class="f-anni-name w-full border-b text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}">
+                <div class="flex gap-2">
+                    <select class="f-anni-m border rounded p-2 text-xs flex-1">${mOpt}</select>
+                    <select class="f-anni-d border rounded p-2 text-xs flex-1">${dOpt}</select>
+                </div>`;
             document.getElementById('anniversary-inputs').appendChild(div);
+            
+            if(v.date) {
+                const dt = new Date(v.date);
+                div.querySelector('.f-anni-m').value = dt.getMonth() + 1;
+                div.querySelector('.f-anni-d').value = dt.getDate();
+            }
         }
 
         function openModalWithClear() {
             document.getElementById('modal-title').innerText = "うちの子登録";
-            document.getElementById('edit-id').value = ""; document.getElementById('f-name').value = ""; document.getElementById('crop-preview').classList.add('hidden'); document.getElementById('doll-hint').classList.remove('hidden'); document.getElementById('anniversary-inputs').innerHTML = ''; document.getElementById('f-profile').value = ''; currentRawImg.doll = null; toggleMenu('side-menu'); document.getElementById('modal').style.display='flex';
+            document.getElementById('edit-id').value = ""; document.getElementById('f-name').value = ""; 
+            document.getElementById('f-bday-m').value = ""; document.getElementById('f-bday-d').value = "";
+            document.getElementById('f-welcome-m').value = ""; document.getElementById('f-welcome-d').value = "";
+            document.getElementById('crop-preview').classList.add('hidden'); document.getElementById('doll-hint').classList.remove('hidden'); document.getElementById('anniversary-inputs').innerHTML = ''; document.getElementById('f-profile').value = ''; currentRawImg.doll = null; toggleMenu('side-menu'); document.getElementById('modal').style.display='flex';
         }
 
         function editDoll(idx) {
             const d = dolls[idx]; closeProfile();
             document.getElementById('modal-title').innerText = "うちの子編集";
-            document.getElementById('edit-id').value = idx; document.getElementById('f-name').value = d.name; document.getElementById('f-kana').value = d.kana || ""; document.getElementById('f-size-label').value = d.bodySize || ""; document.getElementById('f-body-make').value = d.bodyMake || ""; document.getElementById('f-head').value = d.headMake || ""; document.getElementById('f-profile').value = d.profile || ""; document.getElementById('crop-preview').src = d.image; document.getElementById('crop-preview').classList.remove('hidden'); document.getElementById('doll-hint').classList.add('hidden'); document.getElementById('anniversary-inputs').innerHTML = ''; (d.anniversaries || []).forEach(a => addAnniversaryInput(a)); document.getElementById('modal').style.display = 'flex';
+            document.getElementById('edit-id').value = idx; document.getElementById('f-name').value = d.name; document.getElementById('f-kana').value = d.kana || ""; document.getElementById('f-size-label').value = d.bodySize || ""; document.getElementById('f-body-make').value = d.bodyMake || ""; document.getElementById('f-head').value = d.headMake || ""; document.getElementById('f-profile').value = d.profile || ""; 
+            if(d.birthday) { const dt = new Date(d.birthday); document.getElementById('f-bday-m').value = dt.getMonth()+1; document.getElementById('f-bday-d').value = dt.getDate(); }
+            if(d.welcomeDay) { const dt = new Date(d.welcomeDay); document.getElementById('f-welcome-m').value = dt.getMonth()+1; document.getElementById('f-welcome-d').value = dt.getDate(); }
+            document.getElementById('crop-preview').src = d.image; document.getElementById('crop-preview').classList.remove('hidden'); document.getElementById('doll-hint').classList.add('hidden'); document.getElementById('anniversary-inputs').innerHTML = ''; (d.anniversaries || []).forEach(a => addAnniversaryInput(a)); document.getElementById('modal').style.display = 'flex';
         }
 
         function openOwnerModal() {
@@ -559,7 +599,6 @@
             toggleMenu('side-menu'); document.getElementById('owner-modal').style.display = 'flex';
         }
 
-        // SNSシェアの選択肢を復活
         function addSnsInput(v = {type:'Twitter', val:''}) {
             const div = document.createElement('div'); div.className = "flex gap-2 p-3 bg-stone-50 rounded-xl items-center";
             div.innerHTML = `
@@ -643,6 +682,7 @@
             document.getElementById(`${type}-select-icon`).style.backgroundColor = def;
         }
         function toggleColorGrid(type) { document.getElementById(`${type}-color-grid`).classList.toggle('grid-open'); }
+        function initDateSelectors() { const bM = document.getElementById('f-bday-m'), bD = document.getElementById('f-bday-d'), wM = document.getElementById('f-welcome-m'), wD = document.getElementById('f-welcome-d'); for(let i=1; i<=12; i++) { const o= `<option value="${i}">${i}</option>`; bM.innerHTML += o; wM.innerHTML += o; } for(let i=1; i<=31; i++) { const o= `<option value="${i}">${i}</option>`; bD.innerHTML += o; wD.innerHTML += o; } }
         function updateCrop(imgId, hId, vId) { const el = document.getElementById(imgId); if(el) el.style.objectPosition = `${document.getElementById(hId).value}% ${document.getElementById(vId).value}%`; }
         function changeMonth(d) { calOffset += d; renderCalendar(); }
     </script>
