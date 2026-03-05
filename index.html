@@ -9,25 +9,21 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Dancing+Script:wght@700&display=swap');
         
-        /* 基本スタイル & レスポンシブ調整（最大幅制限） */
         body { 
             font-family: 'Noto Sans JP', sans-serif; 
             background-color: #f5f5f5; 
             margin: 0; 
             padding: 0; 
             -webkit-tap-highlight-color: transparent; 
+            /* テキスト選択を許可（コピペ可能に） */
+            -webkit-user-select: text;
+            user-select: text;
         }
         
-        /* iPad・PCで大きくなりすぎないためのコンテナ */
-        .app-outer {
-            display: flex;
-            justify-content: center;
-            background-color: #f5f5f5;
-        }
-
+        .app-outer { display: flex; justify-content: center; background-color: #f5f5f5; }
         .app-container {
             width: 100%;
-            max-width: 600px; /* モバイルアプリ風の見た目を維持 */
+            max-width: 600px;
             min-height: 100vh;
             background: #fcfaf8;
             box-shadow: 0 0 50px rgba(0,0,0,0.05);
@@ -37,51 +33,36 @@
 
         .logo-font { font-family: 'Dancing Script', cursive; }
         
-        /* 画像長押し・右クリック禁止設定 */
+        /* 画像のみ保護（長押し・右クリック禁止） */
         img { 
-            -webkit-touch-callout: none; /* iOS 長押しメニュー禁止 */
-            -webkit-user-select: none; 
-            -khtml-user-select: none; 
-            -moz-user-select: none; 
-            -ms-user-select: none; 
-            user-select: none; 
-            pointer-events: auto; /* クリックイベントは通す */
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            pointer-events: auto;
         }
 
-        /* フィルムロール表示 */
         .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .film-outer::-webkit-scrollbar { display: none; }
         .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 20px; }
         .film-frame { width: 80px; height: 80px; background: #333; border: 2px solid #eee; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; position: relative; z-index: 10; }
 
-        /* モーダル・ダイアログ */
         .modal-base { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 10px; }
         .modal-content { background: white; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; border-radius: 24px; padding: 24px; position: relative; }
         
-        /* クロップ調整 */
-        .crop-area { display: flex; flex-direction: row-reverse; gap: 10px; align-items: center; margin-bottom: 10px; }
-        .v-bar-box { width: 20px; height: 180px; display: flex; align-items: center; justify-content: center; }
-        .vertical-range { writing-mode: vertical-lr; direction: rtl; appearance: slider-vertical; width: 8px; height: 100%; }
-        .preview-sq { flex: 1; aspect-ratio: 1/1; background: #f3f3f3; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid #eee; }
+        .preview-sq { aspect-ratio: 1/1; background: #f3f3f3; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid #eee; }
         .preview-sq img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; }
 
-        /* カレンダー */
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; border-radius: 50%; cursor: pointer; position: relative; background: #fff; }
         .cal-dots { display: flex; gap: 2px; justify-content: center; position: absolute; bottom: 4px; width: 100%; height: 4px; overflow: hidden; }
         .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
         
-        /* カラーピッカー */
         .color-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 12px; padding: 4px; display: none; }
         .color-grid.grid-open { display: grid; }
         .color-chip { aspect-ratio: 1; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; }
         .color-select-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #ddd; cursor: pointer; }
 
-        /* 入力要素 */
-        .date-input { font-size: 16px !important; padding: 8px; border-radius: 8px; border: 1px solid #e5e7eb; width: 100%; }
         textarea.auto-resize { resize: none; overflow-y: hidden; min-height: 100px; }
-
-        /* アニメーション */
         @keyframes pulse-anni {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 114, 182, 0.4); }
             70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(244, 114, 182, 0); }
@@ -94,7 +75,7 @@
         body.is-admin .admin-only-flex { display: flex !important; }
     </style>
 </head>
-<body oncontextmenu="return false;" onselectstart="return false;">
+<body oncontextmenu="return false;">
 
     <div class="app-outer">
         <div class="app-container">
@@ -147,7 +128,6 @@
                         <h3 class="text-[10px] font-bold text-pink-500 uppercase mb-4 tracking-widest border-b border-pink-100 pb-2">Happy Anniversary!</h3>
                         <div id="happy-anniversary-list"></div>
                     </div>
-
                     <h3 class="text-[10px] font-bold text-stone-400 uppercase mb-4 tracking-widest border-b pb-2">Next Anniversary</h3>
                     <div id="closest-anniversary"></div>
                 </section>
@@ -186,17 +166,18 @@
             <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
             <h3 id="modal-title" class="text-xl font-bold mb-6">うちの子登録</h3>
             
-            <div class="crop-area">
+            <div class="flex flex-col gap-4 mb-6">
                 <div class="preview-sq" onclick="document.getElementById('doll-file').click()">
                     <img id="crop-preview" class="hidden">
                     <span id="doll-hint" class="text-stone-300 text-xs font-bold">画像を選択</span>
                 </div>
-                <div class="v-bar-box">
-                    <input type="range" id="crop-v" min="0" max="100" class="vertical-range" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')">
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] font-bold text-stone-400">ズーム/位置調整（横・縦）</label>
+                    <input type="range" id="crop-h" min="0" max="100" class="w-full" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')">
+                    <input type="range" id="crop-v" min="0" max="100" class="w-full" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')">
                 </div>
             </div>
-            <input type="range" id="crop-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')">
-            
+
             <div class="space-y-6">
                 <input type="file" id="doll-file" accept="image/*" class="hidden" onchange="loadImg(event, 'doll')">
                 <input type="hidden" id="edit-id">
@@ -209,72 +190,42 @@
                     <input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="HEAD">
                 </div>
 
-                <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
+                <div class="p-4 bg-stone-50 rounded-2xl space-y-4 text-sm">
                     <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">カラー設定</p>
-                    <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('bg')">
-                        <span class="text-xs text-stone-500 font-bold">背景色</span>
-                        <div id="bg-select-icon" class="color-select-btn"></div>
+                    <div class="flex justify-between items-center border-b pb-2 cursor-pointer" onclick="toggleColorGrid('bg')">
+                        <span class="font-bold">背景色</span><div id="bg-select-icon" class="color-select-btn"></div>
                     </div>
                     <div id="bg-color-grid" class="color-grid"></div>
                     <input type="hidden" id="f-bg-color" value="#ffffff">
 
-                    <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('text')">
-                        <span class="text-xs text-stone-500 font-bold">文字色</span>
-                        <div id="text-select-icon" class="color-select-btn"></div>
+                    <div class="flex justify-between items-center border-b pb-2 cursor-pointer" onclick="toggleColorGrid('text')">
+                        <span class="font-bold">文字色</span><div id="text-select-icon" class="color-select-btn"></div>
                     </div>
                     <div id="text-color-grid" class="color-grid"></div>
                     <input type="hidden" id="f-text-color" value="#000000">
 
-                    <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('cal')">
-                        <span class="text-xs text-stone-500 font-bold">カレンダー強調色</span>
-                        <div id="cal-select-icon" class="color-select-btn"></div>
+                    <div class="flex justify-between items-center border-b pb-2 cursor-pointer" onclick="toggleColorGrid('cal')">
+                        <span class="font-bold">カレンダー色</span><div id="cal-select-icon" class="color-select-btn"></div>
                     </div>
                     <div id="cal-color-grid" class="color-grid"></div>
                     <input type="hidden" id="f-cal-color" value="#E11D48">
                 </div>
 
-                <div class="space-y-4 text-sm px-2">
-                    <div class="border-b pb-4">
-                        <span class="block text-stone-400 text-[10px] font-bold mb-1 uppercase tracking-widest">誕生日</span>
-                        <div class="flex gap-2 mb-2">
-                            <select id="f-bday-m" class="border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option></select>
-                            <select id="f-bday-d" class="border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option></select>
-                        </div>
-                        <input type="date" id="f-bday" class="date-input">
+                <div class="space-y-4">
+                    <div>
+                        <span class="text-[10px] font-bold text-stone-400 uppercase">誕生日</span>
+                        <input type="date" id="f-bday" class="w-full border p-2 rounded-lg mt-1">
                     </div>
-                    <div class="border-b pb-4">
-                        <span class="block text-stone-400 text-[10px] font-bold mb-1 uppercase tracking-widest">お迎え日</span>
-                        <div class="flex gap-2 mb-2">
-                            <select id="f-welcome-m" class="border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option></select>
-                            <select id="f-welcome-d" class="border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option></select>
-                        </div>
-                        <input type="date" id="f-welcome" class="date-input">
+                    <div>
+                        <span class="text-[10px] font-bold text-stone-400 uppercase">お迎え日</span>
+                        <input type="date" id="f-welcome" class="w-full border p-2 rounded-lg mt-1">
                     </div>
                 </div>
                 
                 <div id="anniversary-inputs" class="space-y-3"></div>
                 <button onclick="addAnniversaryInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-400 font-bold">+ 記念日を追加</button>
                 <textarea id="f-profile" class="auto-resize w-full border p-4 rounded-2xl text-sm outline-none" placeholder="プロフィール"></textarea>
-                <button onclick="saveData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg shadow-xl">保存する</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="profile-overlay" class="fixed inset-0 bg-white z-[10000] hidden overflow-y-auto">
-        <div class="app-outer">
-            <div id="profile-bg" class="app-container p-6 pb-32">
-                <button onclick="closeProfile()" class="bg-white/80 shadow px-6 py-2 rounded-full text-xs font-bold mb-6">閉じる</button>
-                <img id="view-img" class="w-full aspect-square object-cover rounded-3xl shadow-xl mb-8">
-                <div class="text-center mb-8">
-                    <p id="view-kana" class="text-sm opacity-70 mb-1"></p>
-                    <h2 id="view-name" class="text-3xl font-bold"></h2>
-                </div>
-                <div id="detail-box" class="bg-white/20 backdrop-blur-md p-6 rounded-3xl space-y-4 mb-8 text-[16px]"></div>
-                <p id="view-profile" class="whitespace-pre-wrap leading-relaxed px-2 text-[18px] font-medium"></p>
-                <div class="fixed bottom-6 inset-x-0 px-6 flex gap-4 max-w-[600px] mx-auto admin-only-flex hidden">
-                    <button id="detail-edit-btn" class="flex-1 bg-stone-800 text-white py-4 rounded-full font-bold">編集</button>
-                    <button id="detail-del-btn" class="flex-1 bg-red-50 text-red-400 py-4 rounded-full font-bold border border-red-100">削除</button>
-                </div>
+                <button onclick="saveData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg">保存する</button>
             </div>
         </div>
     </div>
@@ -283,16 +234,10 @@
         <div class="modal-content" onclick="event.stopPropagation()">
             <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
             <h3 class="text-xl font-bold mb-6">オーナー設定</h3>
-            <div class="crop-area">
-                <div class="preview-sq" onclick="document.getElementById('owner-file').click()">
-                    <img id="owner-preview" class="hidden">
-                    <span id="owner-hint" class="text-stone-300 text-xs font-bold">画像を選択</span>
-                </div>
-                <div class="v-bar-box">
-                    <input type="range" id="o-crop-v" min="0" max="100" class="vertical-range" oninput="updateCrop('owner-preview', 'o-crop-h', 'o-crop-v')">
-                </div>
+            <div class="preview-sq mb-4" onclick="document.getElementById('owner-file').click()">
+                <img id="owner-preview" class="hidden">
+                <span id="owner-hint" class="text-stone-300 text-xs font-bold">画像を選択</span>
             </div>
-            <input type="range" id="o-crop-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('owner-preview', 'o-crop-h', 'o-crop-v')">
             <div class="space-y-4">
                 <input type="file" id="owner-file" accept="image/*" class="hidden" onchange="loadImg(event, 'owner')">
                 <input type="text" id="o-name" class="w-full border-b p-2 font-bold" placeholder="オーナー名">
@@ -317,7 +262,26 @@
                 <label class="flex items-center gap-1"><input type="radio" name="p-pos" value="home" checked> ホーム</label>
                 <label class="flex items-center gap-1"><input type="radio" name="p-pos" value="menu"> メニュー</label>
             </div>
-            <button onclick="savePost()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold mt-6 shadow-lg">投稿を保存</button>
+            <button onclick="savePost()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold mt-6">投稿を保存</button>
+        </div>
+    </div>
+
+    <div id="profile-overlay" class="fixed inset-0 bg-white z-[10000] hidden overflow-y-auto">
+        <div class="app-outer">
+            <div id="profile-bg" class="app-container p-6 pb-32">
+                <button onclick="closeProfile()" class="bg-white/80 shadow px-6 py-2 rounded-full text-xs font-bold mb-6">閉じる</button>
+                <img id="view-img" class="w-full aspect-square object-cover rounded-3xl shadow-xl mb-8">
+                <div class="text-center mb-8">
+                    <p id="view-kana" class="text-sm opacity-70 mb-1"></p>
+                    <h2 id="view-name" class="text-3xl font-bold"></h2>
+                </div>
+                <div id="detail-box" class="bg-white/20 backdrop-blur-md p-6 rounded-3xl space-y-4 mb-8 text-[16px]"></div>
+                <p id="view-profile" class="whitespace-pre-wrap leading-relaxed px-2 text-[18px] font-medium"></p>
+                <div class="fixed bottom-6 inset-x-0 px-6 flex gap-4 max-w-[600px] mx-auto admin-only-flex hidden">
+                    <button id="detail-edit-btn" class="flex-1 bg-stone-800 text-white py-4 rounded-full font-bold">編集</button>
+                    <button id="detail-del-btn" class="flex-1 bg-red-50 text-red-400 py-4 rounded-full font-bold border border-red-100">削除</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -336,27 +300,20 @@
     </div>
 
     <script>
-        // --- Supabase 設定 ---
         const SUPABASE_URL = "https://eegxuxsyaradufdcvzuj.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlZ3h1eHN5YXJhZHVmZGN2enVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDc3ODYsImV4cCI6MjA4ODEyMzc4Nn0.9O7L6iIYJHChTVDu9w3y5FLNunDvYG6jQFGF4laEoRQ";
-        
-        // ライブラリとの衝突を防ぐため、クライアント変数を db に変更
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"" }, posts = [], calOffset = 0;
         let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null }, isLoggedIn = false;
 
-        // --- 初期化 ---
         window.onload = async () => {
-            initDateSelectors();
             initColorPalettes();
             setupTextareaAutoResize();
-            
             try {
                 const { data: { session } } = await db.auth.getSession();
                 isLoggedIn = !!session;
-            } catch (e) { console.warn("Auth check failed:", e); }
-
+            } catch (e) { }
             await loadAllData();
             renderAll();
         };
@@ -366,17 +323,15 @@
                 const { data: dData } = await db.from('dolls').select('data');
                 const { data: oData } = await db.from('owner').select('data').maybeSingle();
                 const { data: pData } = await db.from('posts').select('data');
-
                 if (dData) dolls = dData.map(d => d.data);
                 if (oData) owner = oData.data;
                 if (pData) posts = pData.map(p => p.data);
-            } catch (e) { console.error("Data load error:", e); }
+            } catch (e) { }
         }
 
         async function saveToSupabase(table, dataArrayOrObject) {
             if (!isLoggedIn) return;
             const { data: { user } } = await db.auth.getUser();
-            
             if (Array.isArray(dataArrayOrObject)) {
                 await db.from(table).delete().eq('id', user.id);
                 const insertData = dataArrayOrObject.map(d => ({ id: user.id, data: d }));
@@ -387,17 +342,9 @@
         }
 
         async function handleGoogleLogin() {
-            const { error } = await db.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: window.location.origin }
-            });
-            if (error) alert("ログインエラー: " + error.message);
+            await db.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
         }
-
-        async function handleLogout() {
-            await db.auth.signOut();
-            location.reload();
-        }
+        async function handleLogout() { await db.auth.signOut(); location.reload(); }
 
         function setupTextareaAutoResize() {
             document.addEventListener('input', (e) => {
@@ -408,7 +355,6 @@
             });
         }
 
-        // --- レンダリング ---
         function renderAll() {
             document.body.classList.toggle('is-admin', isLoggedIn);
             document.getElementById('login-btn').style.display = isLoggedIn ? 'none' : 'block';
@@ -432,7 +378,8 @@
             const snsArea = document.getElementById('owner-sns-links'); snsArea.innerHTML = '';
             (owner.sns || []).forEach(s => {
                 const a = document.createElement('a'); a.href = s.val; a.target = "_blank"; a.className = "block w-full max-w-[240px] text-center bg-white border py-3 rounded-xl text-xs font-bold shadow-sm";
-                a.innerText = "🔗 " + s.type; snsArea.appendChild(a);
+                a.innerText = (s.type === 'Twitter' ? '𝕏 ' : s.type === 'Instagram' ? '📸 ' : '🔗 ') + s.type;
+                snsArea.appendChild(a);
             });
 
             const hp = document.getElementById('home-posts'); hp.innerHTML = '';
@@ -454,12 +401,9 @@
             renderCalendar(); renderAnni();
         }
 
-        // --- アニバーサリー計算 & 表示（アイコン追加 & プロフィールリンク） ---
         function renderAnni() { 
             const area = document.getElementById('closest-anniversary'), happyArea = document.getElementById('happy-anniversary'), happyListArea = document.getElementById('happy-anniversary-list');
-            if(!area || !happyArea) return; 
             area.innerHTML = ''; happyListArea.innerHTML = ''; happyArea.classList.add('hidden');
-            
             let list = [], happyEvents = []; const now = new Date(), todayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             
             dolls.forEach((d, idx) => { 
@@ -470,17 +414,11 @@
                         const diffDaysTotal = Math.floor((todayZero - originZero) / (1000 * 60 * 60 * 24));
                         const isToday = (originDate.getMonth() === now.getMonth() && originDate.getDate() === now.getDate());
                         const diffYears = now.getFullYear() - originDate.getFullYear();
-                        
                         let next = new Date(now.getFullYear(), originDate.getMonth(), originDate.getDate()); 
                         if(next < todayZero) next.setFullYear(now.getFullYear() + 1); 
                         const daysToNext = Math.ceil((next - todayZero) / (1000 * 60 * 60 * 24));
-
-                        if (isToday && diffYears >= 0) {
-                            let text = `${d.name} の${v.n}${diffYears === 0 ? '' : ' (' + (v.type==='birth' ? diffYears+'歳' : diffYears+'周年') + ')'}！`;
-                            happyEvents.push({ text: text, dollIdx: idx });
-                        } else if (diffDaysTotal > 0 && diffDaysTotal % 100 === 0) {
-                            happyEvents.push({ text: `${d.name} ${v.n}から ${diffDaysTotal}日！`, dollIdx: idx });
-                        }
+                        if (isToday && diffYears >= 0) happyEvents.push({ text: `${d.name} の${v.n}${diffYears === 0 ? '' : ' (' + (v.type==='birth' ? diffYears+'歳' : diffYears+'周年') + ')'}！`, dollIdx: idx });
+                        else if (diffDaysTotal > 0 && diffDaysTotal % 100 === 0) happyEvents.push({ text: `${d.name} ${v.n}から ${diffDaysTotal}日！`, dollIdx: idx });
                         list.push({ doll: d.name, title: v.n, color: d.calColor || '#E11D48', diff: daysToNext, isToday: isToday, order: idx }); 
                     } 
                 }); 
@@ -500,34 +438,23 @@
                 list.sort((a,b) => a.diff - b.diff || a.order - b.order); 
                 const closestEvents = list.filter(item => item.diff === list[0].diff);
                 let html = `<div class="space-y-3">`;
-                closestEvents.forEach(b => {
-                    html += `<div class="bg-white p-5 border-l-4 rounded shadow-sm flex justify-between items-center" style="border-color:${b.color}"><div><p class="text-[10px] text-stone-400 font-bold">${b.doll}</p><p class="font-bold">${b.title}</p></div><b class="text-lg">${b.isToday ? "Today" : 'あと '+b.diff+' 日'}</b></div>`;
-                });
+                closestEvents.forEach(b => { html += `<div class="bg-white p-5 border-l-4 rounded shadow-sm flex justify-between items-center" style="border-color:${b.color}"><div><p class="text-[10px] text-stone-400 font-bold">${b.doll}</p><p class="font-bold">${b.title}</p></div><b class="text-lg">${b.isToday ? "Today" : 'あと '+b.diff+' 日'}</b></div>`; });
                 html += `</div>`; area.innerHTML = html;
             } 
         }
 
-        // --- カレンダー ---
         function renderCalendar() {
             const now = new Date(), v = new Date(now.getFullYear(), now.getMonth() + calOffset, 1), y = v.getFullYear(), m = v.getMonth();
             document.getElementById('cal-month').innerText = `${y} / ${m+1}`;
             const firstDay = new Date(y, m, 1).getDay(), lastDate = new Date(y, m+1, 0).getDate(), area = document.getElementById('cal-days');
             area.innerHTML = ''; const map = {};
-
             dolls.forEach((d, idx) => {
                 const evs = [{n: "誕生日", d: d.birthday}, {n: "お迎え日", d: d.welcomeDay}, ...(d.anniversaries || [])];
                 evs.forEach(ev => { 
-                    const rawDate = ev.d || ev.date;
-                    if(rawDate) { 
-                        const dt = new Date(rawDate); 
-                        if(dt.getMonth() === m) { 
-                            const day = dt.getDate(); if(!map[day]) map[day] = []; 
-                            map[day].push({ doll: d.name, name: ev.n || ev.name, color: d.calColor || '#E11D48' }); 
-                        } 
-                    } 
+                    const rawDate = ev.d || ev.date; if(!rawDate) return;
+                    const dt = new Date(rawDate); if(dt.getMonth() === m) { const day = dt.getDate(); if(!map[day]) map[day] = []; map[day].push({ doll: d.name, name: ev.n || ev.name, color: d.calColor || '#E11D48' }); }
                 });
             });
-
             for(let i=0; i<firstDay; i++) area.innerHTML += '<div></div>';
             for(let d=1; d<=lastDate; d++) {
                 const isToday = (calOffset===0 && d===now.getDate() && m===now.getMonth()), annis = map[d], div = document.createElement('div'); 
@@ -545,7 +472,6 @@
             }
         }
 
-        // --- モーダル・ページ操作 ---
         function toggleMenu(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'flex') ? 'none' : 'flex'; }
         function closeModal() { document.querySelectorAll('.modal-base').forEach(m => m.style.display='none'); }
         function showHome() { document.getElementById('home-content').classList.remove('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); closeArticle(); }
@@ -568,38 +494,31 @@
             document.getElementById('view-img').src = d.image; 
             document.getElementById('view-name').innerText = d.name; 
             document.getElementById('view-kana').innerText = d.kana || ""; 
-            
             const b = document.getElementById('detail-box'); b.innerHTML = '';
             const addInfo = (l, v) => { if(v) b.innerHTML += `<div><span class="text-[10px] opacity-60 font-bold block uppercase">${l}</span><b class="text-lg">${v}</b></div>`; };
             addInfo('Size', d.bodySize); addInfo('Body', d.bodyMake); addInfo('Head', d.headMake);
             if(d.birthday) addInfo('Birthday', d.birthday);
             if(d.welcomeDay) addInfo('Welcome', d.welcomeDay);
-            
             document.getElementById('view-profile').innerText = d.profile || "";
             document.getElementById('detail-edit-btn').onclick = () => editDoll(idx); 
             document.getElementById('detail-del-btn').onclick = () => { if(confirm("削除しますか？")) { dolls.splice(idx, 1); saveToSupabase('dolls', dolls).then(()=>location.reload()); } }; 
             overlay.classList.remove('hidden'); 
         }
-
         function closeProfile() { document.getElementById('profile-overlay').classList.add('hidden'); }
 
-        // --- 保存処理 (WebP 変換含む) ---
         async function saveData() {
             const id = document.getElementById('edit-id').value, h = document.getElementById('crop-h').value, v = document.getElementById('crop-v').value;
             let imgData = (id !== "" && dolls[id]) ? dolls[id].image : "";
-            
             if(currentRawImg.doll) {
                 const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'); cvs.width = cvs.height = 800;
                 const s = Math.max(800/currentRawImg.doll.width, 800/currentRawImg.doll.height);
                 ctx.drawImage(currentRawImg.doll, (800-currentRawImg.doll.width*s)*(h/100), (800-currentRawImg.doll.height*s)*(v/100), currentRawImg.doll.width*s, currentRawImg.doll.height*s);
                 imgData = cvs.toDataURL('image/webp', 0.7);
             }
-
             const data = { 
                 name: document.getElementById('f-name').value, kana: document.getElementById('f-kana').value, image: imgData,
                 bodySize: document.getElementById('f-size-label').value, bodyMake: document.getElementById('f-body-make').value, headMake: document.getElementById('f-head').value,
-                birthday: document.getElementById('f-bday').value || (document.getElementById('f-bday-m').value ? `2000-${document.getElementById('f-bday-m').value}-${document.getElementById('f-bday-d').value}` : ''),
-                welcomeDay: document.getElementById('f-welcome').value || (document.getElementById('f-welcome-m').value ? `2000-${document.getElementById('f-welcome-m').value}-${document.getElementById('f-welcome-d').value}` : ''),
+                birthday: document.getElementById('f-bday').value, welcomeDay: document.getElementById('f-welcome').value,
                 profile: document.getElementById('f-profile').value, bgColor: document.getElementById('f-bg-color').value, textColor: document.getElementById('f-text-color').value, calColor: document.getElementById('f-cal-color').value,
                 anniversaries: Array.from(document.querySelectorAll('.f-anni-item')).map(el => ({ name: el.querySelector('.f-anni-name').value, date: el.querySelector('.f-anni-date').value }))
             };
@@ -608,56 +527,29 @@
         }
 
         function loadImg(e, type) { 
-            const f = e.target.files[0]; if(!f) return; const rd = new FileReader(); 
-            rd.onload = (re) => { 
-                const img = new Image(); img.onload = () => { 
-                    currentRawImg[type] = img; 
-                    const el = document.getElementById(type === 'doll' ? 'crop-preview' : 'owner-preview'); el.src = img.src; el.classList.remove('hidden'); 
-                    document.getElementById(type === 'doll' ? 'doll-hint' : 'owner-hint').classList.add('hidden'); 
-                }; img.src = re.target.result; 
+            const f = e.target.files[0]; if(!f) return;
+            const rd = new FileReader(); rd.onload = (re) => { 
+                const img = new Image(); img.onload = () => { currentRawImg[type] = img; const el = document.getElementById(type === 'doll' ? 'crop-preview' : 'owner-preview'); el.src = img.src; el.classList.remove('hidden'); document.getElementById(type === 'doll' ? 'doll-hint' : 'owner-hint').classList.add('hidden'); }; img.src = re.target.result; 
             }; rd.readAsDataURL(f); 
         }
 
-        // --- 記念日・ブロック追加などのUIパーツ ---
         function addAnniversaryInput(v = {name:'', date:''}) {
             const div = document.createElement('div'); div.className = "f-anni-item p-4 bg-white border rounded-xl space-y-2 relative";
-            div.innerHTML = `<button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-stone-300">✕</button>
-                <input type="text" class="f-anni-name w-full border-b text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}">
-                <input type="date" class="f-anni-date date-input" value="${v.date}">`;
+            div.innerHTML = `<button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-stone-300">✕</button><input type="text" class="f-anni-name w-full border-b text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><input type="date" class="f-anni-date w-full border p-2 rounded text-xs" value="${v.date}">`;
             document.getElementById('anniversary-inputs').appendChild(div);
         }
 
         function openModalWithClear() {
             document.getElementById('modal-title').innerText = "うちの子登録";
-            document.getElementById('edit-id').value = "";
-            document.getElementById('f-name').value = "";
-            document.getElementById('crop-preview').classList.add('hidden');
-            document.getElementById('doll-hint').classList.remove('hidden');
-            document.getElementById('anniversary-inputs').innerHTML = '';
-            document.getElementById('f-profile').value = '';
-            currentRawImg.doll = null;
-            toggleMenu('side-menu'); document.getElementById('modal').style.display='flex';
+            document.getElementById('edit-id').value = ""; document.getElementById('f-name').value = ""; document.getElementById('crop-preview').classList.add('hidden'); document.getElementById('doll-hint').classList.remove('hidden'); document.getElementById('anniversary-inputs').innerHTML = ''; document.getElementById('f-profile').value = ''; currentRawImg.doll = null; toggleMenu('side-menu'); document.getElementById('modal').style.display='flex';
         }
 
         function editDoll(idx) {
             const d = dolls[idx]; closeProfile();
             document.getElementById('modal-title').innerText = "うちの子編集";
-            document.getElementById('edit-id').value = idx;
-            document.getElementById('f-name').value = d.name;
-            document.getElementById('f-kana').value = d.kana || "";
-            document.getElementById('f-size-label').value = d.bodySize || "";
-            document.getElementById('f-body-make').value = d.bodyMake || "";
-            document.getElementById('f-head').value = d.headMake || "";
-            document.getElementById('f-profile').value = d.profile || "";
-            document.getElementById('crop-preview').src = d.image;
-            document.getElementById('crop-preview').classList.remove('hidden');
-            document.getElementById('doll-hint').classList.add('hidden');
-            document.getElementById('anniversary-inputs').innerHTML = '';
-            (d.anniversaries || []).forEach(a => addAnniversaryInput(a));
-            document.getElementById('modal').style.display = 'flex';
+            document.getElementById('edit-id').value = idx; document.getElementById('f-name').value = d.name; document.getElementById('f-kana').value = d.kana || ""; document.getElementById('f-size-label').value = d.bodySize || ""; document.getElementById('f-body-make').value = d.bodyMake || ""; document.getElementById('f-head').value = d.headMake || ""; document.getElementById('f-profile').value = d.profile || ""; document.getElementById('crop-preview').src = d.image; document.getElementById('crop-preview').classList.remove('hidden'); document.getElementById('doll-hint').classList.add('hidden'); document.getElementById('anniversary-inputs').innerHTML = ''; (d.anniversaries || []).forEach(a => addAnniversaryInput(a)); document.getElementById('modal').style.display = 'flex';
         }
 
-        // --- オーナー設定関連 ---
         function openOwnerModal() {
             document.getElementById('o-name').value = owner.name || "";
             document.getElementById('o-bio').value = owner.bio || "";
@@ -667,46 +559,43 @@
             toggleMenu('side-menu'); document.getElementById('owner-modal').style.display = 'flex';
         }
 
-        function addSnsInput(v = {type:'', val:''}) {
-            const div = document.createElement('div'); div.className = "flex gap-2";
-            div.innerHTML = `<input type="text" class="sns-type border p-2 rounded text-xs w-24" placeholder="ラベル" value="${v.type}">
-                             <input type="text" class="sns-val border p-2 rounded text-xs flex-1" placeholder="URL" value="${v.val}">
-                             <button onclick="this.parentElement.remove()" class="text-red-400 text-xs">✕</button>`;
+        // SNSシェアの選択肢を復活
+        function addSnsInput(v = {type:'Twitter', val:''}) {
+            const div = document.createElement('div'); div.className = "flex gap-2 p-3 bg-stone-50 rounded-xl items-center";
+            div.innerHTML = `
+                <select class="sns-type border p-2 rounded text-xs bg-white">
+                    <option value="Twitter" ${v.type==='Twitter'?'selected':''}>𝕏 (Twitter)</option>
+                    <option value="Instagram" ${v.type==='Instagram'?'selected':''}>Instagram</option>
+                    <option value="Bluesky" ${v.type==='Bluesky'?'selected':''}>Bluesky</option>
+                    <option value="Link" ${v.type==='Link'?'selected':''}>その他Link</option>
+                </select>
+                <input type="text" class="sns-val border p-2 rounded text-xs flex-1 bg-white" placeholder="URLを入力" value="${v.val}">
+                <button onclick="this.parentElement.remove()" class="text-red-400 text-xs font-bold px-2">✕</button>`;
             document.getElementById('sns-inputs-container').appendChild(div);
         }
 
         async function saveOwner() {
-            const h = document.getElementById('o-crop-h').value, v = document.getElementById('o-crop-v').value;
-            let imgData = owner.image || "";
+            owner = { name: document.getElementById('o-name').value, bio: document.getElementById('o-bio').value, image: owner.image, sns: Array.from(document.querySelectorAll('#sns-inputs-container .flex')).map(el => ({ type: el.querySelector('.sns-type').value, val: el.querySelector('.sns-val').value })) };
             if(currentRawImg.owner) {
                 const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d'); cvs.width = cvs.height = 400;
                 const s = Math.max(400/currentRawImg.owner.width, 400/currentRawImg.owner.height);
-                ctx.drawImage(currentRawImg.owner, (400-currentRawImg.owner.width*s)*(h/100), (400-currentRawImg.owner.height*s)*(v/100), currentRawImg.owner.width*s, currentRawImg.owner.height*s);
-                imgData = cvs.toDataURL('image/webp', 0.7);
+                ctx.drawImage(currentRawImg.owner, 0, 0, currentRawImg.owner.width*s, currentRawImg.owner.height*s);
+                owner.image = cvs.toDataURL('image/webp', 0.7);
             }
-            owner = { name: document.getElementById('o-name').value, bio: document.getElementById('o-bio').value, image: imgData, sns: Array.from(document.querySelectorAll('#sns-inputs-container div')).map(el => ({ type: el.querySelector('.sns-type').value, val: el.querySelector('.sns-val').value })) };
             await saveToSupabase('owner', owner); location.reload();
         }
 
-        // --- 投稿関連 ---
         function openPostModal(idx = null) {
             document.getElementById('post-blocks-container').innerHTML = '';
             if(idx !== null) {
-                const p = posts[idx]; document.getElementById('edit-post-id').value = idx;
-                document.getElementById('p-title').value = p.title;
-                p.blocks.forEach(b => addPostBlock(b));
-            } else {
-                document.getElementById('edit-post-id').value = ""; document.getElementById('p-title').value = ""; addPostBlock();
-            }
+                const p = posts[idx]; document.getElementById('edit-post-id').value = idx; document.getElementById('p-title').value = p.title; p.blocks.forEach(b => addPostBlock(b));
+            } else { document.getElementById('edit-post-id').value = ""; document.getElementById('p-title').value = ""; addPostBlock(); }
             document.getElementById('post-modal').style.display = 'flex';
         }
 
         function addPostBlock(v = {img:'', text:''}) {
             const div = document.createElement('div'); div.className = "p-4 bg-stone-50 rounded-2xl space-y-3 relative block-item";
-            div.innerHTML = `<button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-stone-300">✕</button>
-                <div class="preview-sq mb-2" onclick="this.nextElementSibling.click()"><img src="${v.img}" class="${v.img?'':'hidden'} w-full h-full object-cover rounded-lg"><span class="${v.img?'hidden':''} text-stone-300 text-xs font-bold">画像を選択</span></div>
-                <input type="file" accept="image/*" class="hidden" onchange="loadBlockImg(event)">
-                <textarea class="auto-resize w-full border p-3 rounded-xl text-sm outline-none" placeholder="テキストを入力">${v.text}</textarea>`;
+            div.innerHTML = `<button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-stone-300">✕</button><div class="preview-sq mb-2" onclick="this.nextElementSibling.click()"><img src="${v.img}" class="${v.img?'':'hidden'} w-full h-full object-cover rounded-lg"><span class="${v.img?'hidden':''} text-stone-300 text-xs font-bold">画像を選択</span></div><input type="file" accept="image/*" class="hidden" onchange="loadBlockImg(event)"><textarea class="auto-resize w-full border p-3 rounded-xl text-sm outline-none" placeholder="テキストを入力">${v.text}</textarea>`;
             document.getElementById('post-blocks-container').appendChild(div);
         }
 
@@ -718,8 +607,7 @@
                     const max = 1000, ratio = Math.min(max/img.width, max/img.height, 1);
                     cvs.width = img.width * ratio; cvs.height = img.height * ratio;
                     ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
-                    const p = e.target.previousElementSibling; p.querySelector('img').src = cvs.toDataURL('image/webp', 0.7);
-                    p.querySelector('img').classList.remove('hidden'); p.querySelector('span').classList.add('hidden');
+                    const p = e.target.previousElementSibling; p.querySelector('img').src = cvs.toDataURL('image/webp', 0.7); p.querySelector('img').classList.remove('hidden'); p.querySelector('span').classList.add('hidden');
                 }; img.src = re.target.result;
             }; rd.readAsDataURL(f);
         }
@@ -734,17 +622,13 @@
         function viewPost(idx) {
             const p = posts[idx]; document.getElementById('art-title').innerText = p.title;
             const cnt = document.getElementById('art-content'); cnt.innerHTML = '';
-            p.blocks.forEach(b => {
-                if(b.img) cnt.innerHTML += `<img src="${b.img}" class="w-full rounded-[32px] shadow-lg">`;
-                if(b.text) cnt.innerHTML += `<p class="text-stone-600 leading-relaxed whitespace-pre-wrap px-2">${b.text}</p>`;
-            });
+            p.blocks.forEach(b => { if(b.img) cnt.innerHTML += `<img src="${b.img}" class="w-full rounded-[32px] shadow-lg">`; if(b.text) cnt.innerHTML += `<p class="text-stone-600 leading-relaxed whitespace-pre-wrap px-2">${b.text}</p>`; });
             document.getElementById('art-edit-btn').onclick = () => { closeArticle(); openPostModal(idx); };
             document.getElementById('art-del-btn').onclick = () => { if(confirm("削除しますか？")) { posts.splice(idx, 1); saveToSupabase('posts', posts).then(()=>location.reload()); } };
             document.getElementById('article-page').style.display = 'block';
         }
         function closeArticle() { document.getElementById('article-page').style.display = 'none'; }
 
-        // --- その他ツール ---
         const palette100 = (() => {
             const hues = [0, 30, 60, 120, 150, 180, 220, 280, 330], colors = [];
             for(let i=0; i<10; i++) colors.push(`hsl(0, 0%, ${i * 11}%)`);
@@ -759,7 +643,6 @@
             document.getElementById(`${type}-select-icon`).style.backgroundColor = def;
         }
         function toggleColorGrid(type) { document.getElementById(`${type}-color-grid`).classList.toggle('grid-open'); }
-        function initDateSelectors() { const bM = document.getElementById('f-bday-m'), bD = document.getElementById('f-bday-d'), wM = document.getElementById('f-welcome-m'), wD = document.getElementById('f-welcome-d'); for(let i=1; i<=12; i++) { const o= `<option value="${i}">${i}</option>`; bM.innerHTML += o; wM.innerHTML += o; } for(let i=1; i<=31; i++) { const o= `<option value="${i}">${i}</option>`; bD.innerHTML += o; wD.innerHTML += o; } }
         function updateCrop(imgId, hId, vId) { const el = document.getElementById(imgId); if(el) el.style.objectPosition = `${document.getElementById(hId).value}% ${document.getElementById(vId).value}%`; }
         function changeMonth(d) { calOffset += d; renderCalendar(); }
     </script>
