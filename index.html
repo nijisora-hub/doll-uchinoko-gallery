@@ -81,9 +81,13 @@
         }
         .animate-anni { animation: pulse-anni 2s infinite ease-in-out; border: 2px solid #f472b6 !important; }
 
+        /* 権限別表示設定 */
         .admin-only { display: none !important; }
         body.is-admin .admin-only { display: block !important; }
         body.is-admin .admin-only-flex { display: flex !important; }
+        
+        .viewer-only { display: block !important; }
+        body.is-admin .viewer-only { display: none !important; }
     </style>
 </head>
 <body class="text-stone-800 pb-20" oncontextmenu="return false;">
@@ -92,6 +96,9 @@
         <div id="custom-dialog">
             <div class="bg-white w-full max-w-xs p-8 rounded-3xl shadow-2xl text-center">
                 <p id="dialog-message" class="text-[16px] mb-8 leading-relaxed font-bold whitespace-pre-wrap text-stone-700"></p>
+                <div id="dialog-input-container" class="hidden mb-6">
+                    <input type="text" id="dialog-text-input" class="w-full border-b-2 p-2 text-center outline-none font-bold text-lg" placeholder="半角英数字記号">
+                </div>
                 <div id="dialog-buttons" class="flex flex-col gap-3"></div>
             </div>
         </div>
@@ -114,9 +121,10 @@
             <div class="bg-white w-72 h-full ml-auto p-6 flex flex-col overflow-y-auto" onclick="event.stopPropagation()">
                 <div class="space-y-1">
                     <button onclick="showHome(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">🏠 ホーム</button>
-                    <button onclick="openModalWithClear()" class="text-left py-4 font-bold border-b text-blue-600 w-full admin-only">✨ うちの子を登録する</button>
                     <button onclick="showDollList()" class="text-left py-4 font-bold border-b w-full text-stone-800">📸 うちの子一覧</button>
                     <button onclick="showPostListPage()" class="text-left py-4 font-bold border-b w-full text-stone-800">📝 投稿一覧</button>
+                    
+                    <button onclick="requestCreateGallery()" class="text-left py-4 font-bold border-b text-blue-600 w-full viewer-only">✨ 新規作成する</button>
                 </div>
                 
                 <div class="py-6 space-y-2 border-b">
@@ -126,8 +134,10 @@
 
                 <div class="py-10 space-y-4 admin-only">
                     <button onclick="openOwnerModal()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm">👤 オーナー設定</button>
+                    <button onclick="openModalWithClear()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm">📸 うちの子登録</button>
                     <button onclick="openPostModal()" class="w-full py-4 bg-stone-800 text-white rounded-2xl text-sm font-bold shadow-lg">📝 投稿を追加</button>
                 </div>
+                
                 <div class="mt-auto pt-10 admin-only">
                     <button onclick="requestClearAll()" class="w-full py-3 bg-red-50 text-red-400 rounded-xl text-xs font-bold border border-red-100 shadow-sm">⚠️ データ全削除</button>
                 </div>
@@ -300,6 +310,7 @@
     </div>
 
     <script>
+        // Supabase設定
         const SB_URL = "https://eegxuxsyaradufdcvzuj.supabase.co";
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlZ3h1eHN5YXJhZHVmZGN2enVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDc3ODYsImV4cCI6MjA4ODEyMzc4Nn0.9O7L6iIYJHChTVDu9w3y5FLNunDvYG6jQFGF4laEoRQ";
         const sbClient = supabase.createClient(SB_URL, SB_KEY);
@@ -307,6 +318,7 @@
         let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"" }, posts = [], calOffset = 0;
         let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null }, loopInterval;
         let currentUser = null;
+        let galleryId = null;
 
         const palette100 = (() => {
             const hues = [0, 30, 60, 120, 150, 180, 220, 280, 330], colors = [];
@@ -322,23 +334,28 @@
             setupImageProtection();
             
             const urlParams = new URLSearchParams(window.location.search);
-            const targetId = urlParams.get('id');
+            galleryId = urlParams.get('id');
 
             const { data: { session } } = await sbClient.auth.getSession();
             currentUser = session?.user || null;
-            document.body.classList.toggle('is-admin', !!currentUser);
 
-            if (targetId) {
-                await loadGalleryData(targetId);
+            // 管理者判定: ログインしており、かつURLのIDが自分のUIDと一致する場合
+            const isAdmin = currentUser && (galleryId === currentUser.id);
+            document.body.classList.toggle('is-admin', isAdmin);
+
+            if (galleryId) {
+                await loadGalleryData(galleryId);
             } else if (currentUser) {
-                await loadGalleryData(currentUser.id);
+                // ID指定がないがログインしている場合は自分のギャラリーへ
+                location.href = window.location.origin + window.location.pathname + '?id=' + currentUser.id;
             } else {
                 renderAll();
             }
 
             sbClient.auth.onAuthStateChanged((_event, session) => {
                 currentUser = session?.user || null;
-                document.body.classList.toggle('is-admin', !!currentUser);
+                const isAdminNow = currentUser && (galleryId === currentUser.id);
+                document.body.classList.toggle('is-admin', isAdminNow);
                 renderAll();
             });
         };
@@ -356,7 +373,7 @@
         }
 
         async function syncToSupabase() {
-            if (!currentUser) return;
+            if (!currentUser || galleryId !== currentUser.id) return;
             const { error } = await sbClient.from('galleries').upsert({
                 id: currentUser.id,
                 dolls: dolls,
@@ -367,16 +384,30 @@
             if (error) console.error("Sync error:", error);
         }
 
-        async function loginWithGoogle() {
+        async function loginWithGoogle(targetId = null) {
+            const redirectUrl = window.location.origin + window.location.pathname + (targetId ? `?id=${targetId}` : '');
             await sbClient.auth.signInWithOAuth({
                 provider: 'google',
-                options: { redirectTo: window.location.origin + window.location.pathname }
+                options: { redirectTo: redirectUrl }
             });
         }
 
         async function handleLogout() {
             await sbClient.auth.signOut();
             location.href = window.location.origin + window.location.pathname;
+        }
+
+        // 新規作成ボタンの処理
+        function requestCreateGallery() {
+            showInputDialog("ユーザーIDを設定してください", (id) => {
+                const validId = id.replace(/[^a-zA-Z0-9!-/:-@[-`{-~]/g, '');
+                if(!validId) {
+                    showAlert("有効なIDを入力してください");
+                    return;
+                }
+                // IDを保持してGoogleログインへ
+                loginWithGoogle(validId);
+            });
         }
 
         function renderAll() {
@@ -421,9 +452,10 @@
             const hp = document.getElementById('home-posts'); hp.innerHTML = '';
             const mpl = document.getElementById('menu-post-list'); mpl.innerHTML = '';
             posts.forEach((p, i) => {
+                const isAdmin = document.body.classList.contains('is-admin');
                 if(p.pos === 'home') {
                     const card = document.createElement('div'); card.className = "relative bg-white rounded-[32px] p-6 pt-16 border shadow-sm";
-                    if(currentUser) { card.innerHTML = `<div class="absolute top-4 left-4 flex gap-2"><button onclick="editPost(${i})" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-xs font-bold">編集</button><button onclick="deletePostDirectly(${i})" class="bg-red-50 text-red-400 px-4 py-2 rounded-lg text-xs font-bold border border-red-100">削除</button></div>`; }
+                    if(isAdmin) { card.innerHTML = `<div class="absolute top-4 left-4 flex gap-2"><button onclick="editPost(${i})" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-xs font-bold">編集</button><button onclick="deletePostDirectly(${i})" class="bg-red-50 text-red-400 px-4 py-2 rounded-lg text-xs font-bold border border-red-100">削除</button></div>`; }
                     const title = document.createElement('h4'); title.className="font-bold mb-4 text-lg border-b pb-2"; title.innerText = p.title; card.appendChild(title);
                     p.blocks.forEach(b => {
                         if(b.img) { const img = document.createElement('img'); img.src = b.img; img.className="w-full rounded-2xl mb-4 clickable-img"; card.appendChild(img); }
@@ -440,6 +472,7 @@
             setupInfiniteScroll();
         }
 
+        // --- 共通機能群 ---
         function renderAnni() { 
             const area = document.getElementById('closest-anniversary'), happyArea = document.getElementById('happy-anniversary'), happyListArea = document.getElementById('happy-anniversary-list');
             area.innerHTML = ''; happyListArea.innerHTML = ''; happyArea.classList.add('hidden');
@@ -522,11 +555,9 @@
                 const isRealToday = (realY===y && realM===m && realD===d);
                 const annis = map[d], div = document.createElement('div'); 
                 div.className = `cal-day ${isRealToday ? 'cal-today' : ''}`;
-                
                 const dayNum = document.createElement('span');
                 dayNum.innerText = d;
                 div.appendChild(dayNum);
-
                 if(annis) {
                     const dotsDiv = document.createElement('div'); dotsDiv.className = "cal-dots";
                     annis.sort((a,b) => a.order - b.order).forEach(a => {
@@ -558,11 +589,7 @@
 
         function toggleMenu(id) { 
             const el = document.getElementById(id);
-            if (el.style.display === 'flex') { 
-                el.style.display = 'none'; 
-            } else { 
-                el.style.display = 'flex'; 
-            }
+            el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
         }
 
         function showHome() { 
@@ -574,7 +601,7 @@
         }
 
         function showDollList() { 
-            toggleMenu('side-menu');
+            if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu');
             document.getElementById('home-content').classList.add('hidden'); 
             document.getElementById('post-list-page').classList.add('hidden'); 
             document.getElementById('doll-list-page').classList.remove('hidden'); 
@@ -582,7 +609,7 @@
         }
 
         function showPostListPage() { 
-            toggleMenu('side-menu');
+            if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu');
             document.getElementById('home-content').classList.add('hidden'); 
             document.getElementById('doll-list-page').classList.add('hidden'); 
             document.getElementById('post-list-page').classList.remove('hidden'); 
@@ -680,6 +707,7 @@
             location.reload();
         }
 
+        // ユーティリティ
         function setupAutoExpand() {
             document.addEventListener('input', (e) => { if (e.target.classList.contains('auto-expand')) adjustHeight(e.target); });
         }
@@ -690,7 +718,10 @@
         function closeModal() { document.querySelectorAll('.modal-base').forEach(m => m.style.display='none'); }
         function closeProfile() { document.getElementById('profile-overlay').classList.add('hidden'); }
         function closeArticle() { document.getElementById('article-page').style.display = 'none'; }
-        function closeDialog() { document.getElementById('custom-dialog').style.display = 'none'; }
+        function closeDialog() { 
+            document.getElementById('custom-dialog').style.display = 'none';
+            document.getElementById('dialog-input-container').classList.add('hidden');
+        }
         function changeMonth(d) { calOffset += d; document.getElementById('day-events').innerHTML = ''; renderCalendar(); }
         function getDateValue(mainId, mId, dId) { const main = document.getElementById(mainId).value, m = document.getElementById(mId).value, d = document.getElementById(dId).value; if(!main && m && d) return `2000-${m.padStart(2,'0')}-${d.padStart(2,'0')}`; return main; }
         function setDateValue(val, mainId, mId, dId) { if(!val) return; const dt = new Date(val); if(dt.getFullYear() === 2000) { document.getElementById(mId).value = dt.getMonth() + 1; document.getElementById(dId).value = dt.getDate(); document.getElementById(mainId).value = ""; } else { document.getElementById(mainId).value = val; document.getElementById(mId).value = ""; document.getElementById(dId).value = ""; } }
@@ -705,38 +736,61 @@
         function toggleColorGrid(type) { const grid = document.getElementById(`${type}-color-grid`), isOpen = grid.classList.contains('grid-open'); document.querySelectorAll('.color-grid').forEach(g => g.classList.remove('grid-open')); if(!isOpen) grid.classList.add('grid-open'); }
         function updatePaletteSelection(type, color) { document.querySelectorAll(`.${type}-chip`).forEach(chip => { const tempDiv = document.createElement('div'); tempDiv.style.color = color; const targetColor = tempDiv.style.color; chip.classList.toggle('selected', chip.style.backgroundColor === targetColor); }); document.getElementById(`${type}-select-icon`).style.backgroundColor = color; }
         function updateCrop(imgId, hId, vId) { document.getElementById(imgId).style.objectPosition = `${document.getElementById(hId).value}% ${document.getElementById(vId).value}%`; }
-        function openModalWithClear() { clearDollForm(); document.getElementById('modal-title').innerText = "うちの子登録"; document.getElementById('modal').style.display='flex'; toggleMenu('side-menu'); }
+        function openModalWithClear() { clearDollForm(); document.getElementById('modal-title').innerText = "うちの子登録"; document.getElementById('modal').style.display='flex'; if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); }
         function clearDollForm() { document.getElementById('edit-id').value = ""; document.getElementById('f-name').value = ""; document.getElementById('f-kana').value = ""; document.getElementById('f-size-label').value = ""; document.getElementById('f-body-make').value = ""; document.getElementById('f-head').value = ""; document.getElementById('f-bday').value = ""; document.getElementById('f-bday-m').value = ""; document.getElementById('f-bday-d').value = ""; document.getElementById('f-welcome').value = ""; document.getElementById('f-welcome-m').value = ""; document.getElementById('f-welcome-d').value = ""; document.getElementById('anniversary-inputs').innerHTML = ''; document.getElementById('f-profile').value = ""; document.getElementById('f-bg-color').value = "#ffffff"; document.getElementById('f-text-color').value = "#000000"; document.getElementById('f-cal-color').value = "#E11D48"; updatePaletteSelection('bg', "#ffffff"); updatePaletteSelection('text', "#000000"); updatePaletteSelection('cal', "#E11D48"); document.getElementById('crop-preview').classList.add('hidden'); document.getElementById('doll-hint').classList.remove('hidden'); currentRawImg.doll = null; }
         function loadImg(e, type) { const f = e.target.files[0]; if(!f) return; const rd = new FileReader(); rd.onload = (re) => { const img = new Image(); img.onload = () => { currentRawImg[type] = img; const el = document.getElementById(type === 'doll' ? 'crop-preview' : 'owner-preview'); el.src = img.src; el.classList.remove('hidden'); document.getElementById(type === 'doll' ? 'doll-hint' : 'owner-hint').classList.add('hidden'); }; img.src = re.target.result; }; rd.readAsDataURL(f); }
         function editDoll(idx) { closeProfile(); const d = dolls[idx]; document.getElementById('edit-id').value = idx; document.getElementById('modal-title').innerText = "うちの子編集"; document.getElementById('f-name').value = d.name; document.getElementById('f-kana').value = d.kana || ""; document.getElementById('f-size-label').value = d.bodySize || ""; document.getElementById('f-body-make').value = d.bodyMake || ""; document.getElementById('f-head').value = d.head || ""; setDateValue(d.birthday, 'f-bday', 'f-bday-m', 'f-bday-d'); setDateValue(d.welcomeDay, 'f-welcome', 'f-welcome-m', 'f-welcome-d'); const anniArea = document.getElementById('anniversary-inputs'); anniArea.innerHTML = ''; (d.anniversaries || []).forEach(a => addAnniversaryInput(a)); document.getElementById('f-profile').value = d.profile || ""; const bg = d.bgColor || "#ffffff", txt = d.textColor || "#000000", cal = d.calColor || "#E11D48"; document.getElementById('f-bg-color').value = bg; document.getElementById('f-text-color').value = txt; document.getElementById('f-cal-color').value = cal; updatePaletteSelection('bg', bg); updatePaletteSelection('text', txt); updatePaletteSelection('cal', cal); if(d.image) { const pre = document.getElementById('crop-preview'); pre.src = d.image; pre.classList.remove('hidden'); document.getElementById('doll-hint').classList.add('hidden'); } document.getElementById('modal').style.display = 'flex'; setTimeout(()=>adjustHeight(document.getElementById('f-profile')), 100); }
         function addAnniversaryInput(v = {name:'', date:''}) { const id = Date.now() + Math.random(), div = document.createElement('div'); div.className = "p-4 bg-stone-100/50 rounded-2xl space-y-2 border border-stone-100"; div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; document.getElementById('anniversary-inputs').appendChild(div); if(v.date) setDateValue(v.date, `date-${id}`, `m-${id}`, `d-${id}`); }
-        function openOwnerModal() { document.getElementById('o-name').value = owner.name; document.getElementById('o-bio').value = owner.bio; document.getElementById('sns-inputs-container').innerHTML = ''; (owner.sns || []).forEach(s => addSnsInput(s)); if(owner.image) { const p = document.getElementById('owner-preview'); p.src = owner.image; p.classList.remove('hidden'); document.getElementById('owner-hint').classList.add('hidden'); } document.getElementById('owner-modal').style.display='flex'; toggleMenu('side-menu'); setTimeout(()=>adjustHeight(document.getElementById('o-bio')), 100); }
+        function openOwnerModal() { document.getElementById('o-name').value = owner.name; document.getElementById('o-bio').value = owner.bio; document.getElementById('sns-inputs-container').innerHTML = ''; (owner.sns || []).forEach(s => addSnsInput(s)); if(owner.image) { const p = document.getElementById('owner-preview'); p.src = owner.image; p.classList.remove('hidden'); document.getElementById('owner-hint').classList.add('hidden'); } document.getElementById('owner-modal').style.display='flex'; if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); setTimeout(()=>adjustHeight(document.getElementById('o-bio')), 100); }
         function addSnsInput(v = {type:'X(旧Twitter)', val:''}) { const div = document.createElement('div'); div.className = "sns-input-row flex gap-2 items-center"; div.innerHTML = `<select class="sns-type text-sm border p-2 rounded-lg bg-white h-10 outline-none">${['X(旧Twitter)','Instagram','mixi2','Bluesky','Misskey','その他URL'].map(t => `<option ${v.type===t?'selected':''}>${t}</option>`).join('')}</select><input type="text" class="sns-val flex-1 text-sm border p-2 rounded-lg h-10 outline-none" placeholder="ID or URL" value="${v.val}"><button onclick="this.parentElement.remove()" class="p-2 text-stone-400">✕</button>`; document.getElementById('sns-inputs-container').appendChild(div); }
-        function openPostModal() { document.getElementById('edit-post-id').value = ""; document.getElementById('post-modal-title').innerText = "投稿作成"; document.getElementById('p-title').value = ""; document.getElementById('post-blocks-container').innerHTML = ''; addPostBlock(); document.querySelector(`input[name="p-pos"][value="home"]`).checked = true; document.getElementById('post-modal').style.display='flex'; toggleMenu('side-menu'); }
+        function openPostModal() { document.getElementById('edit-post-id').value = ""; document.getElementById('post-modal-title').innerText = "投稿作成"; document.getElementById('p-title').value = ""; document.getElementById('post-blocks-container').innerHTML = ''; addPostBlock(); document.querySelector(`input[name="p-pos"][value="home"]`).checked = true; document.getElementById('post-modal').style.display='flex'; if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); }
         function editPost(idx) { const p = posts[idx]; document.getElementById('edit-post-id').value = idx; document.getElementById('post-modal-title').innerText = "投稿編集"; document.getElementById('p-title').value = p.title; document.getElementById('post-blocks-container').innerHTML = ''; p.blocks.forEach(b => addPostBlock(b)); document.querySelector(`input[name="p-pos"][value="${p.pos}"]`).checked = true; document.getElementById('post-modal').style.display = 'flex'; }
         function addPostBlock(data = {img: '', text: ''}) { const id = Date.now() + Math.random(), div = document.createElement('div'); div.className = "post-block p-4 border rounded-xl mb-4 bg-stone-50"; div.innerHTML = `<div class="preview-sq mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'}"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''}">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><textarea class="w-full text-sm p-3 border rounded-xl h-24 mt-2 outline-none auto-expand" placeholder="文章を入力...">${data.text || ''}</textarea><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`; document.getElementById('post-blocks-container').appendChild(div); setTimeout(()=>adjustHeight(div.querySelector('textarea')), 100); }
         async function loadBlockImg(e, id) { const f = e.target.files[0]; if(!f) return; const rd = new FileReader(); rd.onload = (re) => { const img = new Image(); img.onload = async () => { const webpData = await processImageToWebP(img, 1000, 50, 50); const t = document.getElementById('p-img-'+id); t.src = webpData; t.classList.remove('hidden'); document.getElementById('p-hint-'+id).classList.add('hidden'); }; img.src = re.target.result; }; rd.readAsDataURL(f); }
         function deletePostDirectly(idx) { showConfirm("この投稿を削除しますか？", async () => { posts.splice(idx, 1); await syncToSupabase(); renderAll(); }); }
         function viewPost(idx) { const p = posts[idx]; document.getElementById('art-title').innerText = p.title; const container = document.getElementById('art-content'); container.innerHTML = ''; p.blocks.forEach(b => { if(b.img) { const img = document.createElement('img'); img.src = b.img; img.className = "w-full rounded-2xl mb-4 clickable-img"; container.appendChild(img); } if(b.text) { const txt = document.createElement('p'); txt.className = "text-stone-700 whitespace-pre-wrap leading-relaxed mb-6 user-select-auto"; txt.innerText = b.text; container.appendChild(txt); } }); document.getElementById('art-edit-btn').onclick = () => { closeArticle(); editPost(idx); }; document.getElementById('art-del-btn').onclick = () => showConfirm("この投稿を削除しますか？", async () => { posts.splice(idx, 1); await syncToSupabase(); location.reload(); }); document.getElementById('article-page').style.display = 'block'; }
         function setupInfiniteScroll() { const container = document.getElementById('film-container'); container.addEventListener('scroll', () => { const items = dolls.filter(d => d.image); if (items.length < 5) return; const w = items.length * (80 + 12); if (container.scrollLeft < w * 0.5) container.scrollLeft += w; if (container.scrollLeft > w * 1.5) container.scrollLeft -= w; }); }
-        function shareSNS(type) { const url = window.location.origin + window.location.pathname + (currentUser ? '?id=' + currentUser.id : ''); if(type === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank'); else if(type === 'x') window.open(`https://twitter.com/intent/tweet?text=Doll Uchinoko Gallery&url=${encodeURIComponent(url)}`, '_blank'); }
-        function copyURL() { const url = window.location.origin + window.location.pathname + (currentUser ? '?id=' + currentUser.id : ''); navigator.clipboard.writeText(url).then(() => { showAlert("ギャラリーのURLをコピーしました"); }); }
+        function shareSNS(type) { const url = window.location.origin + window.location.pathname + (galleryId ? '?id=' + galleryId : ''); if(type === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank'); else if(type === 'x') window.open(`https://twitter.com/intent/tweet?text=Doll Uchinoko Gallery&url=${encodeURIComponent(url)}`, '_blank'); }
+        function copyURL() { const url = window.location.origin + window.location.pathname + (galleryId ? '?id=' + galleryId : ''); navigator.clipboard.writeText(url).then(() => { showAlert("ギャラリーのURLをコピーしました"); }); }
+
+        // データ削除（データベースからも削除）
         async function requestClearAll() { 
             showConfirm("全てのデータを削除しますか？\n(登録した画像や投稿がすべて消去されます)", async () => { 
-                if (currentUser) { 
-                    const { error } = await sbClient.from('galleries').upsert({
-                        id: currentUser.id,
-                        dolls: [], 
-                        owner: { name: "Owner Name", bio: "", sns: [], image:"" }, 
-                        posts: [], 
-                        updated_at: new Date()
-                    });
+                if (currentUser && galleryId === currentUser.id) { 
+                    const { error } = await sbClient.from('galleries').delete().eq('id', currentUser.id);
                     if(error) { showAlert("削除に失敗しました: " + error.message); } else { location.reload(); }
                 } 
-            }, "削除する"); 
+            }, "完全に削除する"); 
         }
+
+        // ダイアログ・通知系
         function showConfirm(m, onY, yesText = "実行") { const d = document.getElementById('custom-dialog'); document.getElementById('dialog-message').innerText = m; const bA = document.getElementById('dialog-buttons'); bA.innerHTML = ''; const b1 = document.createElement('button'); b1.className = "w-full bg-red-400 text-white py-4 rounded-full font-bold shadow-lg"; b1.innerText = yesText; b1.onclick = () => { onY(); closeDialog(); }; const b2 = document.createElement('button'); b2.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; b2.innerText = "キャンセル"; b2.onclick = closeDialog; bA.append(b1, b2); d.style.display = 'flex'; }
         function showAlert(msg, callback = null) { const dialog = document.getElementById('custom-dialog'); document.getElementById('dialog-message').innerText = msg; const buttons = document.getElementById('dialog-buttons'); buttons.innerHTML = ''; const btn = document.createElement('button'); btn.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold"; btn.innerText = "OK"; btn.onclick = () => { closeDialog(); if(callback) callback(); }; buttons.appendChild(btn); dialog.style.display = 'flex'; }
+        function showInputDialog(m, onOk) {
+            const d = document.getElementById('custom-dialog');
+            document.getElementById('dialog-message').innerText = m;
+            document.getElementById('dialog-input-container').classList.remove('hidden');
+            const input = document.getElementById('dialog-text-input');
+            input.value = "";
+            const bA = document.getElementById('dialog-buttons');
+            bA.innerHTML = '';
+            const b1 = document.createElement('button');
+            b1.className = "w-full bg-blue-500 text-white py-4 rounded-full font-bold shadow-lg";
+            b1.innerText = "決定してログイン";
+            b1.onclick = () => {
+                if(input.value) {
+                    onOk(input.value);
+                    closeDialog();
+                }
+            };
+            const b2 = document.createElement('button');
+            b2.className = "w-full bg-stone-100 py-4 rounded-full font-bold";
+            b2.innerText = "キャンセル";
+            b2.onclick = closeDialog;
+            bA.append(b1, b2);
+            d.style.display = 'flex';
+            input.focus();
+        }
     </script>
 </body>
 </html>
