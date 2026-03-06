@@ -33,7 +33,7 @@
         .cal-today { border: 2px solid #888; font-weight: bold; background-color: #f9f9f9; }
         .cal-dots { display: flex; gap: 2px; justify-content: center; position: absolute; bottom: 4px; width: 100%; height: 4px; overflow: hidden; }
         .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
-        .color-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 12px; padding: 4px; display: none; }
+        .color-grid { grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 12px; padding: 4px; display: none; }
         .color-grid.grid-open { display: grid; }
         .color-chip { aspect-ratio: 1; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; }
         .color-chip.selected { outline: 3px solid #000; outline-offset: 1px; z-index: 2; }
@@ -46,7 +46,7 @@
         }
         .animate-anni { animation: pulse-anni 2s infinite ease-in-out; border: 2px solid #f472b6 !important; }
         
-        /* 管理用メニューの表示制御用 */
+        /* 管理メニュー制御用クラス */
         .admin-only { display: none !important; }
         body.is-admin .admin-only { display: block !important; }
         body.is-admin .admin-only-flex { display: flex !important; }
@@ -93,13 +93,15 @@
                     <button id="login-btn" onclick="loginWithGoogle()" class="w-full py-3 bg-stone-800 rounded-xl text-xs font-bold text-white">Googleでログイン</button>
                     <button id="logout-btn" onclick="handleLogout()" class="w-full py-3 bg-red-50 rounded-xl text-xs font-bold text-red-400 hidden">ログアウト</button>
                 </div>
+                
                 <div class="py-10 space-y-4 admin-only">
+                    <button onclick="openModalWithClear()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm">📸 うちの子を登録する</button>
+                    <button onclick="openPostModal()" class="w-full py-4 bg-stone-800 text-white rounded-2xl text-sm font-bold shadow-lg">📝 投稿を追加する</button>
                     <button onclick="openOwnerModal()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm">👤 オーナー設定</button>
-                    <button onclick="openModalWithClear()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm">📸 うちの子登録</button>
-                    <button onclick="openPostModal()" class="w-full py-4 bg-stone-800 text-white rounded-2xl text-sm font-bold shadow-lg">📝 投稿を追加</button>
                 </div>
+
                 <div class="mt-auto pt-10 admin-only">
-                    <button onclick="requestClearAll()" class="w-full py-3 bg-red-50 text-red-400 rounded-xl text-xs font-bold border border-red-100 shadow-sm">⚠️ データ全削除</button>
+                    <button onclick="requestClearAll()" class="w-full py-3 bg-red-50 text-red-400 rounded-xl text-xs font-bold border border-red-100 shadow-sm">⚠️ データを全削除</button>
                 </div>
             </div>
         </div>
@@ -293,7 +295,6 @@
             const { data: { session } } = await sbClient.auth.getSession();
             currentUser = session?.user || null;
 
-            // ログイン済みだがURLにIDがない場合、自身のURLにリダイレクト
             if (currentUser && !galleryId) {
                 location.href = `?id=${currentUser.id}`;
                 return;
@@ -305,7 +306,6 @@
                 renderAll();
             }
 
-            // 管理者フラグの確認と反映
             checkAdminStatus();
 
             sbClient.auth.onAuthStateChanged((_event, session) => {
@@ -660,7 +660,7 @@
         function addAnniversaryInput(v = {name:'', date:''}) { 
             const id = Date.now() + Math.random(), div = document.createElement('div'); 
             div.className = "p-4 bg-stone-100/50 rounded-2xl space-y-2 border"; 
-            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; 
+            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; 
             document.getElementById('anniversary-inputs').appendChild(div); 
             if(v.date) setDateValue(v.date, `date-${id}`, `m-${id}`, `d-${id}`); 
         }
@@ -676,7 +676,7 @@
                 document.getElementById('owner-hint').classList.add('hidden'); 
             } 
             document.getElementById('owner-modal').style.display='flex'; 
-            toggleMenu('side-menu'); 
+            if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); 
         }
 
         function addSnsInput(v = {type:'X(旧Twitter)', val:''}) { 
@@ -693,7 +693,7 @@
             document.getElementById('post-blocks-container').innerHTML = ''; 
             addPostBlock(); 
             document.getElementById('post-modal').style.display='flex'; 
-            toggleMenu('side-menu'); 
+            if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); 
         }
 
         function editPost(idx) { 
@@ -776,13 +776,11 @@
         async function requestClearAll() { 
             showConfirm("全てのデータを削除しますか？\n(この操作は取り消せません)", async () => { 
                 if (currentUser && galleryId === currentUser.id) { 
-                    // 1. DBのデータを削除
                     await Promise.all([
                         sbClient.from('owners').delete().eq('id', currentUser.id), 
                         sbClient.from('dolls').delete().eq('owner_id', currentUser.id), 
                         sbClient.from('posts').delete().eq('owner_id', currentUser.id)
                     ]); 
-                    // 2. ログアウトしてトップページへ戻る
                     await sbClient.auth.signOut();
                     location.href = window.location.origin + window.location.pathname;
                 } 
