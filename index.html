@@ -16,7 +16,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* PC/iPad対応：最大幅の制限 */
         .app-container {
             max-width: 480px;
             margin: 0 auto;
@@ -28,7 +27,6 @@
 
         .logo-font { font-family: 'Dancing Script', cursive; }
         
-        /* 画像保護：長押し・右クリック不可 */
         img { 
             -webkit-touch-callout: none; 
             -webkit-user-select: none; 
@@ -47,7 +45,6 @@
         .modal-content { background: white; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; border-radius: 24px; padding: 24px; position: relative; }
         #custom-dialog { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100000; align-items: center; justify-content: center; padding: 20px; }
         
-        /* テキストエリアの自動伸縮 & コピペ許可 */
         textarea {
             resize: none;
             overflow: hidden;
@@ -62,9 +59,8 @@
         .preview-sq img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; pointer-events: none; }
 
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; border-radius: 50%; cursor: pointer; position: relative; }
+        .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; border-radius: 50%; cursor: pointer; position: relative; border: 1px solid transparent; }
         
-        /* 今日の日付の印 */
         .cal-today { border: 2px solid #888; font-weight: bold; background-color: #f9f9f9; }
         
         .cal-dots { display: flex; gap: 2px; justify-content: center; position: absolute; bottom: 4px; width: 100%; height: 4px; overflow: hidden; }
@@ -121,7 +117,6 @@
                     <button onclick="openModalWithClear()" class="text-left py-4 font-bold border-b text-blue-600 w-full admin-only">✨ うちの子を登録する</button>
                     <button onclick="showDollList()" class="text-left py-4 font-bold border-b w-full text-stone-800">📸 うちの子一覧</button>
                     <button onclick="showPostListPage()" class="text-left py-4 font-bold border-b w-full text-stone-800">📝 投稿一覧</button>
-                    <button onclick="loginWithGoogle()" class="text-left py-4 font-bold border-b w-full text-cyan-600">🆕 新規ギャラリー作成</button>
                 </div>
                 
                 <div class="py-6 space-y-2 border-b">
@@ -305,14 +300,10 @@
     </div>
 
     <script>
-        // --- Supabase Client Initialize ---
         const SB_URL = "https://eegxuxsyaradufdcvzuj.supabase.co";
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlZ3h1eHN5YXJhZHVmZGN2enVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDc3ODYsImV4cCI6MjA4ODEyMzc4Nn0.9O7L6iIYJHChTVDu9w3y5FLNunDvYG6jQFGF4laEoRQ";
-        
-        // 変数名の重複を避けるため sbClient と命名
         const sbClient = supabase.createClient(SB_URL, SB_KEY);
 
-        // --- States ---
         let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"" }, posts = [], calOffset = 0;
         let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null }, loopInterval;
         let currentUser = null;
@@ -324,21 +315,15 @@
             return colors.slice(0, 100);
         })();
 
-        // --- Init ---
         window.onload = async () => {
             initDateSelectors();
             initColorPalettes();
             setupAutoExpand();
             setupImageProtection();
             
-            // 最初に一度空の状態で描画（メニューボタン等を有効化するため）
-            renderAll();
-
-            // URLからユーザーID取得
             const urlParams = new URLSearchParams(window.location.search);
             const targetId = urlParams.get('id');
 
-            // セッション確認
             const { data: { session } } = await sbClient.auth.getSession();
             currentUser = session?.user || null;
             document.body.classList.toggle('is-admin', !!currentUser);
@@ -347,9 +332,10 @@
                 await loadGalleryData(targetId);
             } else if (currentUser) {
                 await loadGalleryData(currentUser.id);
+            } else {
+                renderAll();
             }
 
-            // Auth監視
             sbClient.auth.onAuthStateChanged((_event, session) => {
                 currentUser = session?.user || null;
                 document.body.classList.toggle('is-admin', !!currentUser);
@@ -357,7 +343,6 @@
             });
         };
 
-        // --- Supabase Logic ---
         async function loadGalleryData(userId) {
             try {
                 const { data, error } = await sbClient.from('galleries').select('*').eq('id', userId).single();
@@ -394,12 +379,10 @@
             location.href = window.location.origin + window.location.pathname;
         }
 
-        // --- Rendering ---
         function renderAll() {
             document.getElementById('login-btn').style.display = currentUser ? 'none' : 'block';
             document.getElementById('logout-btn').style.display = currentUser ? 'block' : 'none';
 
-            // Top Film Roll
             const track = document.getElementById('top-film-roll'); track.innerHTML = '';
             const items = dolls.filter(d => d.image);
             const container = document.getElementById('film-container');
@@ -418,7 +401,6 @@
                 }
             } else { document.getElementById('empty-msg').style.display = 'flex'; }
 
-            // Owner
             const oImg = document.getElementById('display-owner-img');
             if(owner.image) { oImg.src = owner.image; oImg.classList.remove('hidden'); }
             else { oImg.classList.add('hidden'); }
@@ -436,7 +418,6 @@
                 a.innerText = "🔗 " + s.type; snsArea.appendChild(a);
             });
 
-            // Posts
             const hp = document.getElementById('home-posts'); hp.innerHTML = '';
             const mpl = document.getElementById('menu-post-list'); mpl.innerHTML = '';
             posts.forEach((p, i) => {
@@ -459,7 +440,6 @@
             setupInfiniteScroll();
         }
 
-        // --- Anniversary Popups ---
         function renderAnni() { 
             const area = document.getElementById('closest-anniversary'), happyArea = document.getElementById('happy-anniversary'), happyListArea = document.getElementById('happy-anniversary-list');
             area.innerHTML = ''; happyListArea.innerHTML = ''; happyArea.classList.add('hidden');
@@ -506,8 +486,7 @@
             }
             if(list.length > 0) { 
                 list.sort((a,b) => a.diff - b.diff || a.idx - b.idx);
-                const closestDiff = list[0].diff;
-                const closestEvents = list.filter(item => item.diff === closestDiff);
+                const closestEvents = list.filter(item => item.diff === list[0].diff);
                 let html = `<div class="space-y-3">`;
                 closestEvents.forEach(b => {
                     const displayDay = b.isToday ? "Today" : `あと ${b.diff} 日`;
@@ -517,7 +496,6 @@
             } 
         }
 
-        // --- Calendar Logic ---
         function renderCalendar() {
             const now = new Date(), v = new Date(now.getFullYear(), now.getMonth() + calOffset, 1), y = v.getFullYear(), m = v.getMonth();
             const label = document.getElementById('cal-month'); label.innerText = `${y} / ${m+1}`;
@@ -539,11 +517,16 @@
             });
 
             const realToday = new Date(), realY = realToday.getFullYear(), realM = realToday.getMonth(), realD = realToday.getDate();
-            for(let i=0; i<firstDay; i++) area.innerHTML += '<div></div>';
+            for(let i=0; i<firstDay; i++) { area.appendChild(document.createElement('div')); }
             for(let d=1; d<=lastDate; d++) {
                 const isRealToday = (realY===y && realM===m && realD===d);
                 const annis = map[d], div = document.createElement('div'); 
                 div.className = `cal-day ${isRealToday ? 'cal-today' : ''}`;
+                
+                const dayNum = document.createElement('span');
+                dayNum.innerText = d;
+                div.appendChild(dayNum);
+
                 if(annis) {
                     const dotsDiv = document.createElement('div'); dotsDiv.className = "cal-dots";
                     annis.sort((a,b) => a.order - b.order).forEach(a => {
@@ -558,11 +541,10 @@
                         });
                     };
                 }
-                div.innerHTML += `<span>${d}</span>`; area.appendChild(div);
+                area.appendChild(div);
             }
         }
 
-        // --- WebP Image Processing ---
         async function processImageToWebP(imgEl, size, cropH, cropV) {
             return new Promise((resolve) => {
                 const cvs = document.createElement('canvas');
@@ -574,11 +556,13 @@
             });
         }
 
-        // --- UI Utilities ---
         function toggleMenu(id) { 
             const el = document.getElementById(id);
-            if (el.style.display === 'flex') { el.style.display = 'none'; }
-            else { el.style.display = 'flex'; }
+            if (el.style.display === 'flex') { 
+                el.style.display = 'none'; 
+            } else { 
+                el.style.display = 'flex'; 
+            }
         }
 
         function showHome() { 
@@ -590,7 +574,7 @@
         }
 
         function showDollList() { 
-            toggleMenu('side-menu'); // 収納
+            toggleMenu('side-menu');
             document.getElementById('home-content').classList.add('hidden'); 
             document.getElementById('post-list-page').classList.add('hidden'); 
             document.getElementById('doll-list-page').classList.remove('hidden'); 
@@ -598,7 +582,7 @@
         }
 
         function showPostListPage() { 
-            toggleMenu('side-menu'); // 収納
+            toggleMenu('side-menu');
             document.getElementById('home-content').classList.add('hidden'); 
             document.getElementById('doll-list-page').classList.add('hidden'); 
             document.getElementById('post-list-page').classList.remove('hidden'); 
@@ -640,7 +624,6 @@
             overlay.classList.remove('hidden'); 
         }
 
-        // --- Save Actions ---
         async function saveData() {
             const id = document.getElementById('edit-id').value;
             const h = document.getElementById('crop-h').value, v = document.getElementById('crop-v').value;
@@ -697,7 +680,6 @@
             location.reload();
         }
 
-        // --- Helpers ---
         function setupAutoExpand() {
             document.addEventListener('input', (e) => { if (e.target.classList.contains('auto-expand')) adjustHeight(e.target); });
         }
@@ -739,7 +721,20 @@
         function setupInfiniteScroll() { const container = document.getElementById('film-container'); container.addEventListener('scroll', () => { const items = dolls.filter(d => d.image); if (items.length < 5) return; const w = items.length * (80 + 12); if (container.scrollLeft < w * 0.5) container.scrollLeft += w; if (container.scrollLeft > w * 1.5) container.scrollLeft -= w; }); }
         function shareSNS(type) { const url = window.location.origin + window.location.pathname + (currentUser ? '?id=' + currentUser.id : ''); if(type === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank'); else if(type === 'x') window.open(`https://twitter.com/intent/tweet?text=Doll Uchinoko Gallery&url=${encodeURIComponent(url)}`, '_blank'); }
         function copyURL() { const url = window.location.origin + window.location.pathname + (currentUser ? '?id=' + currentUser.id : ''); navigator.clipboard.writeText(url).then(() => { showAlert("ギャラリーのURLをコピーしました"); }); }
-        async function requestClearAll() { showConfirm("全てのデータを削除しますか？", async () => { if (currentUser) { const { error } = await sbClient.from('galleries').delete().eq('id', currentUser.id); if(!error) location.reload(); } }, "削除する"); }
+        async function requestClearAll() { 
+            showConfirm("全てのデータを削除しますか？\n(登録した画像や投稿がすべて消去されます)", async () => { 
+                if (currentUser) { 
+                    const { error } = await sbClient.from('galleries').upsert({
+                        id: currentUser.id,
+                        dolls: [], 
+                        owner: { name: "Owner Name", bio: "", sns: [], image:"" }, 
+                        posts: [], 
+                        updated_at: new Date()
+                    });
+                    if(error) { showAlert("削除に失敗しました: " + error.message); } else { location.reload(); }
+                } 
+            }, "削除する"); 
+        }
         function showConfirm(m, onY, yesText = "実行") { const d = document.getElementById('custom-dialog'); document.getElementById('dialog-message').innerText = m; const bA = document.getElementById('dialog-buttons'); bA.innerHTML = ''; const b1 = document.createElement('button'); b1.className = "w-full bg-red-400 text-white py-4 rounded-full font-bold shadow-lg"; b1.innerText = yesText; b1.onclick = () => { onY(); closeDialog(); }; const b2 = document.createElement('button'); b2.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; b2.innerText = "キャンセル"; b2.onclick = closeDialog; bA.append(b1, b2); d.style.display = 'flex'; }
         function showAlert(msg, callback = null) { const dialog = document.getElementById('custom-dialog'); document.getElementById('dialog-message').innerText = msg; const buttons = document.getElementById('dialog-buttons'); buttons.innerHTML = ''; const btn = document.createElement('button'); btn.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold"; btn.innerText = "OK"; btn.onclick = () => { closeDialog(); if(callback) callback(); }; buttons.appendChild(btn); dialog.style.display = 'flex'; }
     </script>
