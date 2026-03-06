@@ -32,14 +32,14 @@
         /* クリックが必要な画像（フィルムロールなど） */
         .clickable-img, .film-frame { pointer-events: auto !important; }
         
-        /* テキストエリア・入力フォーム・指定クラスを完全にコピペ可能に */
+        /* 【重要】テキストエリア・入力フォーム・指定クラスを完全にコピペ可能に */
         textarea, input, select, .user-select-auto { 
             user-select: text !important; 
             -webkit-user-select: text !important;
             -moz-user-select: text !important;
             -ms-user-select: text !important;
             pointer-events: auto !important;
-            -webkit-touch-callout: default !important;
+            -webkit-touch-callout: default !important; /* iOSで長押しメニュー（コピー等）を許可 */
         }
 
         .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
@@ -63,15 +63,11 @@
         .cal-dots { display: flex; gap: 2px; justify-content: center; position: absolute; bottom: 4px; width: 100%; height: 4px; overflow: hidden; }
         .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
         
-        /* カラー選択のデザイン修正 */
-        .color-grid { grid-template-columns: repeat(8, 1fr); gap: 8px; margin-top: 12px; padding: 12px; display: none; background: #fff; border-radius: 16px; border: 1px solid #eee; }
+        .color-grid { grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 12px; padding: 4px; display: none; }
         .color-grid.grid-open { display: grid; }
-        .color-chip { aspect-ratio: 1; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.1s; }
-        .color-chip:active { transform: scale(0.9); }
+        .color-chip { aspect-ratio: 1; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; }
         .color-chip.selected { outline: 3px solid #000; outline-offset: 1px; z-index: 2; }
-        .color-select-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #ddd; cursor: pointer; box-shadow: 0 0 0 2px #fff; transition: transform 0.2s; }
-        .color-select-btn:hover { transform: scale(1.1); }
-
+        .color-select-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #ddd; cursor: pointer; box-shadow: 0 0 0 2px #fff; }
         .date-input { font-size: 16px !important; padding: 8px; border-radius: 8px; border: 1px solid #e5e7eb; width: 100%; }
         
         @keyframes pulse-anni {
@@ -115,7 +111,7 @@
             </div>
         </header>
 
-        <div id="side-menu" class="modal-base" onclick="toggleMenu('side-menu')">
+        <div id="side-menu" class="modal-base" onclick="toggleMenu('side-menu')" style="display: none;">
             <div class="bg-white w-72 h-full ml-auto p-6 flex flex-col overflow-y-auto" onclick="event.stopPropagation()">
                 <div class="space-y-1">
                     <button onclick="showHome(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">🏠 ホーム</button>
@@ -172,9 +168,9 @@
             <section class="p-10 bg-stone-100 mt-10 text-center border-t">
                 <p class="text-[10px] font-bold text-stone-400 mb-8 tracking-widest uppercase">Share this gallery</p>
                 <div class="flex flex-col gap-4 max-w-[280px] mx-auto">
-                    <button onclick="shareSNS('x')" class="w-full h-14 bg-black rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">X (旧Twitter)</span></button>
-                    <button onclick="shareSNS('line')" class="w-full h-14 bg-[#06C755] rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">LINE</span></button>
-                    <button onclick="copyURL()" class="w-full h-14 bg-stone-400 rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">URL Copy</span></button>
+                    <button onclick="shareSNS('x')" class="share-btn w-full h-14 bg-black rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">X (旧Twitter)</span></button>
+                    <button onclick="shareSNS('line')" class="share-btn w-full h-14 bg-[#06C755] rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">LINE</span></button>
+                    <button onclick="copyURL()" class="share-btn w-full h-14 bg-stone-400 rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">URL Copy</span></button>
                 </div>
             </section>
         </main>
@@ -210,38 +206,20 @@
                     <input type="hidden" id="edit-id">
                     <input type="text" id="f-name" class="w-full border-b p-2 font-bold text-lg outline-none" placeholder="お名前">
                     <input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none" placeholder="ふりがな">
-                    
                     <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
                         <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE">
                         <input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="BODY">
                         <input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="HEAD">
                     </div>
-
                     <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
                         <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">カラー設定</p>
-                        
-                        <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('bg')">
-                            <span class="text-xs text-stone-500 font-bold">背景色</span>
-                            <div id="bg-select-icon" class="color-select-btn"></div>
-                        </div>
-                        <div id="bg-color-grid" class="color-grid"></div>
-                        <input type="hidden" id="f-bg-color" value="#ffffff">
-
-                        <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('text')">
-                            <span class="text-xs text-stone-500 font-bold">文字色</span>
-                            <div id="text-select-icon" class="color-select-btn"></div>
-                        </div>
-                        <div id="text-color-grid" class="color-grid"></div>
-                        <input type="hidden" id="f-text-color" value="#000000">
-
-                        <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('cal')">
-                            <span class="text-xs text-stone-500 font-bold">カレンダー強調色</span>
-                            <div id="cal-select-icon" class="color-select-btn"></div>
-                        </div>
-                        <div id="cal-color-grid" class="color-grid"></div>
-                        <input type="hidden" id="f-cal-color" value="#E11D48">
+                        <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('bg')"><span class="text-xs text-stone-500 font-bold">背景色</span><div id="bg-select-icon" class="color-select-btn"></div></div>
+                        <div id="bg-color-grid" class="color-grid"></div><input type="hidden" id="f-bg-color" value="#ffffff">
+                        <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('text')"><span class="text-xs text-stone-500 font-bold">文字色</span><div id="text-select-icon" class="color-select-btn"></div></div>
+                        <div id="text-color-grid" class="color-grid"></div><input type="hidden" id="f-text-color" value="#000000">
+                        <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('cal')"><span class="text-xs text-stone-500 font-bold">カレンダー強調色</span><div id="cal-select-icon" class="color-select-btn"></div></div>
+                        <div id="cal-color-grid" class="color-grid"></div><input type="hidden" id="f-cal-color" value="#E11D48">
                     </div>
-
                     <div class="space-y-4 text-sm px-2">
                         <div class="border-b pb-4"><span class="block text-stone-400 text-[10px] font-bold mb-1 uppercase tracking-widest">誕生日</span>
                             <div class="flex gap-2 mb-2 items-center"><select id="f-bday-m" class="border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option></select><select id="f-bday-d" class="border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option></select></div>
@@ -267,7 +245,6 @@
                 <div class="text-center mb-8"><p id="view-kana" class="text-sm opacity-70 mb-1"></p><h2 id="view-name" class="text-3xl font-bold"></h2></div>
                 <div id="detail-box" class="bg-white/20 backdrop-blur-md p-6 rounded-3xl space-y-4 mb-8 text-[16px] hidden"></div>
                 <p id="view-profile" class="whitespace-pre-wrap leading-relaxed px-2 text-[18px] font-medium user-select-auto"></p>
-                
                 <div class="fixed bottom-6 inset-x-0 px-6 flex gap-4 max-w-[440px] mx-auto admin-only-flex hidden">
                     <button id="detail-edit-btn" class="flex-1 bg-stone-800 text-white py-4 rounded-full font-bold">編集</button>
                     <button id="detail-del-btn" class="flex-1 bg-red-50 text-red-400 py-4 rounded-full font-bold border border-red-100">削除</button>
@@ -332,7 +309,6 @@
         let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null }, loopInterval;
         let currentUser = null, galleryId = new URLSearchParams(window.location.search).get('id');
 
-        // カラーパレット生成
         const palette100 = (() => {
             const hues = [0, 30, 60, 120, 150, 180, 220, 280, 330], colors = [];
             for(let i=0; i<10; i++) colors.push(`hsl(0, 0%, ${Math.min(0 + (i * 11), 100)}%)`);
@@ -724,12 +700,9 @@
 
         function initDateSelectors() { ["f-bday", "f-welcome"].forEach(p => { const m = document.getElementById(p+"-m"), d = document.getElementById(p+"-d"); if(m){for(let i=1; i<=12; i++) m.innerHTML += `<option value="${i}">${i}</option>`;} if(d){for(let i=1; i<=31; i++) d.innerHTML += `<option value="${i}">${i}</option>`;} }); }
         
-        // --- カラーパレット初期化 ---
         function initColorPalettes() { 
             ["bg", "text", "cal"].forEach(t => { 
-                const g = document.getElementById(t+"-color-grid");
-                const def = (t==='bg'?'#ffffff':(t==='text'?'#000000':'#E11D48')); 
-                g.innerHTML = '';
+                const g = document.getElementById(t+"-color-grid"), def = (t==='bg'?'#ffffff':(t==='text'?'#000000':'#E11D48')); 
                 palette100.forEach(c => { 
                     const chip = document.createElement('div'); 
                     chip.className = `color-chip ${t}-chip`; 
@@ -745,34 +718,43 @@
         function selectPaletteColor(type, color, el) { 
             document.querySelectorAll("."+type+"-chip").forEach(c => c.classList.remove('selected')); 
             el.classList.add('selected'); 
-            document.getElementById("f-"+type+"-color").value = color; // ID指定ミス修正
+            document.getElementById("f-"+type+"-color").value = color; 
             document.getElementById(type+"-select-icon").style.backgroundColor = color; 
             document.getElementById(type+"-color-grid").classList.remove('grid-open'); 
         }
 
         function toggleColorGrid(type) { 
-            const g = document.getElementById(type+"-color-grid");
-            const open = g.classList.contains('grid-open'); 
+            const g = document.getElementById(type+"-color-grid"), open = g.classList.contains('grid-open'); 
             document.querySelectorAll('.color-grid').forEach(x => x.classList.remove('grid-open')); 
             if(!open) g.classList.add('grid-open'); 
         }
 
         function updateCrop(imgId, hId, vId) { document.getElementById(imgId).style.objectPosition = `${document.getElementById(hId).value}% ${document.getElementById(vId).value}%`; }
         function openModalWithClear() { clearDollForm(); document.getElementById('modal-title').innerText = "うちの子登録"; document.getElementById('modal').style.display='flex'; if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); }
-        
         function clearDollForm() { 
-            document.getElementById('edit-id').value = ""; document.getElementById('f-name').value = ""; 
-            document.getElementById('f-kana').value = ""; document.getElementById('f-size-label').value = ""; 
-            document.getElementById('f-body-make').value = ""; document.getElementById('f-head').value = ""; 
-            document.getElementById('f-bday').value = ""; document.getElementById('f-bday-m').value = ""; 
-            document.getElementById('f-bday-d').value = ""; document.getElementById('f-welcome').value = ""; 
-            document.getElementById('f-welcome-m').value = ""; document.getElementById('f-welcome-d').value = ""; 
-            document.getElementById('anniversary-inputs').innerHTML = ''; document.getElementById('f-profile').value = ""; 
-            document.getElementById('crop-preview').classList.add('hidden'); document.getElementById('doll-hint').classList.remove('hidden'); currentRawImg.doll = null; 
-            // カラーリセット
-            document.getElementById('bg-select-icon').style.backgroundColor = "#ffffff";
-            document.getElementById('text-select-icon').style.backgroundColor = "#000000";
-            document.getElementById('cal-select-icon').style.backgroundColor = "#E11D48";
+            document.getElementById('edit-id').value = ""; 
+            document.getElementById('f-name').value = ""; 
+            document.getElementById('f-kana').value = ""; 
+            document.getElementById('f-size-label').value = ""; 
+            document.getElementById('f-body-make').value = ""; 
+            document.getElementById('f-head').value = ""; 
+            document.getElementById('f-bday').value = ""; 
+            document.getElementById('f-bday-m').value = ""; 
+            document.getElementById('f-bday-d').value = ""; 
+            document.getElementById('f-welcome').value = ""; 
+            document.getElementById('f-welcome-m').value = ""; 
+            document.getElementById('f-welcome-d').value = ""; 
+            document.getElementById('anniversary-inputs').innerHTML = ''; 
+            document.getElementById('f-profile').value = ""; 
+            document.getElementById('crop-preview').classList.add('hidden'); 
+            document.getElementById('doll-hint').classList.remove('hidden'); 
+            currentRawImg.doll = null; 
+            // カラー初期化
+            const colors = {bg:'#ffffff', text:'#000000', cal:'#E11D48'};
+            Object.keys(colors).forEach(t => {
+                document.getElementById("f-"+t+"-color").value = colors[t];
+                document.getElementById(t+"-select-icon").style.backgroundColor = colors[t];
+            });
         }
         
         function loadImg(e, type) { 
@@ -808,12 +790,11 @@
             document.getElementById('f-profile').value = d.profile || ""; 
             
             // カラー反映
-            document.getElementById('f-bg-color').value = d.bg_color || "#ffffff"; 
-            document.getElementById('f-text-color').value = d.text_color || "#000000"; 
-            document.getElementById('f-cal-color').value = d.cal_color || "#E11D48"; 
-            document.getElementById('bg-select-icon').style.backgroundColor = d.bg_color || "#ffffff";
-            document.getElementById('text-select-icon').style.backgroundColor = d.text_color || "#000000";
-            document.getElementById('cal-select-icon').style.backgroundColor = d.cal_color || "#E11D48";
+            ['bg', 'text', 'cal'].forEach(t => {
+                const color = d[t+'_color'] || (t==='bg'?'#ffffff':(t==='text'?'#000000':'#E11D48'));
+                document.getElementById('f-'+t+'-color').value = color;
+                document.getElementById(t+'-select-icon').style.backgroundColor = color;
+            });
 
             if(d.image) { 
                 const p = document.getElementById('crop-preview'); 
@@ -940,7 +921,7 @@
         }
 
         async function requestClearAll() { 
-            showConfirm("全てのデータを削除しますか？\n(この操作は取り消せません)", async () => { 
+            showConfirm("全てのデータを削除しますか？\n(この操作は取りせません)", async () => { 
                 if (currentUser && galleryId === currentUser.id) { 
                     await Promise.all([
                         sbClient.from('owners').delete().eq('id', currentUser.id), 
