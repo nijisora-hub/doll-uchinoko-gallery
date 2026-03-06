@@ -340,7 +340,8 @@
 
         async function handleLogout() {
             await sbClient.auth.signOut();
-            location.href = window.location.origin + window.location.pathname;
+            // ログアウト後は、現在のギャラリーを表示したままの状態にする
+            location.href = window.location.origin + window.location.pathname + (galleryId ? `?id=${galleryId}` : '');
         }
 
         function requestCreateGallery() {
