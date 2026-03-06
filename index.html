@@ -79,10 +79,11 @@
         }
         .animate-anni { animation: pulse-anni 2s infinite ease-in-out; border: 2px solid #f472b6 !important; }
         
-        /* 管理権限表示制御 */
+        /* 管理者専用・閲覧者専用の制御（重要） */
         .admin-only { display: none !important; }
         body.is-admin .admin-only { display: block !important; }
         body.is-admin .admin-only-flex { display: flex !important; }
+        
         .viewer-only { display: block !important; }
         body.is-admin .viewer-only { display: none !important; }
     </style>
@@ -120,17 +121,19 @@
                     <button onclick="showHome(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">🏠 ホーム</button>
                     <button onclick="showDollList()" class="text-left py-4 font-bold border-b w-full text-stone-800">📸 うちの子一覧</button>
                     <button onclick="showPostListPage()" class="text-left py-4 font-bold border-b w-full text-stone-800">📝 投稿一覧</button>
-                    <button onclick="requestCreateGallery()" class="text-left py-4 font-bold border-b text-blue-600 w-full viewer-only">✨ 新規作成する</button>
+                    <button onclick="requestCreateGallery()" class="text-left py-4 font-bold border-b text-blue-600 w-full viewer-only">✨ ギャラリーを作る</button>
                 </div>
+                
                 <div class="py-6 space-y-2 border-b">
                     <button id="login-btn" onclick="loginWithGoogle()" class="w-full py-3 bg-stone-800 rounded-xl text-xs font-bold text-white">Googleでログイン</button>
                     <button id="logout-btn" onclick="handleLogout()" class="w-full py-3 bg-red-50 rounded-xl text-xs font-bold text-red-400 hidden">ログアウト</button>
                 </div>
                 
                 <div class="py-10 space-y-4 admin-only">
-                    <button onclick="openModalWithClear()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm">📸 うちの子を登録する</button>
-                    <button onclick="openPostModal()" class="w-full py-4 bg-stone-800 text-white rounded-2xl text-sm font-bold shadow-lg">📝 投稿を追加する</button>
-                    <button onclick="openOwnerModal()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm">👤 オーナー設定</button>
+                    <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase mb-2">Admin Menu</p>
+                    <button onclick="openModalWithClear()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm text-left px-6">📸 うちの子を登録</button>
+                    <button onclick="openPostModal()" class="w-full py-4 bg-stone-800 text-white rounded-2xl text-sm font-bold shadow-lg text-left px-6">📝 投稿を追加</button>
+                    <button onclick="openOwnerModal()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm text-left px-6">👤 オーナー設定</button>
                 </div>
 
                 <div class="mt-auto pt-10 admin-only">
@@ -300,8 +303,9 @@
                 <input type="hidden" id="edit-post-id">
                 <input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-4 outline-none" placeholder="タイトル">
                 <div id="post-blocks-container" class="space-y-4"></div>
-                <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ 追加</button>
-                <div class="flex gap-4 p-4 bg-stone-50 rounded-2xl text-xs mt-6 items-center"><label><input type="radio" name="p-pos" value="home" checked> ホーム</label><label><input type="radio" name="p-pos" value="menu"> メニュー</label></div>
+                <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ 本文を追加</button>
+                <button onclick="addPostBlock('image')" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-2">+ 画像を追加</button>
+                <div class="flex gap-4 p-4 bg-stone-50 rounded-2xl text-xs mt-6 items-center"><label><input type="radio" name="p-pos" value="home" checked> ホームに表示</label><label><input type="radio" name="p-pos" value="menu"> メニューのみ</label></div>
                 <button onclick="savePost()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold mt-6">保存</button>
             </div>
         </div>
@@ -322,15 +326,18 @@
     </div>
 
     <script>
+        // 設定値
         const SB_URL = "https://eegxuxsyaradufdcvzuj.supabase.co";
-        const SB_KEY = "（あなたのAPIキーをここに入力）";
+        const SB_KEY = "（ここにあなたのAPIキーを貼り付けてください）";
         const sbClient = supabase.createClient(SB_URL, SB_KEY);
 
+        // 状態管理
         let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"" }, posts = [], calOffset = 0;
         let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null };
         let currentUser = null;
         let galleryId = new URLSearchParams(window.location.search).get('id');
 
+        // カラーパレット定義
         const palette100 = (() => {
             const hues = [0, 30, 60, 120, 150, 180, 220, 280, 330], colors = [];
             for(let i=0; i<10; i++) colors.push(`hsl(0, 0%, ${Math.min(0 + (i * 11), 100)}%)`);
@@ -338,6 +345,7 @@
             return colors.slice(0, 100);
         })();
 
+        // 初期化
         window.onload = async () => {
             initDateSelectors();
             initColorPalettes();
@@ -359,31 +367,39 @@
                 renderAll();
             }
 
+            // 認証状態の変化を監視
             sbClient.auth.onAuthStateChanged(async (_event, session) => {
+                const prevUser = currentUser;
                 currentUser = session?.user || null;
-                if (galleryId) await loadAllData(galleryId);
-                else {
-                    checkAdminStatus();
-                    renderAll();
+                
+                // ログアウトした（ユーザーがいなくなった）場合
+                if (prevUser && !currentUser) {
+                    handleLogoutProcess();
+                    return;
                 }
+
+                if (galleryId) await loadAllData(galleryId);
+                else { checkAdminStatus(); renderAll(); }
             });
         };
 
+        // 管理者判定とUI更新
         function checkAdminStatus() {
-            // isAdminの判定ロジックを整理
+            // isAdmin = 「ログインしている」かつ「表示中のギャラリーIDが自分のIDである」
+            // または「オーナー情報のuser_idが自分のものである」
             const isAdmin = !!(currentUser && (
                 (owner && owner.user_id === currentUser.id) ||
-                (!owner.id && galleryId === currentUser.id)
+                (galleryId === currentUser.id)
             ));
             
+            // クラスの着脱で表示制御
             document.body.classList.toggle('is-admin', isAdmin);
             
+            // ログイン・ログアウトボタンの表示
             const lIn = document.getElementById('login-btn');
             const lOut = document.getElementById('logout-btn');
-            if (lIn && lOut) {
-                lIn.classList.toggle('hidden', !!currentUser);
-                lOut.classList.toggle('hidden', !currentUser);
-            }
+            if (lIn) lIn.classList.toggle('hidden', !!currentUser);
+            if (lOut) lOut.classList.toggle('hidden', !currentUser);
         }
 
         async function loadAllData(uid) {
@@ -416,6 +432,46 @@
             renderCalendar();
             renderAnniversaryList();
         }
+
+        // --- ログアウト処理 ---
+        async function handleLogout() {
+            if(!confirm("ログアウトしますか？")) return;
+            await sbClient.auth.signOut();
+            handleLogoutProcess();
+        }
+
+        function handleLogoutProcess() {
+            // 状態リセット
+            currentUser = null;
+            document.body.classList.remove('is-admin');
+            
+            // UIを強制的に閲覧モードとして再描画し、トップページへ
+            const currentUrl = new URL(window.location.href);
+            // ギャラリーIDは残してリロード
+            window.location.href = currentUrl.origin + currentUrl.pathname + "?id=" + galleryId;
+        }
+
+        // --- 全削除処理 ---
+        async function requestClearAll() {
+            if (!confirm("【警告】すべてのデータを完全に削除しますか？\nこの操作は取り消せません。")) return;
+            
+            try {
+                // 並列削除
+                await Promise.all([
+                    sbClient.from('dolls').delete().eq('owner_id', galleryId),
+                    sbClient.from('posts').delete().eq('owner_id', galleryId),
+                    sbClient.from('owners').delete().eq('id', galleryId)
+                ]);
+                
+                showAlert("すべてのデータを削除しました。");
+                // リロードして初期状態に戻す
+                setTimeout(() => location.reload(), 1000);
+            } catch (e) {
+                showAlert("削除中にエラーが発生しました。");
+            }
+        }
+
+        // --- 以下、描画・ユーティリティ（変更なし） ---
 
         function renderOwner() {
             document.getElementById('owner-name').innerText = owner.name || "Owner Name";
@@ -471,7 +527,7 @@
 
             const { error } = await sbClient.from('owners').upsert(updates);
             if (error) showAlert("保存に失敗しました");
-            else { showAlert("オーナー情報を保存しました"); closeModal(); location.reload(); }
+            else { showAlert("保存しました"); closeModal(); location.reload(); }
         }
 
         function renderDolls() {
@@ -532,10 +588,6 @@
             const menu = document.getElementById('menu-post-list');
             home.innerHTML = ''; menu.innerHTML = '';
             posts.forEach(p => {
-                const div = document.createElement('div');
-                div.className = "p-8 bg-stone-50 rounded-[32px] cursor-pointer";
-                div.innerHTML = `<h4 class="text-xs font-bold text-stone-400 mb-2 uppercase tracking-widest">Article</h4><h3 class="text-xl font-bold">${p.title}</h3>`;
-                div.onclick = () => openArticle(p);
                 if (p.position === 'menu') {
                     const mBtn = document.createElement('button');
                     mBtn.className = "w-full text-left py-4 font-bold border-b text-stone-600";
@@ -543,6 +595,10 @@
                     mBtn.onclick = () => { toggleMenu('side-menu'); openArticle(p); };
                     menu.appendChild(mBtn);
                 } else {
+                    const div = document.createElement('div');
+                    div.className = "p-8 bg-stone-50 rounded-[32px] cursor-pointer";
+                    div.innerHTML = `<h4 class="text-xs font-bold text-stone-400 mb-2 uppercase tracking-widest">Article</h4><h3 class="text-xl font-bold">${p.title}</h3>`;
+                    div.onclick = () => openArticle(p);
                     home.appendChild(div);
                 }
             });
@@ -556,10 +612,10 @@
                 const block = { type };
                 if (type === 'text') block.content = b.querySelector('textarea').value;
                 else {
-                    const file = b.querySelector('input').files[0];
-                    if (file) {
+                    const fileInput = b.querySelector('input');
+                    if (fileInput && fileInput.files[0]) {
                         const path = `posts/${galleryId}/${Date.now()}.jpg`;
-                        const { data } = await sbClient.storage.from('gallery-images').upload(path, file);
+                        const { data } = await sbClient.storage.from('gallery-images').upload(path, fileInput.files[0]);
                         if (data) block.content = sbClient.storage.from('gallery-images').getPublicUrl(path).data.publicUrl;
                     } else {
                         block.content = b.querySelector('img').src;
@@ -643,6 +699,7 @@
             const next = document.getElementById('closest-anniversary');
             happy.innerHTML = ''; next.innerHTML = '';
             const today = new Date();
+            today.setHours(0,0,0,0);
             const todayStr = `${today.getMonth()+1}/${today.getDate()}`;
             
             let isAnyHappy = false;
@@ -664,7 +721,7 @@
                     }
                     
                     let nextDt = new Date(today.getFullYear(), m-1, dd);
-                    if (nextDt < new Date(today.getFullYear(), today.getMonth(), today.getDate())) nextDt.setFullYear(today.getFullYear()+1);
+                    if (nextDt < today) nextDt.setFullYear(today.getFullYear()+1);
                     anniArray.push({ doll: d, label, date: nextDt });
                 };
                 process(d.bday, "Birthday");
@@ -675,7 +732,7 @@
             document.getElementById('happy-anniversary').classList.toggle('hidden', !isAnyHappy);
             
             anniArray.sort((a,b) => a.date - b.date);
-            const closest = anniArray.find(a => a.date > today);
+            const closest = anniArray.find(a => a.date >= today);
             if (closest) {
                 const diff = Math.ceil((closest.date - today) / (1000*60*60*24));
                 next.innerHTML = `<div class="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm cursor-pointer" onclick='openProfile(${JSON.stringify(closest.doll).replace(/'/g,"&apos;")})'>
@@ -685,6 +742,7 @@
             }
         }
 
+        // --- モーダル制御 ---
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal() {
             document.querySelectorAll('.modal-base').forEach(m => m.style.display = 'none');
@@ -720,7 +778,7 @@
             div.className = "sns-input-group flex gap-2";
             div.innerHTML = `<select class="border p-2 rounded text-xs"><option value="x" ${type==='x'?'selected':''}>X</option><option value="insta" ${type==='insta'?'selected':''}>Instagram</option><option value="link" ${type==='link'?'selected':''}>Other</option></select>
                              <input type="text" class="border p-2 rounded text-xs flex-1" placeholder="URL" value="${url}">
-                             <button onclick="this.parentElement.remove()" class="text-red-400">✕</button>`;
+                             <button onclick="this.parentElement.remove()" class="text-red-400 px-2 font-bold">✕</button>`;
             document.getElementById('sns-inputs-container').appendChild(div);
         }
 
@@ -747,10 +805,10 @@
             if (type === 'text') {
                 div.innerHTML = `<textarea class="w-full bg-transparent text-sm outline-none auto-expand" placeholder="本文を入力">${content}</textarea>`;
             } else {
-                div.innerHTML = `<input type="file" accept="image/*" class="hidden" onchange="previewPostImg(this)"><img src="${content}" class="w-full rounded-lg mb-2 ${content?'':'hidden'}" onclick="this.previousElementSibling.click()"><p class="text-[10px] text-stone-400 text-center">画像を選択</p>`;
+                div.innerHTML = `<input type="file" accept="image/*" class="hidden" onchange="previewPostImg(this)"><img src="${content}" class="w-full rounded-lg mb-2 ${content?'':'hidden'}" onclick="this.previousElementSibling.click()"><p class="text-[10px] text-stone-400 text-center cursor-pointer" onclick="this.previousElementSibling.previousElementSibling.click()">画像を選択</p>`;
             }
             const del = document.createElement('button');
-            del.className = "absolute -top-2 -right-2 bg-white shadow rounded-full w-6 h-6 text-xs";
+            del.className = "absolute -top-2 -right-2 bg-white shadow rounded-full w-6 h-6 text-xs font-bold";
             del.innerText = "✕";
             del.onclick = () => div.remove();
             div.appendChild(del);
@@ -792,7 +850,7 @@
             detail.classList.toggle('hidden', !hasDetail);
 
             document.getElementById('detail-edit-btn').onclick = () => { closeProfile(); editDoll(d); };
-            document.getElementById('detail-del-btn').onclick = () => { if(confirm("削除しますか？")) deleteDoll(d.id); };
+            document.getElementById('detail-del-btn').onclick = () => { if(confirm("このドール情報を削除しますか？")) deleteDoll(d.id); };
             
             over.classList.remove('hidden');
         }
@@ -853,7 +911,7 @@
                 }
             });
             document.getElementById('art-edit-btn').onclick = () => { closeArticle(); openPostModal(p); };
-            document.getElementById('art-del-btn').onclick = () => { if(confirm("削除しますか？")) deletePost(p.id); };
+            document.getElementById('art-del-btn').onclick = () => { if(confirm("この投稿を削除しますか？")) deletePost(p.id); };
             page.style.display = 'block';
         }
 
@@ -948,7 +1006,7 @@
             div.className = "anni-group p-4 bg-stone-50 rounded-2xl space-y-2 relative";
             div.innerHTML = `<input type="text" class="anni-label w-full border-b bg-transparent py-1 text-xs font-bold outline-none" placeholder="記念日名" value="${label}">
                              <input type="date" class="anni-date date-input" value="${date}">
-                             <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-stone-300">✕</button>`;
+                             <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-stone-300 font-bold">✕</button>`;
             document.getElementById('anniversary-inputs').appendChild(div);
         }
 
@@ -1002,18 +1060,11 @@
             await sbClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: redirectUrl } });
         }
 
-        async function handleLogout() {
-            await sbClient.auth.signOut();
-            // ログアウト後は明示的に状態をリセットしてリロード
-            currentUser = null;
-            location.reload();
-        }
-
         function requestCreateGallery() {
             if (!currentUser) return loginWithGoogle();
 
             const d = document.getElementById('custom-dialog');
-            document.getElementById('dialog-message').innerText = "作成するギャラリーのIDを決めてください\n（半角英数字、後から変更不可）";
+            document.getElementById('dialog-message').innerText = "ギャラリーIDを入力してください\n（半角英数字、例: my-doll-room）";
             document.getElementById('dialog-input-container').classList.remove('hidden');
             const input = document.getElementById('dialog-text-input');
             input.value = "";
@@ -1022,10 +1073,10 @@
 
             const b1 = document.createElement('button');
             b1.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold";
-            b1.innerText = "このIDで作成する";
+            b1.innerText = "作成する";
             b1.onclick = () => {
                 const val = input.value.trim();
-                if(!val || !/^[a-zA-Z0-9_-]+$/.test(val)) return alert("半角英数字で入力してください");
+                if(!val || !/^[a-zA-Z0-9_-]+$/.test(val)) return alert("英数字で入力してください");
                 location.href = window.location.origin + window.location.pathname + `?id=${val}`;
             };
             const b2 = document.createElement('button');
@@ -1036,16 +1087,6 @@
             bA.append(b1, b2);
             d.style.display = 'flex';
             input.focus();
-        }
-
-        async function requestClearAll() {
-            if (!confirm("すべてのデータを削除しますか？")) return;
-            await Promise.all([
-                sbClient.from('dolls').delete().eq('owner_id', galleryId),
-                sbClient.from('posts').delete().eq('owner_id', galleryId),
-                sbClient.from('owners').delete().eq('id', galleryId)
-            ]);
-            location.reload();
         }
 
         function showAlert(m) {
@@ -1062,13 +1103,10 @@
             d.style.display = 'flex';
         }
 
-        function copyURL() {
-            navigator.clipboard.writeText(window.location.href).then(() => showAlert("URLをコピーしました"));
-        }
-
+        function copyURL() { navigator.clipboard.writeText(window.location.href).then(() => showAlert("URLをコピーしました")); }
         function shareSNS(type) {
             const url = encodeURIComponent(window.location.href);
-            const txt = encodeURIComponent((owner.name || "Doll") + "さんのドールギャラリー");
+            const txt = encodeURIComponent((owner.name || "Doll") + "さんのギャラリー");
             if (type === 'x') window.open(`https://twitter.com/intent/tweet?url=${url}&text=${txt}`);
             else window.open(`https://social-plugins.line.me/lineit/share?url=${url}`);
         }
@@ -1083,11 +1121,6 @@
             document.addEventListener('contextmenu', e => {
                 if (!['TEXTAREA', 'INPUT'].includes(e.target.tagName) && !e.target.closest('.user-select-auto')) e.preventDefault();
             });
-            document.addEventListener('touchstart', e => {
-                if (e.target.tagName === 'IMG' && !e.target.classList.contains('clickable-img') && !e.target.classList.contains('film-frame')) {
-                    // Long press protection
-                }
-            }, {passive: true});
         }
     </script>
 </body>
