@@ -21,7 +21,7 @@
         .app-container { max-width: 480px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative; }
         .logo-font { font-family: 'Dancing Script', cursive; }
         
-        /* 画像保護の設定：画像のみを選択・保存不可に */
+        /* 画像保護の設定 */
         img { 
             -webkit-touch-callout: none; 
             -webkit-user-select: none !important; 
@@ -29,45 +29,61 @@
             pointer-events: none; 
             -webkit-user-drag: none; 
         }
-        /* クリックが必要な画像（フィルムロールなど） */
         .clickable-img, .film-frame { pointer-events: auto !important; }
         
-        /* 【重要】テキストエリア・入力フォーム・指定クラスを完全にコピペ可能に */
+        /* テキストエリア・入力フォーム */
         textarea, input, select, .user-select-auto { 
             user-select: text !important; 
             -webkit-user-select: text !important;
-            -moz-user-select: text !important;
-            -ms-user-select: text !important;
             pointer-events: auto !important;
-            -webkit-touch-callout: default !important; /* iOSで長押しメニュー（コピー等）を許可 */
         }
 
+        /* フィルムロール */
         .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .film-outer::-webkit-scrollbar { display: none; }
         .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 20px; }
         .film-frame { width: 80px; height: 80px; background: #333; border: 2px solid #eee; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; position: relative; z-index: 10; }
         
+        /* モーダル基本 */
         .modal-base { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 10px; }
         .modal-content { background: white; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; border-radius: 24px; padding: 24px; position: relative; }
         #custom-dialog { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100000; align-items: center; justify-content: center; padding: 20px; }
         
+        /* クロップ・プレビュー */
         .crop-area { display: flex; flex-direction: row-reverse; gap: 10px; align-items: center; margin-bottom: 10px; }
         .v-bar-box { width: 20px; height: 180px; display: flex; align-items: center; justify-content: center; }
         .vertical-range { writing-mode: vertical-lr; direction: rtl; appearance: slider-vertical; width: 8px; height: 100%; }
         .preview-sq { flex: 1; aspect-ratio: 1/1; background: #f3f3f3; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid #eee; }
         .preview-sq img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; pointer-events: none; }
         
+        /* カレンダー */
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; border-radius: 50%; cursor: pointer; position: relative; border: 1px solid transparent; }
         .cal-today { border: 2px solid #888; font-weight: bold; background-color: #f9f9f9; }
         .cal-dots { display: flex; gap: 2px; justify-content: center; position: absolute; bottom: 4px; width: 100%; height: 4px; overflow: hidden; }
         .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
         
-        .color-grid { grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 12px; padding: 4px; display: none; }
+        /* カラーパレット（丸型・収納式） */
+        .color-grid { 
+            grid-template-columns: repeat(8, 1fr); 
+            gap: 8px; 
+            margin-top: 12px; 
+            padding: 12px; 
+            display: none; 
+            background: #fff; 
+            border-radius: 20px; 
+            border: 1px solid #eee; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
         .color-grid.grid-open { display: grid; }
-        .color-chip { aspect-ratio: 1; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; }
+        .color-chip { aspect-ratio: 1; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.1s; }
+        .color-chip:active { transform: scale(0.9); }
         .color-chip.selected { outline: 3px solid #000; outline-offset: 1px; z-index: 2; }
-        .color-select-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #ddd; cursor: pointer; box-shadow: 0 0 0 2px #fff; }
+        
+        /* 選択中の色丸アイコン */
+        .color-select-btn { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; box-shadow: 0 0 0 2px #ddd; transition: transform 0.2s; }
+        .color-select-btn:active { transform: scale(0.9); }
+
         .date-input { font-size: 16px !important; padding: 8px; border-radius: 8px; border: 1px solid #e5e7eb; width: 100%; }
         
         @keyframes pulse-anni {
@@ -77,6 +93,7 @@
         }
         .animate-anni { animation: pulse-anni 2s infinite ease-in-out; border: 2px solid #f472b6 !important; }
         
+        /* 管理権限表示 */
         .admin-only { display: none !important; }
         body.is-admin .admin-only { display: block !important; }
         body.is-admin .admin-only-flex { display: flex !important; }
@@ -111,7 +128,7 @@
             </div>
         </header>
 
-        <div id="side-menu" class="modal-base" onclick="toggleMenu('side-menu')" style="display: none;">
+        <div id="side-menu" class="modal-base" onclick="toggleMenu('side-menu')">
             <div class="bg-white w-72 h-full ml-auto p-6 flex flex-col overflow-y-auto" onclick="event.stopPropagation()">
                 <div class="space-y-1">
                     <button onclick="showHome(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">🏠 ホーム</button>
@@ -168,9 +185,9 @@
             <section class="p-10 bg-stone-100 mt-10 text-center border-t">
                 <p class="text-[10px] font-bold text-stone-400 mb-8 tracking-widest uppercase">Share this gallery</p>
                 <div class="flex flex-col gap-4 max-w-[280px] mx-auto">
-                    <button onclick="shareSNS('x')" class="share-btn w-full h-14 bg-black rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">X (旧Twitter)</span></button>
-                    <button onclick="shareSNS('line')" class="share-btn w-full h-14 bg-[#06C755] rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">LINE</span></button>
-                    <button onclick="copyURL()" class="share-btn w-full h-14 bg-stone-400 rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">URL Copy</span></button>
+                    <button onclick="shareSNS('x')" class="w-full h-14 bg-black rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">X (旧Twitter)</span></button>
+                    <button onclick="shareSNS('line')" class="w-full h-14 bg-[#06C755] rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">LINE</span></button>
+                    <button onclick="copyURL()" class="w-full h-14 bg-stone-400 rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">URL Copy</span></button>
                 </div>
             </section>
         </main>
@@ -206,20 +223,38 @@
                     <input type="hidden" id="edit-id">
                     <input type="text" id="f-name" class="w-full border-b p-2 font-bold text-lg outline-none" placeholder="お名前">
                     <input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none" placeholder="ふりがな">
+                    
                     <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
                         <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE">
                         <input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="BODY">
                         <input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="HEAD">
                     </div>
+
                     <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
-                        <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">カラー設定</p>
-                        <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('bg')"><span class="text-xs text-stone-500 font-bold">背景色</span><div id="bg-select-icon" class="color-select-btn"></div></div>
-                        <div id="bg-color-grid" class="color-grid"></div><input type="hidden" id="f-bg-color" value="#ffffff">
-                        <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('text')"><span class="text-xs text-stone-500 font-bold">文字色</span><div id="text-select-icon" class="color-select-btn"></div></div>
-                        <div id="text-color-grid" class="color-grid"></div><input type="hidden" id="f-text-color" value="#000000">
-                        <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('cal')"><span class="text-xs text-stone-500 font-bold">カレンダー強調色</span><div id="cal-select-icon" class="color-select-btn"></div></div>
-                        <div id="cal-color-grid" class="color-grid"></div><input type="hidden" id="f-cal-color" value="#E11D48">
+                        <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">デザインカラー</p>
+                        
+                        <div class="flex items-center justify-between border-b border-stone-200 pb-3 cursor-pointer" onclick="toggleColorGrid('bg')">
+                            <span class="text-xs text-stone-500 font-bold">背景色</span>
+                            <div id="bg-select-icon" class="color-select-btn"></div>
+                        </div>
+                        <div id="bg-color-grid" class="color-grid"></div>
+                        <input type="hidden" id="f-bg-color" value="#ffffff">
+
+                        <div class="flex items-center justify-between border-b border-stone-200 pb-3 cursor-pointer" onclick="toggleColorGrid('text')">
+                            <span class="text-xs text-stone-500 font-bold">文字色</span>
+                            <div id="text-select-icon" class="color-select-btn"></div>
+                        </div>
+                        <div id="text-color-grid" class="color-grid"></div>
+                        <input type="hidden" id="f-text-color" value="#000000">
+
+                        <div class="flex items-center justify-between border-b border-stone-200 pb-3 cursor-pointer" onclick="toggleColorGrid('cal')">
+                            <span class="text-xs text-stone-500 font-bold">カレンダー強調色</span>
+                            <div id="cal-select-icon" class="color-select-btn"></div>
+                        </div>
+                        <div id="cal-color-grid" class="color-grid"></div>
+                        <input type="hidden" id="f-cal-color" value="#E11D48">
                     </div>
+
                     <div class="space-y-4 text-sm px-2">
                         <div class="border-b pb-4"><span class="block text-stone-400 text-[10px] font-bold mb-1 uppercase tracking-widest">誕生日</span>
                             <div class="flex gap-2 mb-2 items-center"><select id="f-bday-m" class="border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option></select><select id="f-bday-d" class="border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option></select></div>
@@ -245,6 +280,7 @@
                 <div class="text-center mb-8"><p id="view-kana" class="text-sm opacity-70 mb-1"></p><h2 id="view-name" class="text-3xl font-bold"></h2></div>
                 <div id="detail-box" class="bg-white/20 backdrop-blur-md p-6 rounded-3xl space-y-4 mb-8 text-[16px] hidden"></div>
                 <p id="view-profile" class="whitespace-pre-wrap leading-relaxed px-2 text-[18px] font-medium user-select-auto"></p>
+                
                 <div class="fixed bottom-6 inset-x-0 px-6 flex gap-4 max-w-[440px] mx-auto admin-only-flex hidden">
                     <button id="detail-edit-btn" class="flex-1 bg-stone-800 text-white py-4 rounded-full font-bold">編集</button>
                     <button id="detail-del-btn" class="flex-1 bg-red-50 text-red-400 py-4 rounded-full font-bold border border-red-100">削除</button>
@@ -301,14 +337,17 @@
     </div>
 
     <script>
+        // Supabase 設定
         const SB_URL = "https://eegxuxsyaradufdcvzuj.supabase.co";
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlZ3h1eHN5YXJhZHVmZGN2enVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDc3ODYsImV4cCI6MjA4ODEyMzc4Nn0.9O7L6iIYJHChTVDu9w3y5FLNunDvYG6jQFGF4laEoRQ";
         const sbClient = supabase.createClient(SB_URL, SB_KEY);
 
+        // アプリ内変数
         let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"" }, posts = [], calOffset = 0;
         let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null }, loopInterval;
         let currentUser = null, galleryId = new URLSearchParams(window.location.search).get('id');
 
+        // カラーパレット生成 (100色)
         const palette100 = (() => {
             const hues = [0, 30, 60, 120, 150, 180, 220, 280, 330], colors = [];
             for(let i=0; i<10; i++) colors.push(`hsl(0, 0%, ${Math.min(0 + (i * 11), 100)}%)`);
@@ -318,7 +357,7 @@
 
         window.onload = async () => {
             initDateSelectors();
-            initColorPalettes();
+            initColorPalettes(); // パレット初期化
             setupAutoExpand();
             setupUnifiedProtection();
             
@@ -382,6 +421,9 @@
             });
         }
 
+        // -------------------------
+        // データベース保存 (Supabase)
+        // -------------------------
         async function saveDollData() {
             if (!currentUser) return;
             const id = document.getElementById('edit-id').value;
@@ -451,6 +493,9 @@
             if(error) showAlert(error.message); else location.reload();
         }
 
+        // -------------------------
+        // 描画関連
+        // -------------------------
         function renderAll() {
             document.getElementById('login-btn').style.display = currentUser ? 'none' : 'block';
             document.getElementById('logout-btn').style.display = currentUser ? 'block' : 'none';
@@ -498,7 +543,6 @@
                     const card = document.createElement('div'); 
                     card.className = "relative bg-white rounded-[32px] p-6 pt-16 border shadow-sm cursor-pointer hover:bg-stone-50 transition-colors";
                     card.onclick = () => viewPost(i);
-
                     if(isAdmin) { 
                         const btnDiv = document.createElement('div');
                         btnDiv.className = "absolute top-4 left-4 flex gap-2 z-20";
@@ -506,18 +550,10 @@
                         btnDiv.innerHTML = `<button onclick="editPost(${i})" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-xs font-bold">編集</button><button onclick="deletePostDirectly(${i})" class="bg-red-50 text-red-400 px-4 py-2 rounded-lg text-xs font-bold border border-red-100">削除</button>`;
                         card.appendChild(btnDiv);
                     }
-
                     const title = document.createElement('h4'); title.className="font-bold mb-4 text-lg border-b pb-2 user-select-auto"; title.innerText = p.title; card.appendChild(title);
-                    
                     let firstImg = (p.blocks || []).find(b => b.img);
-                    if(firstImg) {
-                        const img = document.createElement('img'); img.src = firstImg.img; img.className="w-full rounded-2xl mb-4 clickable-img"; card.appendChild(img);
-                    }
-                    const readMore = document.createElement('p');
-                    readMore.className = "text-center text-stone-400 text-xs font-bold mt-2";
-                    readMore.innerText = "── 続きを読む ──";
-                    card.appendChild(readMore);
-
+                    if(firstImg) { const img = document.createElement('img'); img.src = firstImg.img; img.className="w-full rounded-2xl mb-4 clickable-img"; card.appendChild(img); }
+                    const readMore = document.createElement('p'); readMore.className = "text-center text-stone-400 text-xs font-bold mt-2"; readMore.innerText = "── 続きを読む ──"; card.appendChild(readMore);
                     hp.appendChild(card);
                 } else {
                     const btn = document.createElement('button'); btn.className = "w-full text-left py-4 px-6 bg-white border rounded-2xl text-stone-700 font-bold shadow-sm mb-2";
@@ -527,103 +563,61 @@
             renderCalendar(); renderAnni(); setupInfiniteScroll();
         }
 
-        function renderAnni() {
-            const area = document.getElementById('closest-anniversary'), happyArea = document.getElementById('happy-anniversary'), happyListArea = document.getElementById('happy-anniversary-list');
-            area.innerHTML = ''; happyListArea.innerHTML = ''; happyArea.classList.add('hidden');
-            let list = [], happyEvents = []; const now = new Date(), todayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            dolls.forEach((d, idx) => {
-                const ds = [{ type: 'birth', n: "誕生日", d: d.birthday }, { type: 'welcome', n: "お迎え日", d: d.welcome_day }, ...(d.anniversaries || []).map(a => ({ type: 'custom', n: a.name, d: a.date }))];
-                ds.forEach(v => {
-                    if(v.d) {
-                        const originDate = new Date(v.d);
-                        const isToday = (originDate.getMonth() === now.getMonth() && originDate.getDate() === now.getDate());
-                        const diffYears = now.getFullYear() - originDate.getFullYear();
-                        let next = new Date(now.getFullYear(), originDate.getMonth(), originDate.getDate());
-                        if(next < todayZero) next.setFullYear(now.getFullYear() + 1);
-                        const daysToNext = Math.ceil((next - todayZero) / (1000 * 60 * 60 * 24));
-                        if (isToday && diffYears >= 0) {
-                            let text = (v.type === 'birth') ? `${d.name} の誕生日 ${diffYears}歳` : (v.type === 'welcome' ? (diffYears === 0 ? `${d.name} と出会った日！` : `${d.name} と出会って ${diffYears}年`) : (diffYears === 0 ? `${d.name} の ${v.n}` : `${d.name} の ${v.n} ${diffYears}年`));
-                            happyEvents.push({ text, img: d.image, dollIdx: idx });
-                        }
-                        list.push({ doll: d.name, title: v.n, color: d.cal_color || '#E11D48', diff: daysToNext, isToday, idx });
-                    }
-                });
-            });
-            if (happyEvents.length > 0) {
-                happyArea.classList.remove('hidden');
-                happyEvents.forEach(ev => {
-                    const div = document.createElement('div'); div.className = "bg-white p-3 rounded-2xl shadow-sm mb-3 animate-anni flex items-center gap-3 cursor-pointer";
-                    div.onclick = () => showDetail(ev.dollIdx);
-                    div.innerHTML = `<img src="${ev.img}" class="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-pink-200 clickable-img"><p class="font-bold text-stone-800 text-sm user-select-auto">${ev.text}</p><span class="ml-auto text-xl">🎉</span>`;
-                    happyListArea.appendChild(div);
-                });
-            }
-            if(list.length > 0) {
-                list.sort((a,b) => a.diff - b.diff);
-                const closest = list.filter(item => item.diff === list[0].diff);
-                let html = `<div class="space-y-3">`;
-                closest.forEach(b => { html += `<div class="bg-white p-5 border-l-4 rounded shadow-sm flex justify-between items-center" style="border-color:${b.color}"><div><p class="text-[10px] text-stone-400 font-bold user-select-auto">${b.doll}</p><p class="font-bold user-select-auto">${b.title}</p></div><b class="text-lg">${b.isToday ? "Today" : "あと "+b.diff+" 日"}</b></div>`; });
-                area.innerHTML = html + `</div>`;
-            }
+        // -------------------------
+        // カラーパレット処理 (修正箇所)
+        // -------------------------
+        function initColorPalettes() { 
+            ["bg", "text", "cal"].forEach(t => { 
+                const grid = document.getElementById(t+"-color-grid");
+                const defaultColor = (t==='bg' ? '#ffffff' : (t==='text' ? '#000000' : '#E11D48')); 
+                grid.innerHTML = '';
+                palette100.forEach(color => { 
+                    const chip = document.createElement('div'); 
+                    chip.className = `color-chip ${t}-chip`; 
+                    chip.style.backgroundColor = color; 
+                    chip.onclick = (e) => { e.stopPropagation(); selectPaletteColor(t, color, chip); }; 
+                    grid.appendChild(chip); 
+                }); 
+                // 初期プレビュー色の設定
+                document.getElementById(t + "-select-icon").style.backgroundColor = defaultColor;
+            }); 
         }
 
-        function renderCalendar() {
-            const now = new Date(), v = new Date(now.getFullYear(), now.getMonth() + calOffset, 1), y = v.getFullYear(), m = v.getMonth();
-            document.getElementById('cal-month').innerText = `${y} / ${m+1}`;
-            const firstDay = new Date(y, m, 1).getDay(), lastDate = new Date(y, m+1, 0).getDate(), area = document.getElementById('cal-days'), map = {};
-            area.innerHTML = '';
-            dolls.forEach((d, idx) => {
-                [{n: "誕生日", d: d.birthday}, {n: "お迎え日", d: d.welcome_day}, ...(d.anniversaries || [])].forEach(ev => { 
-                    const dtVal = ev.d || ev.date;
-                    if(dtVal) { 
-                        const dt = new Date(dtVal); 
-                        if(dt.getMonth() === m) { 
-                            const day = dt.getDate(); if(!map[day]) map[day] = []; 
-                            map[day].push({ dollName: d.name, eventName: ev.n || ev.name, calColor: d.cal_color || '#E11D48', uBg: d.bg_color || '#ffffff', uTxt: d.text_color || '#000000', mm: m+1, dd: day, order: idx }); 
-                        } 
-                    } 
-                });
-            });
-            for(let i=0; i<firstDay; i++) area.appendChild(document.createElement('div'));
-            const realToday = new Date();
-            for(let d=1; d<=lastDate; d++) {
-                const isRealToday = (realToday.getFullYear()===y && realToday.getMonth()===m && realToday.getDate()===d);
-                const annis = map[d], div = document.createElement('div'); div.className = `cal-day ${isRealToday?'cal-today':''}`;
-                div.innerHTML = `<span>${d}</span>`;
-                if(annis) {
-                    const dots = document.createElement('div'); dots.className="cal-dots";
-                    annis.sort((a,b)=>a.order-b.order).forEach(a => { const dot=document.createElement('div'); dot.className="cal-dot"; dot.style.backgroundColor=a.calColor; dots.appendChild(dot); });
-                    div.appendChild(dots);
-                    div.onclick = () => {
-                        const evC = document.getElementById('day-events'); evC.innerHTML = '';
-                        annis.forEach(a => { const r=document.createElement('div'); r.className="p-5 rounded-2xl shadow-sm border text-lg space-y-1"; r.style.backgroundColor=a.uBg; r.style.color=a.uTxt; r.innerHTML=`<div class="font-bold user-select-auto">${a.dollName}：${a.mm}/${a.dd}</div><div class="opacity-80 user-select-auto">${a.eventName}</div>`; evC.appendChild(r); });
-                    };
-                }
-                area.appendChild(div);
-            }
+        function selectPaletteColor(type, color, chipElement) { 
+            // 同じタイプのチップの選択状態を解除
+            document.querySelectorAll(`.${type}-chip`).forEach(c => c.classList.remove('selected')); 
+            chipElement.classList.add('selected'); 
+            
+            // 値の反映
+            document.getElementById(`f-${type}-color`).value = color; 
+            document.getElementById(`${type}-select-icon`).style.backgroundColor = color; 
+            
+            // パレットを閉じる
+            document.getElementById(`${type}-color-grid`).classList.remove('grid-open'); 
         }
 
-        async function processImageToWebP(imgEl, size, cropH, cropV) {
-            return new Promise((resolve) => {
-                const cvs = document.createElement('canvas'); const ctx = cvs.getContext('2d'); cvs.width = cvs.height = size;
-                const s = Math.max(size/imgEl.width, size/imgEl.height);
-                ctx.drawImage(imgEl, (size-imgEl.width*s)*(cropH/100), (size-imgEl.height*s)*(cropV/100), imgEl.width*s, imgEl.height*s);
-                resolve(cvs.toDataURL('image/webp', 0.8));
-            });
+        function toggleColorGrid(type) { 
+            const target = document.getElementById(`${type}-color-grid`);
+            const isOpen = target.classList.contains('grid-open'); 
+            // 他を閉じる
+            document.querySelectorAll('.color-grid').forEach(x => x.classList.remove('grid-open')); 
+            if(!isOpen) target.classList.add('grid-open'); 
         }
 
-        function toggleMenu(id) { 
-            const el = document.getElementById(id); 
-            if (el.style.display === 'none' || el.style.display === '') {
-                el.style.display = 'flex';
-            } else {
-                el.style.display = 'none';
-            }
-        }
-
+        // -------------------------
+        // ユーティリティ
+        // -------------------------
+        function updateCrop(imgId, hId, vId) { document.getElementById(imgId).style.objectPosition = `${document.getElementById(hId).value}% ${document.getElementById(vId).value}%`; }
+        function closeModal() { document.querySelectorAll('.modal-base').forEach(m => m.style.display='none'); }
+        function closeProfile() { document.getElementById('profile-overlay').classList.add('hidden'); }
+        function closeArticle() { document.getElementById('article-page').style.display = 'none'; }
+        function closeDialog() { document.getElementById('custom-dialog').style.display = 'none'; document.getElementById('dialog-input-container').classList.add('hidden'); }
+        function changeMonth(d) { calOffset += d; document.getElementById('day-events').innerHTML = ''; renderCalendar(); }
+        function toggleMenu(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'flex') ? 'none' : 'flex'; }
         function showHome() { document.getElementById('home-content').classList.remove('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); document.getElementById('main-header').classList.remove('hidden'); closeArticle(); renderCalendar(); }
         function showDollList() { if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); document.getElementById('home-content').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); document.getElementById('doll-list-page').classList.remove('hidden'); renderDollList(); }
         function showPostListPage() { if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); document.getElementById('home-content').classList.add('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.remove('hidden'); }
+
         function renderDollList() {
             const area = document.getElementById('doll-display-area'); area.innerHTML = ''; 
             if (dollViewMode === 'grid') { 
@@ -634,23 +628,15 @@
                 dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="flex items-center gap-4 bg-white p-3 border rounded-xl cursor-pointer"><img src="${d.image}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0 clickable-img"><div><p class="text-xs text-stone-400 font-bold user-select-auto">${d.kana||''}</p><p class="font-bold text-stone-800 user-select-auto">${d.name}</p></div></div>`; }); 
             } 
         }
+
         function toggleDollViewMode() { dollViewMode = (dollViewMode === 'grid') ? 'list' : 'grid'; document.getElementById('toggle-list-view').innerText = (dollViewMode === 'grid') ? '名前を表示' : 'サムネのみ'; renderDollList(); }
-        
+
         function showDetail(idx) {
             const d = dolls[idx], overlay = document.getElementById('profile-overlay'), bg = document.getElementById('profile-bg');
             bg.style.backgroundColor = d.bg_color || "#ffffff"; bg.style.color = d.text_color || "#000000";
             document.getElementById('view-img').src = d.image; document.getElementById('view-name').innerText = d.name; document.getElementById('view-kana').innerText = d.kana || "";
             const b = document.getElementById('detail-box'); b.innerHTML = ''; let hasInfo = false;
-            
-            const fmt = (s) => { 
-                if(!s) return ""; 
-                const dt = new Date(s); 
-                if(isNaN(dt.getTime())) return s;
-                return dt.getFullYear() === 2000 
-                    ? `${dt.getMonth() + 1}/${dt.getDate()}` 
-                    : `${dt.getFullYear()}/${dt.getMonth() + 1}/${dt.getDate()}`; 
-            };
-
+            const fmt = (s) => { if(!s) return ""; const dt = new Date(s); return dt.getFullYear() === 2000 ? `${dt.getMonth() + 1}/${dt.getDate()}` : `${dt.getFullYear()}/${dt.getMonth() + 1}/${dt.getDate()}`; };
             if(d.size_label) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Size</span><b class="user-select-auto">${d.size_label}</b></div>`; hasInfo = true; }
             if(d.body_make) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Body</span><b class="user-select-auto">${d.body_make}</b></div>`; hasInfo = true; }
             if(d.head_info) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Head</span><b class="user-select-auto">${d.head_info}</b></div>`; hasInfo = true; }
@@ -664,99 +650,58 @@
             overlay.classList.remove('hidden');
         }
 
-        function closeModal() { document.querySelectorAll('.modal-base').forEach(m => m.style.display='none'); }
-        function closeProfile() { document.getElementById('profile-overlay').classList.add('hidden'); }
-        function closeArticle() { document.getElementById('article-page').style.display = 'none'; }
-        function closeDialog() { document.getElementById('custom-dialog').style.display = 'none'; document.getElementById('dialog-input-container').classList.add('hidden'); }
-        function changeMonth(d) { calOffset += d; document.getElementById('day-events').innerHTML = ''; renderCalendar(); }
+        function openModalWithClear() { 
+            clearDollForm(); 
+            document.getElementById('modal-title').innerText = "うちの子登録"; 
+            document.getElementById('modal').style.display='flex'; 
+            if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); 
+        }
         
-        function getDateValue(mainId, mId, dId) { 
-            const main = document.getElementById(mainId).value; 
-            const m = document.getElementById(mId).value; 
-            const d = document.getElementById(dId).value; 
-            if(main) return main;
-            if(m && d) return `2000-${m.padStart(2,'0')}-${d.padStart(2,'0')}`; 
-            return null; 
-        }
-
-        function setDateValue(val, mainId, mId, dId) { 
-            if(!val) {
-                document.getElementById(mainId).value = "";
-                document.getElementById(mId).value = "";
-                document.getElementById(dId).value = "";
-                return;
-            } 
-            const dt = new Date(val); 
-            if(dt.getFullYear() === 2000) { 
-                document.getElementById(mId).value = dt.getMonth() + 1; 
-                document.getElementById(dId).value = dt.getDate(); 
-                document.getElementById(mainId).value = ""; 
-            } else { 
-                document.getElementById(mainId).value = val; 
-                document.getElementById(mId).value = ""; 
-                document.getElementById(dId).value = ""; 
-            } 
-        }
-
-        function initDateSelectors() { ["f-bday", "f-welcome"].forEach(p => { const m = document.getElementById(p+"-m"), d = document.getElementById(p+"-d"); if(m){for(let i=1; i<=12; i++) m.innerHTML += `<option value="${i}">${i}</option>`;} if(d){for(let i=1; i<=31; i++) d.innerHTML += `<option value="${i}">${i}</option>`;} }); }
-        
-        function initColorPalettes() { 
-            ["bg", "text", "cal"].forEach(t => { 
-                const g = document.getElementById(t+"-color-grid"), def = (t==='bg'?'#ffffff':(t==='text'?'#000000':'#E11D48')); 
-                palette100.forEach(c => { 
-                    const chip = document.createElement('div'); 
-                    chip.className = `color-chip ${t}-chip`; 
-                    chip.style.backgroundColor = c; 
-                    if(c.toLowerCase() === def.toLowerCase()) chip.classList.add('selected'); 
-                    chip.onclick = e => { e.stopPropagation(); selectPaletteColor(t, c, chip); }; 
-                    g.appendChild(chip); 
-                }); 
-                document.getElementById(t+"-select-icon").style.backgroundColor = def; 
-            }); 
-        }
-
-        function selectPaletteColor(type, color, el) { 
-            document.querySelectorAll("."+type+"-chip").forEach(c => c.classList.remove('selected')); 
-            el.classList.add('selected'); 
-            document.getElementById("f-"+type+"-color").value = color; 
-            document.getElementById(type+"-select-icon").style.backgroundColor = color; 
-            document.getElementById(type+"-color-grid").classList.remove('grid-open'); 
-        }
-
-        function toggleColorGrid(type) { 
-            const g = document.getElementById(type+"-color-grid"), open = g.classList.contains('grid-open'); 
-            document.querySelectorAll('.color-grid').forEach(x => x.classList.remove('grid-open')); 
-            if(!open) g.classList.add('grid-open'); 
-        }
-
-        function updateCrop(imgId, hId, vId) { document.getElementById(imgId).style.objectPosition = `${document.getElementById(hId).value}% ${document.getElementById(vId).value}%`; }
-        function openModalWithClear() { clearDollForm(); document.getElementById('modal-title').innerText = "うちの子登録"; document.getElementById('modal').style.display='flex'; if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); }
         function clearDollForm() { 
-            document.getElementById('edit-id').value = ""; 
-            document.getElementById('f-name').value = ""; 
-            document.getElementById('f-kana').value = ""; 
-            document.getElementById('f-size-label').value = ""; 
-            document.getElementById('f-body-make').value = ""; 
-            document.getElementById('f-head').value = ""; 
-            document.getElementById('f-bday').value = ""; 
-            document.getElementById('f-bday-m').value = ""; 
-            document.getElementById('f-bday-d').value = ""; 
-            document.getElementById('f-welcome').value = ""; 
-            document.getElementById('f-welcome-m').value = ""; 
-            document.getElementById('f-welcome-d').value = ""; 
-            document.getElementById('anniversary-inputs').innerHTML = ''; 
-            document.getElementById('f-profile').value = ""; 
-            document.getElementById('crop-preview').classList.add('hidden'); 
-            document.getElementById('doll-hint').classList.remove('hidden'); 
-            currentRawImg.doll = null; 
-            // カラー初期化
-            const colors = {bg:'#ffffff', text:'#000000', cal:'#E11D48'};
-            Object.keys(colors).forEach(t => {
-                document.getElementById("f-"+t+"-color").value = colors[t];
-                document.getElementById(t+"-select-icon").style.backgroundColor = colors[t];
-            });
+            document.getElementById('edit-id').value = ""; document.getElementById('f-name').value = ""; 
+            document.getElementById('f-kana').value = ""; document.getElementById('f-size-label').value = ""; 
+            document.getElementById('f-body-make').value = ""; document.getElementById('f-head').value = ""; 
+            document.getElementById('f-bday').value = ""; document.getElementById('f-bday-m').value = ""; 
+            document.getElementById('f-bday-d').value = ""; document.getElementById('f-welcome').value = ""; 
+            document.getElementById('f-welcome-m').value = ""; document.getElementById('f-welcome-d').value = ""; 
+            document.getElementById('anniversary-inputs').innerHTML = ''; document.getElementById('f-profile').value = ""; 
+            document.getElementById('crop-preview').classList.add('hidden'); document.getElementById('doll-hint').classList.remove('hidden'); currentRawImg.doll = null; 
+            // カラーリセット
+            document.getElementById('bg-select-icon').style.backgroundColor = "#ffffff";
+            document.getElementById('text-select-icon').style.backgroundColor = "#000000";
+            document.getElementById('cal-select-icon').style.backgroundColor = "#E11D48";
+            document.getElementById('f-bg-color').value = "#ffffff";
+            document.getElementById('f-text-color').value = "#000000";
+            document.getElementById('f-cal-color').value = "#E11D48";
         }
-        
+
+        function editDoll(idx) { 
+            closeProfile(); const d = dolls[idx]; 
+            document.getElementById('edit-id').value = d.id; 
+            document.getElementById('modal-title').innerText = "うちの子編集"; 
+            document.getElementById('f-name').value = d.name; 
+            document.getElementById('f-kana').value = d.kana || ""; 
+            document.getElementById('f-size-label').value = d.size_label || ""; 
+            document.getElementById('f-body-make').value = d.body_make || ""; 
+            document.getElementById('f-head').value = d.head_info || ""; 
+            setDateValue(d.birthday, 'f-bday', 'f-bday-m', 'f-bday-d'); 
+            setDateValue(d.welcome_day, 'f-welcome', 'f-welcome-m', 'f-welcome-d'); 
+            const anniA = document.getElementById('anniversary-inputs'); 
+            anniA.innerHTML = ''; (d.anniversaries || []).forEach(a => addAnniversaryInput(a)); 
+            document.getElementById('f-profile').value = d.profile || ""; 
+            
+            // カラーの復元
+            document.getElementById('f-bg-color').value = d.bg_color || "#ffffff"; 
+            document.getElementById('f-text-color').value = d.text_color || "#000000"; 
+            document.getElementById('f-cal-color').value = d.cal_color || "#E11D48"; 
+            document.getElementById('bg-select-icon').style.backgroundColor = d.bg_color || "#ffffff";
+            document.getElementById('text-select-icon').style.backgroundColor = d.text_color || "#000000";
+            document.getElementById('cal-select-icon').style.backgroundColor = d.cal_color || "#E11D48";
+
+            if(d.image) { const p = document.getElementById('crop-preview'); p.src = d.image; p.classList.remove('hidden'); document.getElementById('doll-hint').classList.add('hidden'); } 
+            document.getElementById('modal').style.display = 'flex'; 
+        }
+
         function loadImg(e, type) { 
             const f = e.target.files[0]; if(!f) return; 
             const rd = new FileReader(); 
@@ -773,123 +718,128 @@
             rd.readAsDataURL(f); 
         }
 
-        function editDoll(idx) { 
-            closeProfile(); const d = dolls[idx]; 
-            document.getElementById('edit-id').value = d.id; 
-            document.getElementById('modal-title').innerText = "うちの子編集"; 
-            document.getElementById('f-name').value = d.name; 
-            document.getElementById('f-kana').value = d.kana || ""; 
-            document.getElementById('f-size-label').value = d.size_label || ""; 
-            document.getElementById('f-body-make').value = d.body_make || ""; 
-            document.getElementById('f-head').value = d.head_info || ""; 
-            setDateValue(d.birthday, 'f-bday', 'f-bday-m', 'f-bday-d'); 
-            setDateValue(d.welcome_day, 'f-welcome', 'f-welcome-m', 'f-welcome-d'); 
-            const anniA = document.getElementById('anniversary-inputs'); 
-            anniA.innerHTML = ''; 
-            (d.anniversaries || []).forEach(a => addAnniversaryInput(a)); 
-            document.getElementById('f-profile').value = d.profile || ""; 
-            
-            // カラー反映
-            ['bg', 'text', 'cal'].forEach(t => {
-                const color = d[t+'_color'] || (t==='bg'?'#ffffff':(t==='text'?'#000000':'#E11D48'));
-                document.getElementById('f-'+t+'-color').value = color;
-                document.getElementById(t+'-select-icon').style.backgroundColor = color;
+        async function processImageToWebP(imgEl, size, h, v) {
+            return new Promise(r => {
+                const c = document.createElement('canvas'); const x = c.getContext('2d'); c.width = c.height = size;
+                const s = Math.max(size/imgEl.width, size/imgEl.height);
+                x.drawImage(imgEl, (size-imgEl.width*s)*(h/100), (size-imgEl.height*s)*(v/100), imgEl.width*s, imgEl.height*s);
+                r(c.toDataURL('image/webp', 0.8));
             });
+        }
 
-            if(d.image) { 
-                const p = document.getElementById('crop-preview'); 
-                p.src = d.image; p.classList.remove('hidden'); 
-                document.getElementById('doll-hint').classList.add('hidden'); 
-            } 
-            document.getElementById('modal').style.display = 'flex'; 
+        // カレンダー描画
+        function renderCalendar() {
+            const now = new Date(), v = new Date(now.getFullYear(), now.getMonth() + calOffset, 1), y = v.getFullYear(), m = v.getMonth();
+            document.getElementById('cal-month').innerText = `${y} / ${m+1}`;
+            const first = new Date(y, m, 1).getDay(), last = new Date(y, m+1, 0).getDate(), area = document.getElementById('cal-days'), map = {};
+            area.innerHTML = '';
+            dolls.forEach((d, idx) => {
+                [{n: "誕生日", d: d.birthday}, {n: "お迎え日", d: d.welcome_day}, ...(d.anniversaries || [])].forEach(ev => { 
+                    const dtVal = ev.d || ev.date; if(dtVal) { 
+                        const dt = new Date(dtVal); if(dt.getMonth() === m) { 
+                            const day = dt.getDate(); if(!map[day]) map[day] = []; 
+                            map[day].push({ name: d.name, ev: ev.n || ev.name, color: d.cal_color || '#E11D48', bg: d.bg_color || '#ffffff', txt: d.text_color || '#000000', mm: m+1, dd: day, order: idx }); 
+                        } 
+                    } 
+                });
+            });
+            for(let i=0; i<first; i++) area.appendChild(document.createElement('div'));
+            const today = new Date();
+            for(let d=1; d<=last; d++) {
+                const isT = (today.getFullYear()===y && today.getMonth()===m && today.getDate()===d);
+                const annis = map[d], div = document.createElement('div'); div.className = `cal-day ${isT?'cal-today':''}`;
+                div.innerHTML = `<span>${d}</span>`;
+                if(annis) {
+                    const dots = document.createElement('div'); dots.className="cal-dots";
+                    annis.sort((a,b)=>a.order-b.order).forEach(a => { const dot=document.createElement('div'); dot.className="cal-dot"; dot.style.backgroundColor=a.color; dots.appendChild(dot); });
+                    div.appendChild(dots);
+                    div.onclick = () => {
+                        const evC = document.getElementById('day-events'); evC.innerHTML = '';
+                        annis.forEach(a => { const r=document.createElement('div'); r.className="p-5 rounded-2xl shadow-sm border text-lg"; r.style.backgroundColor=a.bg; r.style.color=a.txt; r.innerHTML=`<div class="font-bold user-select-auto">${a.name}：${a.mm}/${a.dd}</div><div class="opacity-80 user-select-auto">${a.ev}</div>`; evC.appendChild(r); });
+                    };
+                }
+                area.appendChild(div);
+            }
+        }
+
+        // 記念日集計
+        function renderAnni() {
+            const area = document.getElementById('closest-anniversary'), hA = document.getElementById('happy-anniversary'), hL = document.getElementById('happy-anniversary-list');
+            area.innerHTML = ''; hL.innerHTML = ''; hA.classList.add('hidden');
+            let list = [], happy = []; const now = new Date(), tZ = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            dolls.forEach((d, idx) => {
+                const ds = [{ t: 'b', n: "誕生日", d: d.birthday }, { t: 'w', n: "お迎え日", d: d.welcome_day }, ...(d.anniversaries || []).map(a => ({ t: 'c', n: a.name, d: a.date }))];
+                ds.forEach(v => {
+                    if(v.d) {
+                        const oD = new Date(v.d), isT = (oD.getMonth() === now.getMonth() && oD.getDate() === now.getDate()), dY = now.getFullYear() - oD.getFullYear();
+                        let next = new Date(now.getFullYear(), oD.getMonth(), oD.getDate()); if(next < tZ) next.setFullYear(now.getFullYear() + 1);
+                        const diff = Math.ceil((next - tZ) / 86400000);
+                        if (isT && dY >= 0) {
+                            let txt = (v.t === 'b') ? `${d.name} の誕生日 ${dY}歳` : (v.t === 'w' ? (dY === 0 ? `${d.name} と出会った日！` : `${d.name} と出会って ${dY}年`) : `${d.name} の ${v.n} ${dY?dY+'年':''}`);
+                            happy.push({ txt, img: d.image, idx });
+                        }
+                        list.push({ doll: d.name, title: v.n, color: d.cal_color || '#E11D48', diff, isT });
+                    }
+                });
+            });
+            if (happy.length > 0) {
+                hA.classList.remove('hidden');
+                happy.forEach(ev => {
+                    const div = document.createElement('div'); div.className = "bg-white p-3 rounded-2xl shadow-sm mb-3 animate-anni flex items-center gap-3 cursor-pointer";
+                    div.onclick = () => showDetail(ev.idx);
+                    div.innerHTML = `<img src="${ev.img}" class="w-12 h-12 rounded-full object-cover border-2 border-pink-200 clickable-img"><p class="font-bold text-sm user-select-auto">${ev.txt}</p><span class="ml-auto text-xl">🎉</span>`;
+                    hL.appendChild(div);
+                });
+            }
+            if(list.length > 0) {
+                list.sort((a,b) => a.diff - b.diff); const close = list.filter(x => x.diff === list[0].diff);
+                let html = `<div class="space-y-3">`;
+                close.forEach(b => { html += `<div class="bg-white p-5 border-l-4 rounded shadow-sm flex justify-between items-center" style="border-color:${b.color}"><div><p class="text-[10px] text-stone-400 font-bold user-select-auto">${b.doll}</p><p class="font-bold user-select-auto">${b.title}</p></div><b class="text-lg">${b.isT ? "Today" : "あと "+b.diff+" 日"}</b></div>`; });
+                area.innerHTML = html + `</div>`;
+            }
+        }
+
+        // 日付・SNS・記念日入力補助
+        function initDateSelectors() { ["f-bday", "f-welcome"].forEach(p => { const m = document.getElementById(p+"-m"), d = document.getElementById(p+"-d"); if(m){for(let i=1; i<=12; i++) m.innerHTML += `<option value="${i}">${i}</option>`;} if(d){for(let i=1; i<=31; i++) d.innerHTML += `<option value="${i}">${i}</option>`;} }); }
+        function getDateValue(mainId, mId, dId) { const m = document.getElementById(mainId).value; const mm = document.getElementById(mId).value, dd = document.getElementById(dId).value; return m || (mm && dd ? `2000-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}` : null); }
+        function setDateValue(val, mainId, mId, dId) { 
+            if(!val) { document.getElementById(mainId).value = ""; document.getElementById(mId).value = ""; document.getElementById(dId).value = ""; return; } 
+            const dt = new Date(val); if(dt.getFullYear() === 2000) { document.getElementById(mId).value = dt.getMonth() + 1; document.getElementById(dId).value = dt.getDate(); document.getElementById(mainId).value = ""; } else { document.getElementById(mainId).value = val; document.getElementById(mId).value = ""; document.getElementById(dId).value = ""; } 
         }
 
         function addAnniversaryInput(v = {name:'', date:''}) { 
-            const id = Date.now() + Math.random(), div = document.createElement('div'); 
-            div.className = "p-4 bg-stone-100/50 rounded-2xl space-y-2 border"; 
-            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="${v.date?new Date(v.date).getDate():''}">${v.date?new Date(v.date).getDate():'日'}</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; 
-            document.getElementById('anniversary-inputs').appendChild(div); 
-            if(v.date) setDateValue(v.date, `date-${id}`, `m-${id}`, `d-${id}`); 
+            const id = Date.now() + Math.random(), div = document.createElement('div'); div.className = "p-4 bg-stone-100/50 rounded-2xl space-y-2 border"; 
+            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; 
+            document.getElementById('anniversary-inputs').appendChild(div); if(v.date) setDateValue(v.date, `date-${id}`, `m-${id}`, `d-${id}`); 
         }
 
         function openOwnerModal() { 
-            document.getElementById('o-name').value = owner.name; 
-            document.getElementById('o-bio').value = owner.bio; 
-            document.getElementById('sns-inputs-container').innerHTML = ''; 
+            document.getElementById('o-name').value = owner.name; document.getElementById('o-bio').value = owner.bio; document.getElementById('sns-inputs-container').innerHTML = ''; 
             (owner.sns || []).forEach(s => addSnsInput(s)); 
-            if(owner.image) { 
-                const p = document.getElementById('owner-preview'); 
-                p.src = owner.image; p.classList.remove('hidden'); 
-                document.getElementById('owner-hint').classList.add('hidden'); 
-            } 
-            document.getElementById('owner-modal').style.display='flex'; 
-            if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); 
+            if(owner.image) { const p = document.getElementById('owner-preview'); p.src = owner.image; p.classList.remove('hidden'); document.getElementById('owner-hint').classList.add('hidden'); } 
+            document.getElementById('owner-modal').style.display='flex'; if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); 
         }
 
         function addSnsInput(v = {type:'X(旧Twitter)', val:''}) { 
-            const div = document.createElement('div'); 
-            div.className = "sns-input-row flex gap-2 items-center"; 
+            const div = document.createElement('div'); div.className = "sns-input-row flex gap-2 items-center"; 
             div.innerHTML = `<select class="sns-type text-sm border p-2 rounded-lg bg-white h-10 outline-none">${['X(旧Twitter)','Instagram','mixi2','Bluesky','Misskey','その他URL'].map(t => `<option ${v.type===t?'selected':''}>${t}</option>`).join('')}</select><input type="text" class="sns-val flex-1 text-sm border p-2 rounded-lg h-10 outline-none" placeholder="ID or URL" value="${v.val}"><button onclick="this.parentElement.remove()" class="p-2 text-stone-400">✕</button>`; 
             document.getElementById('sns-inputs-container').appendChild(div); 
         }
 
-        function openPostModal() { 
-            document.getElementById('edit-post-id').value = ""; 
-            document.getElementById('post-modal-title').innerText = "投稿作成"; 
-            document.getElementById('p-title').value = ""; 
-            document.getElementById('post-blocks-container').innerHTML = ''; 
-            addPostBlock(); 
-            document.getElementById('post-modal').style.display='flex'; 
-            if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); 
-        }
-
-        function editPost(idx) { 
-            const p = posts[idx]; 
-            document.getElementById('edit-post-id').value = p.id; 
-            document.getElementById('post-modal-title').innerText = "投稿編集"; 
-            document.getElementById('p-title').value = p.title; 
-            document.getElementById('post-blocks-container').innerHTML = ''; 
-            p.blocks.forEach(b => addPostBlock(b)); 
-            document.querySelector(`input[name="p-pos"][value="${p.pos}"]`).checked = true; 
-            document.getElementById('post-modal').style.display = 'flex'; 
-        }
-
+        // 投稿管理
+        function openPostModal() { document.getElementById('edit-post-id').value = ""; document.getElementById('post-modal-title').innerText = "投稿作成"; document.getElementById('p-title').value = ""; document.getElementById('post-blocks-container').innerHTML = ''; addPostBlock(); document.getElementById('post-modal').style.display='flex'; if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); }
+        function editPost(idx) { const p = posts[idx]; document.getElementById('edit-post-id').value = p.id; document.getElementById('post-modal-title').innerText = "投稿編集"; document.getElementById('p-title').value = p.title; document.getElementById('post-blocks-container').innerHTML = ''; p.blocks.forEach(b => addPostBlock(b)); document.querySelector(`input[name="p-pos"][value="${p.pos}"]`).checked = true; document.getElementById('post-modal').style.display = 'flex'; }
         function addPostBlock(data = {img: '', text: ''}) { 
-            const id = Date.now() + Math.random(), div = document.createElement('div'); 
-            div.className = "post-block p-4 border rounded-xl mb-4 bg-stone-50"; 
+            const id = Date.now() + Math.random(), div = document.createElement('div'); div.className = "post-block p-4 border rounded-xl mb-4 bg-stone-50"; 
             div.innerHTML = `<div class="preview-sq mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'} clickable-img"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''}">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><textarea class="w-full text-sm p-3 border rounded-xl h-24 mt-2 outline-none auto-expand" placeholder="文章を入力...">${data.text||''}</textarea><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`; 
             document.getElementById('post-blocks-container').appendChild(div); 
         }
-
         async function loadBlockImg(e, id) { 
-            const f = e.target.files[0]; if(!f) return; 
-            const rd = new FileReader(); 
-            rd.onload = (re) => { 
-                const img = new Image(); 
-                img.onload = async () => { 
-                    const webp = await processImageToWebP(img, 1000, 50, 50); 
-                    const t = document.getElementById('p-img-'+id); 
-                    t.src = webp; t.classList.remove('hidden'); 
-                    document.getElementById('p-hint-'+id).classList.add('hidden'); 
-                }; 
-                img.src = re.target.result; 
-            }; 
-            rd.readAsDataURL(f); 
+            const f = e.target.files[0]; if(!f) return; const rd = new FileReader(); 
+            rd.onload = (re) => { const img = new Image(); img.onload = async () => { const webp = await processImageToWebP(img, 1000, 50, 50); const t = document.getElementById('p-img-'+id); t.src = webp; t.classList.remove('hidden'); document.getElementById('p-hint-'+id).classList.add('hidden'); }; img.src = re.target.result; }; rd.readAsDataURL(f); 
         }
-
-        function deletePostDirectly(idx) { 
-            const p = posts[idx]; 
-            showConfirm("削除しますか？", async () => { 
-                await sbClient.from('posts').delete().eq('id', p.id); 
-                location.reload(); 
-            }); 
-        }
-
         function viewPost(idx) { 
-            const p = posts[idx]; 
-            document.getElementById('art-title').innerText = p.title; 
-            const c = document.getElementById('art-content'); 
-            c.innerHTML = ''; 
+            const p = posts[idx]; document.getElementById('art-title').innerText = p.title; const c = document.getElementById('art-content'); c.innerHTML = ''; 
             p.blocks.forEach(b => { 
                 if(b.img) { const i = document.createElement('img'); i.src = b.img; i.className = "w-full rounded-2xl mb-4 clickable-img"; c.appendChild(i); } 
                 if(b.text) { const t = document.createElement('p'); t.className = "text-stone-700 whitespace-pre-wrap leading-relaxed mb-6 user-select-auto"; t.innerText = b.text; c.appendChild(t); } 
@@ -898,115 +848,32 @@
             document.getElementById('art-del-btn').onclick = () => showConfirm("削除しますか？", async () => { await sbClient.from('posts').delete().eq('id', p.id); location.reload(); }); 
             document.getElementById('article-page').style.display = 'block'; 
         }
+        function deletePostDirectly(i) { showConfirm("削除しますか？", async () => { await sbClient.from('posts').delete().eq(posts[i].id); location.reload(); }); }
 
+        // 無限スクロール
         function setupInfiniteScroll() { 
-            const container = document.getElementById('film-container'); 
-            container.addEventListener('scroll', () => { 
-                const items = dolls.filter(d => d.image); if (items.length < 5) return; 
-                const w = items.length * (80 + 12); 
-                if (container.scrollLeft < w * 0.5) container.scrollLeft += w; 
-                if (container.scrollLeft > w * 1.5) container.scrollLeft -= w; 
+            const c = document.getElementById('film-container'); c.addEventListener('scroll', () => { 
+                const items = dolls.filter(d => d.image); if (items.length < 5) return; const w = items.length * 92; 
+                if (c.scrollLeft < w * 0.5) c.scrollLeft += w; if (c.scrollLeft > w * 1.5) c.scrollLeft -= w; 
             }); 
         }
 
-        function shareSNS(type) { 
-            const url = window.location.origin + window.location.pathname + (galleryId ? '?id='+galleryId : ''); 
-            if(type === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank'); 
-            else if(type === 'x') window.open(`https://twitter.com/intent/tweet?text=Doll Uchinoko Gallery&url=${encodeURIComponent(url)}`, '_blank'); 
-        }
+        // 共有・全削除
+        function shareSNS(t) { const url = window.location.origin + window.location.pathname + (galleryId ? '?id='+galleryId : ''); if(t === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank'); else if(t === 'x') window.open(`https://twitter.com/intent/tweet?text=Doll Uchinoko Gallery&url=${encodeURIComponent(url)}`, '_blank'); }
+        function copyURL() { navigator.clipboard.writeText(window.location.origin + window.location.pathname + (galleryId ? '?id='+galleryId : '')).then(() => showAlert("コピーしました")); }
+        async function requestClearAll() { showConfirm("全てのデータを削除しますか？\n(復元できません)", async () => { if (currentUser && galleryId === currentUser.id) { await Promise.all([sbClient.from('owners').delete().eq('id', currentUser.id), sbClient.from('dolls').delete().eq('owner_id', currentUser.id), sbClient.from('posts').delete().eq('owner_id', currentUser.id)]); await sbClient.auth.signOut(); location.href = window.location.origin + window.location.pathname; } }, "削除する"); }
 
-        function copyURL() { 
-            const url = window.location.origin + window.location.pathname + (galleryId ? '?id='+galleryId : ''); 
-            navigator.clipboard.writeText(url).then(() => { showAlert("コピーしました"); }); 
-        }
+        // ダイアログ
+        function showConfirm(m, onY, yesText = "実行") { const d = document.getElementById('custom-dialog'); document.getElementById('dialog-message').innerText = m; const bA = document.getElementById('dialog-buttons'); bA.innerHTML = ''; const b1 = document.createElement('button'); b1.className = "w-full bg-red-400 text-white py-4 rounded-full font-bold"; b1.innerText = yesText; b1.onclick = () => { onY(); closeDialog(); }; const b2 = document.createElement('button'); b2.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; b2.innerText = "キャンセル"; b2.onclick = closeDialog; bA.append(b1, b2); d.style.display = 'flex'; }
+        function showAlert(msg, cb = null) { const d = document.getElementById('custom-dialog'); document.getElementById('dialog-message').innerText = msg; const bA = document.getElementById('dialog-buttons'); bA.innerHTML = ''; const b = document.createElement('button'); b.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold"; b.innerText = "OK"; b.onclick = () => { closeDialog(); if(cb) cb(); }; bA.appendChild(b); d.style.display = 'flex'; }
+        function showInputDialog(m, onOk) { const d = document.getElementById('custom-dialog'); document.getElementById('dialog-message').innerText = m; document.getElementById('dialog-input-container').classList.remove('hidden'); const input = document.getElementById('dialog-text-input'); input.value = ""; const bA = document.getElementById('dialog-buttons'); bA.innerHTML = ''; const b1 = document.createElement('button'); b1.className = "w-full bg-blue-500 text-white py-4 rounded-full font-bold"; b1.innerText = "決定してログイン"; b1.onclick = () => { if(input.value) { onOk(input.value); closeDialog(); } }; const b2 = document.createElement('button'); b2.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; b2.innerText = "キャンセル"; b2.onclick = closeDialog; bA.append(b1, b2); d.style.display = 'flex'; input.focus(); }
 
-        async function requestClearAll() { 
-            showConfirm("全てのデータを削除しますか？\n(この操作は取りせません)", async () => { 
-                if (currentUser && galleryId === currentUser.id) { 
-                    await Promise.all([
-                        sbClient.from('owners').delete().eq('id', currentUser.id), 
-                        sbClient.from('dolls').delete().eq('owner_id', currentUser.id), 
-                        sbClient.from('posts').delete().eq('owner_id', currentUser.id)
-                    ]); 
-                    await sbClient.auth.signOut();
-                    location.href = window.location.origin + window.location.pathname;
-                } 
-            }, "完全に削除して初期化する"); 
-        }
+        function setupAutoExpand() { document.addEventListener('input', (e) => { if (e.target.classList.contains('auto-expand')) { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; } }); }
 
-        function showConfirm(m, onY, yesText = "実行") { 
-            const d = document.getElementById('custom-dialog'); 
-            document.getElementById('dialog-message').innerText = m; 
-            const bA = document.getElementById('dialog-buttons'); 
-            bA.innerHTML = ''; 
-            const b1 = document.createElement('button'); 
-            b1.className = "w-full bg-red-400 text-white py-4 rounded-full font-bold shadow-lg"; 
-            b1.innerText = yesText; 
-            b1.onclick = () => { onY(); closeDialog(); }; 
-            const b2 = document.createElement('button'); 
-            b2.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; 
-            b2.innerText = "キャンセル"; 
-            b2.onclick = closeDialog; 
-            bA.append(b1, b2); 
-            d.style.display = 'flex'; 
-        }
-
-        function showAlert(msg, callback = null) { 
-            const dialog = document.getElementById('custom-dialog'); 
-            document.getElementById('dialog-message').innerText = msg; 
-            const buttons = document.getElementById('dialog-buttons'); 
-            buttons.innerHTML = ''; 
-            const btn = document.createElement('button'); 
-            btn.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold"; 
-            btn.innerText = "OK"; 
-            btn.onclick = () => { closeDialog(); if(callback) callback(); }; 
-            buttons.appendChild(btn); 
-            dialog.style.display = 'flex'; 
-        }
-
-        function showInputDialog(m, onOk) { 
-            const d = document.getElementById('custom-dialog'); 
-            document.getElementById('dialog-message').innerText = m; 
-            document.getElementById('dialog-input-container').classList.remove('hidden'); 
-            const input = document.getElementById('dialog-text-input'); 
-            input.value = ""; 
-            const bA = document.getElementById('dialog-buttons'); 
-            bA.innerHTML = ''; 
-            const b1 = document.createElement('button'); 
-            b1.className = "w-full bg-blue-500 text-white py-4 rounded-full font-bold shadow-lg"; 
-            b1.innerText = "決定してログイン"; 
-            b1.onclick = () => { if(input.value) { onOk(input.value); closeDialog(); } }; 
-            const b2 = document.createElement('button'); 
-            b2.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; 
-            b2.innerText = "キャンセル"; 
-            b2.onclick = closeDialog; 
-            bA.append(b1, b2); 
-            d.style.display = 'flex'; 
-            input.focus(); 
-        }
-
-        function setupAutoExpand() { 
-            document.addEventListener('input', (e) => { 
-                if (e.target.classList.contains('auto-expand')) { 
-                    e.target.style.height = 'auto'; 
-                    e.target.style.height = e.target.scrollHeight + 'px'; 
-                } 
-            }); 
-        }
-
+        // 保護機能
         function setupUnifiedProtection() {
-            document.addEventListener('contextmenu', (e) => {
-                if (['TEXTAREA', 'INPUT'].includes(e.target.tagName) || e.target.closest('.user-select-auto')) {
-                    return; 
-                }
-                e.preventDefault();
-            }, false);
-
-            document.addEventListener('touchstart', (e) => {
-                if (e.target.tagName === 'IMG' && !e.target.classList.contains('clickable-img') && !e.target.classList.contains('film-frame')) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
+            document.addEventListener('contextmenu', (e) => { if (!['TEXTAREA', 'INPUT'].includes(e.target.tagName) && !e.target.closest('.user-select-auto')) e.preventDefault(); }, false);
+            document.addEventListener('touchstart', (e) => { if (e.target.tagName === 'IMG' && !e.target.classList.contains('clickable-img') && !e.target.classList.contains('film-frame')) e.preventDefault(); }, { passive: false });
         }
     </script>
 </body>
