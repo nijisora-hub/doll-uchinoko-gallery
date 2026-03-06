@@ -295,8 +295,8 @@
             currentUser = session?.user || null;
 
             if (currentUser && !galleryId) {
-                history.replaceState(null, null, `?id=${currentUser.id}`);
-                galleryId = currentUser.id;
+                location.href = `?id=${currentUser.id}`;
+                return;
             }
 
             if (galleryId) {
@@ -307,15 +307,8 @@
 
             checkAdminStatus();
 
-            sbClient.auth.onAuthStateChanged(async (_event, session) => {
-                const oldUser = currentUser;
+            sbClient.auth.onAuthStateChanged((_event, session) => {
                 currentUser = session?.user || null;
-                
-                if (currentUser && (!oldUser || oldUser.id !== currentUser.id)) {
-                    history.replaceState(null, null, `?id=${currentUser.id}`);
-                    galleryId = currentUser.id;
-                    await loadAllData(galleryId);
-                }
                 checkAdminStatus();
                 renderAll();
             });
@@ -333,9 +326,9 @@
                     sbClient.from('dolls').select('*').eq('owner_id', uid),
                     sbClient.from('posts').select('*').eq('owner_id', uid).order('created_at', { ascending: false })
                 ]);
-                owner = ownerRes.data || { name: "Owner Name", bio: "", sns: [], image:"" };
-                dolls = dollsRes.data || [];
-                posts = postsRes.data || [];
+                if (ownerRes.data) owner = ownerRes.data;
+                if (dollsRes.data) dolls = dollsRes.data;
+                if (postsRes.data) posts = postsRes.data;
                 renderAll();
             } catch (e) { console.error(e); renderAll(); }
         }
@@ -385,13 +378,8 @@
                 profile: document.getElementById('f-profile').value
             };
             if (id) payload.id = id;
-            const { data, error } = await sbClient.from('dolls').upsert(payload).select();
-            if(error) showAlert(error.message); 
-            else {
-                closeModal();
-                await loadAllData(currentUser.id);
-                showAlert("保存しました");
-            }
+            const { error } = await sbClient.from('dolls').upsert(payload);
+            if(error) showAlert(error.message); else location.reload();
         }
 
         async function saveOwner() {
@@ -410,12 +398,7 @@
                 })).filter(s => s.val)
             };
             const { error } = await sbClient.from('owners').upsert(payload);
-            if(error) showAlert(error.message); 
-            else {
-                closeModal();
-                await loadAllData(currentUser.id);
-                showAlert("オーナー情報を更新しました");
-            }
+            if(error) showAlert(error.message); else location.reload();
         }
 
         async function savePost() {
@@ -434,12 +417,7 @@
             };
             if (id) payload.id = id;
             const { error } = await sbClient.from('posts').upsert(payload);
-            if(error) showAlert(error.message); 
-            else {
-                closeModal();
-                await loadAllData(currentUser.id);
-                showAlert("投稿しました");
-            }
+            if(error) showAlert(error.message); else location.reload();
         }
 
         function renderAll() {
@@ -607,7 +585,16 @@
             bg.style.backgroundColor = d.bg_color || "#ffffff"; bg.style.color = d.text_color || "#000000";
             document.getElementById('view-img').src = d.image; document.getElementById('view-name').innerText = d.name; document.getElementById('view-kana').innerText = d.kana || "";
             const b = document.getElementById('detail-box'); b.innerHTML = ''; let hasInfo = false;
-            const fmt = (s) => { if(!s) return ""; const dt = new Date(s); return dt.getFullYear() === 2000 ? `${dt.getMonth()+1}/${dt.getDate()}` : s.replace(/-/g,'/'); };
+            
+            const fmt = (s) => { 
+                if(!s) return ""; 
+                const dt = new Date(s); 
+                if(isNaN(dt.getTime())) return s;
+                return dt.getFullYear() === 2000 
+                    ? `${dt.getMonth() + 1}/${dt.getDate()}` 
+                    : `${dt.getFullYear()}/${dt.getMonth() + 1}/${dt.getDate()}`; 
+            };
+
             if(d.size_label) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Size</span><b>${d.size_label}</b></div>`; hasInfo = true; }
             if(d.body_make) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Body</span><b>${d.body_make}</b></div>`; hasInfo = true; }
             if(d.head_info) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Head</span><b>${d.head_info}</b></div>`; hasInfo = true; }
@@ -617,11 +604,7 @@
             b.classList.toggle('hidden', !hasInfo);
             document.getElementById('view-profile').innerText = d.profile || "";
             document.getElementById('detail-edit-btn').onclick = () => editDoll(idx);
-            document.getElementById('detail-del-btn').onclick = () => showConfirm("このデータを削除しますか？", async () => { 
-                await sbClient.from('dolls').delete().eq('id', d.id); 
-                closeProfile();
-                await loadAllData(galleryId);
-            });
+            document.getElementById('detail-del-btn').onclick = () => showConfirm("このデータを削除しますか？", async () => { await sbClient.from('dolls').delete().eq('id', d.id); location.reload(); });
             overlay.classList.remove('hidden');
         }
 
@@ -630,8 +613,35 @@
         function closeArticle() { document.getElementById('article-page').style.display = 'none'; }
         function closeDialog() { document.getElementById('custom-dialog').style.display = 'none'; document.getElementById('dialog-input-container').classList.add('hidden'); }
         function changeMonth(d) { calOffset += d; document.getElementById('day-events').innerHTML = ''; renderCalendar(); }
-        function getDateValue(mainId, mId, dId) { const main = document.getElementById(mainId).value, m = document.getElementById(mId).value, d = document.getElementById(dId).value; if(!main && m && d) return `2000-${m.padStart(2,'0')}-${d.padStart(2,'0')}`; return main; }
-        function setDateValue(val, mainId, mId, dId) { if(!val) return; const dt = new Date(val); if(dt.getFullYear() === 2000) { document.getElementById(mId).value = dt.getMonth() + 1; document.getElementById(dId).value = dt.getDate(); document.getElementById(mainId).value = ""; } else { document.getElementById(mainId).value = val; document.getElementById(mId).value = ""; document.getElementById(dId).value = ""; } }
+        
+        function getDateValue(mainId, mId, dId) { 
+            const main = document.getElementById(mainId).value; 
+            const m = document.getElementById(mId).value; 
+            const d = document.getElementById(dId).value; 
+            if(main) return main;
+            if(m && d) return `2000-${m.padStart(2,'0')}-${d.padStart(2,'0')}`; 
+            return null; 
+        }
+
+        function setDateValue(val, mainId, mId, dId) { 
+            if(!val) {
+                document.getElementById(mainId).value = "";
+                document.getElementById(mId).value = "";
+                document.getElementById(dId).value = "";
+                return;
+            } 
+            const dt = new Date(val); 
+            if(dt.getFullYear() === 2000) { 
+                document.getElementById(mId).value = dt.getMonth() + 1; 
+                document.getElementById(dId).value = dt.getDate(); 
+                document.getElementById(mainId).value = ""; 
+            } else { 
+                document.getElementById(mainId).value = val; 
+                document.getElementById(mId).value = ""; 
+                document.getElementById(dId).value = ""; 
+            } 
+        }
+
         function initDateSelectors() { ["f-bday", "f-welcome"].forEach(p => { const m = document.getElementById(p+"-m"), d = document.getElementById(p+"-d"); for(let i=1; i<=12; i++) m.innerHTML += `<option value="${i}">${i}</option>`; for(let i=1; i<=31; i++) d.innerHTML += `<option value="${i}">${i}</option>`; }); }
         function initColorPalettes() { ["bg", "text", "cal"].forEach(t => { const g = document.getElementById(t+"-color-grid"), def = (t==='bg'?'#ffffff':(t==='text'?'#000000':'#E11D48')); palette100.forEach(c => { const chip = document.createElement('div'); chip.className = `color-chip ${t}-chip`; chip.style.backgroundColor = c; if(c.toLowerCase() === def.toLowerCase()) chip.classList.add('selected'); chip.onclick = e => { e.stopPropagation(); selectPaletteColor(t, c, chip); }; g.appendChild(chip); }); document.getElementById(t+"-select-icon").style.backgroundColor = def; }); }
         function selectPaletteColor(type, color, el) { document.querySelectorAll("."+type+"-chip").forEach(c => c.classList.remove('selected')); el.classList.add('selected'); document.getElementById("f-"+type+"-color").value = color; document.getElementById(type+"-select-icon").style.backgroundColor = color; document.getElementById(type+"-color-grid").classList.remove('grid-open'); }
@@ -759,7 +769,7 @@
             const p = posts[idx]; 
             showConfirm("削除しますか？", async () => { 
                 await sbClient.from('posts').delete().eq('id', p.id); 
-                await loadAllData(galleryId);
+                location.reload(); 
             }); 
         }
 
@@ -773,11 +783,7 @@
                 if(b.text) { const t = document.createElement('p'); t.className = "text-stone-700 whitespace-pre-wrap leading-relaxed mb-6 user-select-auto"; t.innerText = b.text; c.appendChild(t); } 
             }); 
             document.getElementById('art-edit-btn').onclick = () => { closeArticle(); editPost(idx); }; 
-            document.getElementById('art-del-btn').onclick = () => showConfirm("削除しますか？", async () => { 
-                await sbClient.from('posts').delete().eq('id', p.id); 
-                closeArticle();
-                await loadAllData(galleryId);
-            }); 
+            document.getElementById('art-del-btn').onclick = () => showConfirm("削除しますか？", async () => { await sbClient.from('posts').delete().eq('id', p.id); location.reload(); }); 
             document.getElementById('article-page').style.display = 'block'; 
         }
 
@@ -792,14 +798,14 @@
         }
 
         function shareSNS(type) { 
-            const url = window.location.href; 
+            const url = window.location.origin + window.location.pathname + (galleryId ? '?id='+galleryId : ''); 
             if(type === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank'); 
             else if(type === 'x') window.open(`https://twitter.com/intent/tweet?text=Doll Uchinoko Gallery&url=${encodeURIComponent(url)}`, '_blank'); 
         }
 
         function copyURL() { 
-            const url = window.location.href; 
-            navigator.clipboard.writeText(url).then(() => { showAlert("ギャラリーのURLをコピーしました"); }); 
+            const url = window.location.origin + window.location.pathname + (galleryId ? '?id='+galleryId : ''); 
+            navigator.clipboard.writeText(url).then(() => { showAlert("コピーしました"); }); 
         }
 
         async function requestClearAll() { 
@@ -810,7 +816,8 @@
                         sbClient.from('dolls').delete().eq('owner_id', currentUser.id), 
                         sbClient.from('posts').delete().eq('owner_id', currentUser.id)
                     ]); 
-                    await handleLogout();
+                    await sbClient.auth.signOut();
+                    location.href = window.location.origin + window.location.pathname;
                 } 
             }, "完全に削除して初期化する"); 
         }
