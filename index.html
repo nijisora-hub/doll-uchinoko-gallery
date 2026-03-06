@@ -9,7 +9,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Dancing+Script:wght@700&display=swap');
         
-        /* 基本設定: クリック操作を全体で許可 */
+        /* 基本設定 */
         body { 
             font-family: 'Noto Sans JP', sans-serif; 
             background-color: #fcfaf8; 
@@ -21,7 +21,7 @@
         .app-container { max-width: 480px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative; }
         .logo-font { font-family: 'Dancing Script', cursive; }
         
-        /* 画像保護の設定：画像のみを選択不可に */
+        /* 画像保護の設定：画像のみを選択・保存不可に */
         img { 
             -webkit-touch-callout: none; 
             -webkit-user-select: none !important; 
@@ -32,11 +32,12 @@
         /* クリックが必要な画像（フィルムロールなど） */
         .clickable-img, .film-frame { pointer-events: auto !important; }
         
-        /* テキストエリア・特定テキストをコピペ可能に */
-        textarea, input[type="text"], .user-select-auto { 
+        /* 【修正点】テキストエリア・入力フォームをコピペ可能に */
+        textarea, input[type="text"], input[type="date"], select, .user-select-auto { 
             user-select: text !important; 
             -webkit-user-select: text !important;
             pointer-events: auto !important;
+            -webkit-touch-callout: default !important; /* 長押しメニューを許可 */
         }
 
         .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
@@ -108,7 +109,7 @@
             </div>
         </header>
 
-        <div id="side-menu" class="modal-base" onclick="toggleMenu('side-menu')">
+        <div id="side-menu" class="modal-base" onclick="toggleMenu('side-menu')" style="display: none;">
             <div class="bg-white w-72 h-full ml-auto p-6 flex flex-col overflow-y-auto" onclick="event.stopPropagation()">
                 <div class="space-y-1">
                     <button onclick="showHome(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">🏠 ホーム</button>
@@ -571,8 +572,9 @@
             area.innerHTML = '';
             dolls.forEach((d, idx) => {
                 [{n: "誕生日", d: d.birthday}, {n: "お迎え日", d: d.welcome_day}, ...(d.anniversaries || [])].forEach(ev => { 
-                    if(ev.d || ev.date) { 
-                        const dt = new Date(ev.d || ev.date); 
+                    const dtVal = ev.d || ev.date;
+                    if(dtVal) { 
+                        const dt = new Date(dtVal); 
                         if(dt.getMonth() === m) { 
                             const day = dt.getDate(); if(!map[day]) map[day] = []; 
                             map[day].push({ dollName: d.name, eventName: ev.n || ev.name, calColor: d.cal_color || '#E11D48', uBg: d.bg_color || '#ffffff', uTxt: d.text_color || '#000000', mm: m+1, dd: day, order: idx }); 
@@ -608,7 +610,16 @@
             });
         }
 
-        function toggleMenu(id) { const el = document.getElementById(id); const current = el.style.display; el.style.display = (current === 'flex') ? 'none' : 'flex'; }
+        /* 【修正点】メニューボタンの挙動を安定化 */
+        function toggleMenu(id) { 
+            const el = document.getElementById(id); 
+            if (el.style.display === 'none' || el.style.display === '') {
+                el.style.display = 'flex';
+            } else {
+                el.style.display = 'none';
+            }
+        }
+
         function showHome() { document.getElementById('home-content').classList.remove('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); document.getElementById('main-header').classList.remove('hidden'); closeArticle(); renderCalendar(); }
         function showDollList() { if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); document.getElementById('home-content').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); document.getElementById('doll-list-page').classList.remove('hidden'); renderDollList(); }
         function showPostListPage() { if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); document.getElementById('home-content').classList.add('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.remove('hidden'); }
@@ -926,6 +937,7 @@
             }); 
         }
 
+        /* 画像保護: IMGタグのみtouchstartイベントを無効化（フォーム要素は除外） */
         function setupImageProtection() {
             document.addEventListener('touchstart', (e) => {
                 if (e.target.tagName === 'IMG' && !e.target.classList.contains('clickable-img') && !e.target.classList.contains('film-frame')) {
