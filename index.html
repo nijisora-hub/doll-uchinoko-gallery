@@ -9,11 +9,14 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Dancing+Script:wght@700&display=swap');
         
-        body { font-family: 'Noto Sans JP', sans-serif; background-color: #fcfaf8; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Noto Sans JP', sans-serif; background-color: #fcfaf8; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: auto; }
         .app-container { max-width: 480px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative; }
         .logo-font { font-family: 'Dancing Script', cursive; }
+        
+        /* 画像保護の設定：画像そのものは選択・ドラッグ不可 */
         img { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; pointer-events: none; -webkit-user-drag: none; }
         .clickable-img { pointer-events: auto; }
+        
         .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .film-outer::-webkit-scrollbar { display: none; }
         .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 20px; }
@@ -23,22 +26,26 @@
         #custom-dialog { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100000; align-items: center; justify-content: center; padding: 20px; }
         textarea { resize: none; overflow: hidden; user-select: auto !important; }
         .user-select-auto { user-select: auto !important; }
+        
         .crop-area { display: flex; flex-direction: row-reverse; gap: 10px; align-items: center; margin-bottom: 10px; }
         .v-bar-box { width: 20px; height: 180px; display: flex; align-items: center; justify-content: center; }
         .vertical-range { writing-mode: vertical-lr; direction: rtl; appearance: slider-vertical; width: 8px; height: 100%; }
         .preview-sq { flex: 1; aspect-ratio: 1/1; background: #f3f3f3; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid #eee; }
         .preview-sq img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; pointer-events: none; }
+        
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; border-radius: 50%; cursor: pointer; position: relative; border: 1px solid transparent; }
         .cal-today { border: 2px solid #888; font-weight: bold; background-color: #f9f9f9; }
         .cal-dots { display: flex; gap: 2px; justify-content: center; position: absolute; bottom: 4px; width: 100%; height: 4px; overflow: hidden; }
         .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
+        
         .color-grid { grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 12px; padding: 4px; display: none; }
         .color-grid.grid-open { display: grid; }
         .color-chip { aspect-ratio: 1; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; }
         .color-chip.selected { outline: 3px solid #000; outline-offset: 1px; z-index: 2; }
         .color-select-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #ddd; cursor: pointer; box-shadow: 0 0 0 2px #fff; }
         .date-input { font-size: 16px !important; padding: 8px; border-radius: 8px; border: 1px solid #e5e7eb; width: 100%; }
+        
         @keyframes pulse-anni {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 114, 182, 0.4); }
             70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(244, 114, 182, 0); }
@@ -201,7 +208,7 @@
                     </div>
                     <div id="anniversary-inputs" class="space-y-3"></div>
                     <button onclick="addAnniversaryInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-400 font-bold">+ 記念日を追加</button>
-                    <textarea id="f-profile" class="w-full border p-4 rounded-2xl h-48 text-sm outline-none auto-expand" placeholder="プロフィール"></textarea>
+                    <textarea id="f-profile" class="w-full border p-4 rounded-2xl h-48 text-sm outline-none auto-expand user-select-auto" placeholder="プロフィール"></textarea>
                     <button onclick="saveDollData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg shadow-xl">保存する</button>
                 </div>
             </div>
@@ -233,7 +240,7 @@
                 <div class="space-y-4">
                     <input type="file" id="owner-file" accept="image/*" class="hidden" onchange="loadImg(event, 'owner')">
                     <input type="text" id="o-name" class="w-full border-b p-2 font-bold" placeholder="オーナー名">
-                    <textarea id="o-bio" class="w-full border p-3 rounded-xl h-32 text-sm auto-expand" placeholder="自己紹介"></textarea>
+                    <textarea id="o-bio" class="w-full border p-3 rounded-xl h-32 text-sm auto-expand user-select-auto" placeholder="自己紹介"></textarea>
                     <div id="sns-inputs-container" class="space-y-3"></div>
                     <button onclick="addSnsInput()" class="w-full py-2 bg-stone-100 rounded text-xs font-bold">+ SNSリンクを追加</button>
                     <button onclick="saveOwner()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">保存</button>
@@ -246,7 +253,7 @@
                 <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
                 <h3 id="post-modal-title" class="text-xl font-bold mb-4">投稿作成</h3>
                 <input type="hidden" id="edit-post-id">
-                <input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-4 outline-none" placeholder="タイトル">
+                <input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-4 outline-none user-select-auto" placeholder="タイトル">
                 <div id="post-blocks-container" class="space-y-4"></div>
                 <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ 追加</button>
                 <div class="flex gap-4 p-4 bg-stone-50 rounded-2xl text-xs mt-6 items-center"><label><input type="radio" name="p-pos" value="home" checked> ホーム</label><label><input type="radio" name="p-pos" value="menu"> メニュー</label></div>
@@ -259,11 +266,11 @@
                 <div class="flex justify-between items-center py-6 mb-10 border-b">
                     <button onclick="closeArticle()" class="text-sm font-bold text-stone-400">← 戻る</button>
                     <div class="flex gap-4 admin-only-flex hidden">
-                        <button id="art-edit-btn" class="text-xs font-bold bg-stone-100 px-4 py-2 rounded-full">編集</button>
-                        <button id="art-del-btn" class="text-xs font-bold bg-red-50 text-red-400 px-4 py-2 rounded-full">削除</button>
+                        <button id="art-edit-btn" class="text-xs font-bold bg-stone-800 text-white px-4 py-2 rounded-full">編集</button>
+                        <button id="art-del-btn" class="text-xs font-bold bg-red-50 text-red-400 px-4 py-2 rounded-full border border-red-100">削除</button>
                     </div>
                 </div>
-                <h2 id="art-title" class="text-3xl font-bold text-center mb-12"></h2>
+                <h2 id="art-title" class="text-3xl font-bold text-center mb-12 user-select-auto"></h2>
                 <div id="art-content" class="space-y-6"></div>
             </div>
         </div>
@@ -340,7 +347,6 @@
 
         async function handleLogout() {
             await sbClient.auth.signOut();
-            // ログアウト後は、現在のギャラリーを表示したままの状態にする
             location.href = window.location.origin + window.location.pathname + (galleryId ? `?id=${galleryId}` : '');
         }
 
@@ -356,7 +362,7 @@
             if (!currentUser) return;
             const id = document.getElementById('edit-id').value;
             const h = document.getElementById('crop-h').value, v = document.getElementById('crop-v').value;
-            let imgData = (id !== "" ) ? dolls.find(d => d.id === id).image : "";
+            let imgData = (id !== "" && dolls.find(d => d.id === id)) ? dolls.find(d => d.id === id).image : "";
             if(currentRawImg.doll) imgData = await processImageToWebP(currentRawImg.doll, 800, h, v);
 
             const payload = {
@@ -407,7 +413,7 @@
             const blocks = [];
             for (const el of document.querySelectorAll('.post-block')) {
                 const imgEl = el.querySelector('img'), text = el.querySelector('textarea').value;
-                blocks.push({img: imgEl.classList.contains('hidden') ? '' : imgEl.src, text});
+                blocks.push({img: (imgEl && !imgEl.classList.contains('hidden')) ? imgEl.src : '', text});
             }
             const id = document.getElementById('edit-post-id').value;
             const payload = {
@@ -465,13 +471,31 @@
             posts.forEach((p, i) => {
                 const isAdmin = document.body.classList.contains('is-admin');
                 if(p.pos === 'home') {
-                    const card = document.createElement('div'); card.className = "relative bg-white rounded-[32px] p-6 pt-16 border shadow-sm";
-                    if(isAdmin) { card.innerHTML = `<div class="absolute top-4 left-4 flex gap-2"><button onclick="editPost(${i})" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-xs font-bold">編集</button><button onclick="deletePostDirectly(${i})" class="bg-red-50 text-red-400 px-4 py-2 rounded-lg text-xs font-bold border border-red-100">削除</button></div>`; }
-                    const title = document.createElement('h4'); title.className="font-bold mb-4 text-lg border-b pb-2"; title.innerText = p.title; card.appendChild(title);
-                    (p.blocks || []).forEach(b => {
-                        if(b.img) { const img = document.createElement('img'); img.src = b.img; img.className="w-full rounded-2xl mb-4 clickable-img"; card.appendChild(img); }
-                        if(b.text) { const txt = document.createElement('p'); txt.className="text-sm text-stone-600 mb-6 whitespace-pre-wrap user-select-auto"; txt.innerText = b.text; card.appendChild(txt); }
-                    });
+                    const card = document.createElement('div'); 
+                    card.className = "relative bg-white rounded-[32px] p-6 pt-16 border shadow-sm cursor-pointer hover:bg-stone-50 transition-colors";
+                    card.onclick = () => viewPost(i);
+
+                    // 管理用ボタン（イベント伝播を停止させてカード全体のクリックと分離）
+                    if(isAdmin) { 
+                        const btnDiv = document.createElement('div');
+                        btnDiv.className = "absolute top-4 left-4 flex gap-2 z-20";
+                        btnDiv.onclick = (e) => e.stopPropagation();
+                        btnDiv.innerHTML = `<button onclick="editPost(${i})" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-xs font-bold">編集</button><button onclick="deletePostDirectly(${i})" class="bg-red-50 text-red-400 px-4 py-2 rounded-lg text-xs font-bold border border-red-100">削除</button>`;
+                        card.appendChild(btnDiv);
+                    }
+
+                    const title = document.createElement('h4'); title.className="font-bold mb-4 text-lg border-b pb-2 user-select-auto"; title.innerText = p.title; card.appendChild(title);
+                    
+                    // ホーム表示は「1枚目の画像」と「続きを読む」のみにする
+                    let firstImg = (p.blocks || []).find(b => b.img);
+                    if(firstImg) {
+                        const img = document.createElement('img'); img.src = firstImg.img; img.className="w-full rounded-2xl mb-4 clickable-img"; card.appendChild(img);
+                    }
+                    const readMore = document.createElement('p');
+                    readMore.className = "text-center text-stone-400 text-xs font-bold mt-2";
+                    readMore.innerText = "── 続きを読む ──";
+                    card.appendChild(readMore);
+
                     hp.appendChild(card);
                 } else {
                     const btn = document.createElement('button'); btn.className = "w-full text-left py-4 px-6 bg-white border rounded-2xl text-stone-700 font-bold shadow-sm mb-2";
@@ -508,7 +532,7 @@
                 happyEvents.forEach(ev => {
                     const div = document.createElement('div'); div.className = "bg-white p-3 rounded-2xl shadow-sm mb-3 animate-anni flex items-center gap-3 cursor-pointer";
                     div.onclick = () => showDetail(ev.dollIdx);
-                    div.innerHTML = `<img src="${ev.img}" class="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-pink-200"><p class="font-bold text-stone-800 text-sm">${ev.text}</p><span class="ml-auto text-xl">🎉</span>`;
+                    div.innerHTML = `<img src="${ev.img}" class="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-pink-200"><p class="font-bold text-stone-800 text-sm user-select-auto">${ev.text}</p><span class="ml-auto text-xl">🎉</span>`;
                     happyListArea.appendChild(div);
                 });
             }
@@ -516,7 +540,7 @@
                 list.sort((a,b) => a.diff - b.diff);
                 const closest = list.filter(item => item.diff === list[0].diff);
                 let html = `<div class="space-y-3">`;
-                closest.forEach(b => { html += `<div class="bg-white p-5 border-l-4 rounded shadow-sm flex justify-between items-center" style="border-color:${b.color}"><div><p class="text-[10px] text-stone-400 font-bold">${b.doll}</p><p class="font-bold">${b.title}</p></div><b class="text-lg">${b.isToday ? "Today" : "あと "+b.diff+" 日"}</b></div>`; });
+                closest.forEach(b => { html += `<div class="bg-white p-5 border-l-4 rounded shadow-sm flex justify-between items-center" style="border-color:${b.color}"><div><p class="text-[10px] text-stone-400 font-bold user-select-auto">${b.doll}</p><p class="font-bold user-select-auto">${b.title}</p></div><b class="text-lg">${b.isToday ? "Today" : "あと "+b.diff+" 日"}</b></div>`; });
                 area.innerHTML = html + `</div>`;
             }
         }
@@ -549,7 +573,7 @@
                     div.appendChild(dots);
                     div.onclick = () => {
                         const evC = document.getElementById('day-events'); evC.innerHTML = '';
-                        annis.forEach(a => { const r=document.createElement('div'); r.className="p-5 rounded-2xl shadow-sm border text-lg space-y-1"; r.style.backgroundColor=a.uBg; r.style.color=a.uTxt; r.innerHTML=`<div class="font-bold">${a.dollName}：${a.mm}/${a.dd}</div><div class="opacity-80">${a.eventName}</div>`; evC.appendChild(r); });
+                        annis.forEach(a => { const r=document.createElement('div'); r.className="p-5 rounded-2xl shadow-sm border text-lg space-y-1"; r.style.backgroundColor=a.uBg; r.style.color=a.uTxt; r.innerHTML=`<div class="font-bold user-select-auto">${a.dollName}：${a.mm}/${a.dd}</div><div class="opacity-80 user-select-auto">${a.eventName}</div>`; evC.appendChild(r); });
                     };
                 }
                 area.appendChild(div);
@@ -576,7 +600,7 @@
                 dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="aspect-square bg-white border rounded-xl overflow-hidden cursor-pointer"><img src="${d.image}" class="w-full h-full object-cover"></div>`; }); 
             } else { 
                 area.className = "space-y-2"; 
-                dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="flex items-center gap-4 bg-white p-3 border rounded-xl cursor-pointer"><img src="${d.image}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0"><div><p class="text-xs text-stone-400 font-bold">${d.kana||''}</p><p class="font-bold text-stone-800">${d.name}</p></div></div>`; }); 
+                dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="flex items-center gap-4 bg-white p-3 border rounded-xl cursor-pointer"><img src="${d.image}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0"><div><p class="text-xs text-stone-400 font-bold user-select-auto">${d.kana||''}</p><p class="font-bold text-stone-800 user-select-auto">${d.name}</p></div></div>`; }); 
             } 
         }
         function toggleDollViewMode() { dollViewMode = (dollViewMode === 'grid') ? 'list' : 'grid'; document.getElementById('toggle-list-view').innerText = (dollViewMode === 'grid') ? '名前を表示' : 'サムネのみ'; renderDollList(); }
@@ -596,12 +620,12 @@
                     : `${dt.getFullYear()}/${dt.getMonth() + 1}/${dt.getDate()}`; 
             };
 
-            if(d.size_label) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Size</span><b>${d.size_label}</b></div>`; hasInfo = true; }
-            if(d.body_make) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Body</span><b>${d.body_make}</b></div>`; hasInfo = true; }
-            if(d.head_info) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Head</span><b>${d.head_info}</b></div>`; hasInfo = true; }
-            if(d.birthday) { b.innerHTML += `<div class="flex flex-col mb-4"><span>🎂 誕生日</span><b>${fmt(d.birthday)}</b></div>`; hasInfo = true; }
-            if(d.welcome_day) { b.innerHTML += `<div class="flex flex-col mb-4"><span>🤝 お迎え日</span><b>${fmt(d.welcome_day)}</b></div>`; hasInfo = true; }
-            (d.anniversaries || []).forEach(a => { if(a.date) { b.innerHTML += `<div class="flex flex-col mb-4"><span>✨ ${a.name}</span><b>${fmt(a.date)}</b></div>`; hasInfo = true; } });
+            if(d.size_label) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Size</span><b class="user-select-auto">${d.size_label}</b></div>`; hasInfo = true; }
+            if(d.body_make) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Body</span><b class="user-select-auto">${d.body_make}</b></div>`; hasInfo = true; }
+            if(d.head_info) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Head</span><b class="user-select-auto">${d.head_info}</b></div>`; hasInfo = true; }
+            if(d.birthday) { b.innerHTML += `<div class="flex flex-col mb-4"><span>🎂 誕生日</span><b class="user-select-auto">${fmt(d.birthday)}</b></div>`; hasInfo = true; }
+            if(d.welcome_day) { b.innerHTML += `<div class="flex flex-col mb-4"><span>🤝 お迎え日</span><b class="user-select-auto">${fmt(d.welcome_day)}</b></div>`; hasInfo = true; }
+            (d.anniversaries || []).forEach(a => { if(a.date) { b.innerHTML += `<div class="flex flex-col mb-4"><span>✨ ${a.name}</span><b class="user-select-auto">${fmt(a.date)}</b></div>`; hasInfo = true; } });
             b.classList.toggle('hidden', !hasInfo);
             document.getElementById('view-profile').innerText = d.profile || "";
             document.getElementById('detail-edit-btn').onclick = () => editDoll(idx);
@@ -643,7 +667,7 @@
             } 
         }
 
-        function initDateSelectors() { ["f-bday", "f-welcome"].forEach(p => { const m = document.getElementById(p+"-m"), d = document.getElementById(p+"-d"); for(let i=1; i<=12; i++) m.innerHTML += `<option value="${i}">${i}</option>`; for(let i=1; i<=31; i++) d.innerHTML += `<option value="${i}">${i}</option>`; }); }
+        function initDateSelectors() { ["f-bday", "f-welcome"].forEach(p => { const m = document.getElementById(p+"-m"), d = document.getElementById(p+"-d"); if(m){for(let i=1; i<=12; i++) m.innerHTML += `<option value="${i}">${i}</option>`;} if(d){for(let i=1; i<=31; i++) d.innerHTML += `<option value="${i}">${i}</option>`;} }); }
         function initColorPalettes() { ["bg", "text", "cal"].forEach(t => { const g = document.getElementById(t+"-color-grid"), def = (t==='bg'?'#ffffff':(t==='text'?'#000000':'#E11D48')); palette100.forEach(c => { const chip = document.createElement('div'); chip.className = `color-chip ${t}-chip`; chip.style.backgroundColor = c; if(c.toLowerCase() === def.toLowerCase()) chip.classList.add('selected'); chip.onclick = e => { e.stopPropagation(); selectPaletteColor(t, c, chip); }; g.appendChild(chip); }); document.getElementById(t+"-select-icon").style.backgroundColor = def; }); }
         function selectPaletteColor(type, color, el) { document.querySelectorAll("."+type+"-chip").forEach(c => c.classList.remove('selected')); el.classList.add('selected'); document.getElementById("f-"+type+"-color").value = color; document.getElementById(type+"-select-icon").style.backgroundColor = color; document.getElementById(type+"-color-grid").classList.remove('grid-open'); }
         function toggleColorGrid(type) { const g = document.getElementById(type+"-color-grid"), open = g.classList.contains('grid-open'); document.querySelectorAll('.color-grid').forEach(x => x.classList.remove('grid-open')); if(!open) g.classList.add('grid-open'); }
@@ -696,7 +720,7 @@
         function addAnniversaryInput(v = {name:'', date:''}) { 
             const id = Date.now() + Math.random(), div = document.createElement('div'); 
             div.className = "p-4 bg-stone-100/50 rounded-2xl space-y-2 border"; 
-            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; 
+            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none user-select-auto" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; 
             document.getElementById('anniversary-inputs').appendChild(div); 
             if(v.date) setDateValue(v.date, `date-${id}`, `m-${id}`, `d-${id}`); 
         }
@@ -718,7 +742,7 @@
         function addSnsInput(v = {type:'X(旧Twitter)', val:''}) { 
             const div = document.createElement('div'); 
             div.className = "sns-input-row flex gap-2 items-center"; 
-            div.innerHTML = `<select class="sns-type text-sm border p-2 rounded-lg bg-white h-10 outline-none">${['X(旧Twitter)','Instagram','mixi2','Bluesky','Misskey','その他URL'].map(t => `<option ${v.type===t?'selected':''}>${t}</option>`).join('')}</select><input type="text" class="sns-val flex-1 text-sm border p-2 rounded-lg h-10 outline-none" placeholder="ID or URL" value="${v.val}"><button onclick="this.parentElement.remove()" class="p-2 text-stone-400">✕</button>`; 
+            div.innerHTML = `<select class="sns-type text-sm border p-2 rounded-lg bg-white h-10 outline-none">${['X(旧Twitter)','Instagram','mixi2','Bluesky','Misskey','その他URL'].map(t => `<option ${v.type===t?'selected':''}>${t}</option>`).join('')}</select><input type="text" class="sns-val flex-1 text-sm border p-2 rounded-lg h-10 outline-none user-select-auto" placeholder="ID or URL" value="${v.val}"><button onclick="this.parentElement.remove()" class="p-2 text-stone-400">✕</button>`; 
             document.getElementById('sns-inputs-container').appendChild(div); 
         }
 
@@ -746,7 +770,7 @@
         function addPostBlock(data = {img: '', text: ''}) { 
             const id = Date.now() + Math.random(), div = document.createElement('div'); 
             div.className = "post-block p-4 border rounded-xl mb-4 bg-stone-50"; 
-            div.innerHTML = `<div class="preview-sq mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'}"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''}">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><textarea class="w-full text-sm p-3 border rounded-xl h-24 mt-2 outline-none auto-expand" placeholder="文章を入力...">${data.text||''}</textarea><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`; 
+            div.innerHTML = `<div class="preview-sq mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'}"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''}">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><textarea class="w-full text-sm p-3 border rounded-xl h-24 mt-2 outline-none auto-expand user-select-auto" placeholder="文章を入力...">${data.text||''}</textarea><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`; 
             document.getElementById('post-blocks-container').appendChild(div); 
         }
 
@@ -886,7 +910,11 @@
         function setupImageProtection() { 
             document.addEventListener('dragstart', (e) => { 
                 if(e.target.tagName === 'IMG') e.preventDefault(); 
-            }); 
+            });
+            // 追加：画像上での右クリックを禁止（コンテキストメニュー全体はbodyで制御済みだが念の為）
+            document.addEventListener('contextmenu', (e) => {
+                if(e.target.tagName === 'IMG') e.preventDefault();
+            }, false);
         }
     </script>
 </body>
