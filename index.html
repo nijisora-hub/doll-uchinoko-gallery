@@ -9,23 +9,44 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Dancing+Script:wght@700&display=swap');
         
-        body { font-family: 'Noto Sans JP', sans-serif; background-color: #fcfaf8; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: auto; }
+        /* 基本設定: クリック操作を全体で許可 */
+        body { 
+            font-family: 'Noto Sans JP', sans-serif; 
+            background-color: #fcfaf8; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
         .app-container { max-width: 480px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative; }
         .logo-font { font-family: 'Dancing Script', cursive; }
         
-        /* 画像保護の設定：画像そのものは選択・ドラッグ不可 */
-        img { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; pointer-events: none; -webkit-user-drag: none; }
-        .clickable-img { pointer-events: auto; }
+        /* 画像保護の設定：画像のみを選択不可に */
+        img { 
+            -webkit-touch-callout: none; 
+            -webkit-user-select: none !important; 
+            user-select: none !important; 
+            pointer-events: none; 
+            -webkit-user-drag: none; 
+        }
+        /* クリックが必要な画像（フィルムロールなど） */
+        .clickable-img, .film-frame { pointer-events: auto !important; }
         
+        /* テキストエリア・特定テキストをコピペ可能に */
+        textarea, input[type="text"], .user-select-auto { 
+            user-select: text !important; 
+            -webkit-user-select: text !important;
+            pointer-events: auto !important;
+        }
+
         .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .film-outer::-webkit-scrollbar { display: none; }
         .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 20px; }
-        .film-frame { width: 80px; height: 80px; background: #333; border: 2px solid #eee; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; position: relative; z-index: 10; pointer-events: auto; }
+        .film-frame { width: 80px; height: 80px; background: #333; border: 2px solid #eee; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; position: relative; z-index: 10; }
+        
         .modal-base { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 10px; }
         .modal-content { background: white; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; border-radius: 24px; padding: 24px; position: relative; }
         #custom-dialog { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100000; align-items: center; justify-content: center; padding: 20px; }
-        textarea { resize: none; overflow: hidden; user-select: auto !important; }
-        .user-select-auto { user-select: auto !important; }
         
         .crop-area { display: flex; flex-direction: row-reverse; gap: 10px; align-items: center; margin-bottom: 10px; }
         .v-bar-box { width: 20px; height: 180px; display: flex; align-items: center; justify-content: center; }
@@ -180,12 +201,12 @@
                 <div class="space-y-6">
                     <input type="file" id="doll-file" accept="image/*" class="hidden" onchange="loadImg(event, 'doll')">
                     <input type="hidden" id="edit-id">
-                    <input type="text" id="f-name" class="w-full border-b p-2 font-bold text-lg outline-none" placeholder="お名前">
-                    <input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none" placeholder="ふりがな">
+                    <input type="text" id="f-name" class="w-full border-b p-2 font-bold text-lg outline-none user-select-auto" placeholder="お名前">
+                    <input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none user-select-auto" placeholder="ふりがな">
                     <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
-                        <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE">
-                        <input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="BODY">
-                        <input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="HEAD">
+                        <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none user-select-auto" placeholder="SIZE">
+                        <input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none user-select-auto" placeholder="BODY">
+                        <input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none user-select-auto" placeholder="HEAD">
                     </div>
                     <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
                         <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">カラー設定</p>
@@ -239,7 +260,7 @@
                 <input type="range" id="o-crop-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('owner-preview', 'o-crop-h', 'o-crop-v')">
                 <div class="space-y-4">
                     <input type="file" id="owner-file" accept="image/*" class="hidden" onchange="loadImg(event, 'owner')">
-                    <input type="text" id="o-name" class="w-full border-b p-2 font-bold" placeholder="オーナー名">
+                    <input type="text" id="o-name" class="w-full border-b p-2 font-bold user-select-auto" placeholder="オーナー名">
                     <textarea id="o-bio" class="w-full border p-3 rounded-xl h-32 text-sm auto-expand user-select-auto" placeholder="自己紹介"></textarea>
                     <div id="sns-inputs-container" class="space-y-3"></div>
                     <button onclick="addSnsInput()" class="w-full py-2 bg-stone-100 rounded text-xs font-bold">+ SNSリンクを追加</button>
@@ -475,7 +496,6 @@
                     card.className = "relative bg-white rounded-[32px] p-6 pt-16 border shadow-sm cursor-pointer hover:bg-stone-50 transition-colors";
                     card.onclick = () => viewPost(i);
 
-                    // 管理用ボタン（イベント伝播を停止させてカード全体のクリックと分離）
                     if(isAdmin) { 
                         const btnDiv = document.createElement('div');
                         btnDiv.className = "absolute top-4 left-4 flex gap-2 z-20";
@@ -486,7 +506,6 @@
 
                     const title = document.createElement('h4'); title.className="font-bold mb-4 text-lg border-b pb-2 user-select-auto"; title.innerText = p.title; card.appendChild(title);
                     
-                    // ホーム表示は「1枚目の画像」と「続きを読む」のみにする
                     let firstImg = (p.blocks || []).find(b => b.img);
                     if(firstImg) {
                         const img = document.createElement('img'); img.src = firstImg.img; img.className="w-full rounded-2xl mb-4 clickable-img"; card.appendChild(img);
@@ -532,7 +551,7 @@
                 happyEvents.forEach(ev => {
                     const div = document.createElement('div'); div.className = "bg-white p-3 rounded-2xl shadow-sm mb-3 animate-anni flex items-center gap-3 cursor-pointer";
                     div.onclick = () => showDetail(ev.dollIdx);
-                    div.innerHTML = `<img src="${ev.img}" class="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-pink-200"><p class="font-bold text-stone-800 text-sm user-select-auto">${ev.text}</p><span class="ml-auto text-xl">🎉</span>`;
+                    div.innerHTML = `<img src="${ev.img}" class="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-pink-200 clickable-img"><p class="font-bold text-stone-800 text-sm user-select-auto">${ev.text}</p><span class="ml-auto text-xl">🎉</span>`;
                     happyListArea.appendChild(div);
                 });
             }
@@ -589,7 +608,7 @@
             });
         }
 
-        function toggleMenu(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'flex') ? 'none' : 'flex'; }
+        function toggleMenu(id) { const el = document.getElementById(id); const current = el.style.display; el.style.display = (current === 'flex') ? 'none' : 'flex'; }
         function showHome() { document.getElementById('home-content').classList.remove('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); document.getElementById('main-header').classList.remove('hidden'); closeArticle(); renderCalendar(); }
         function showDollList() { if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); document.getElementById('home-content').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); document.getElementById('doll-list-page').classList.remove('hidden'); renderDollList(); }
         function showPostListPage() { if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); document.getElementById('home-content').classList.add('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.remove('hidden'); }
@@ -597,10 +616,10 @@
             const area = document.getElementById('doll-display-area'); area.innerHTML = ''; 
             if (dollViewMode === 'grid') { 
                 area.className = "grid grid-cols-3 gap-2"; 
-                dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="aspect-square bg-white border rounded-xl overflow-hidden cursor-pointer"><img src="${d.image}" class="w-full h-full object-cover"></div>`; }); 
+                dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="aspect-square bg-white border rounded-xl overflow-hidden cursor-pointer"><img src="${d.image}" class="w-full h-full object-cover clickable-img"></div>`; }); 
             } else { 
                 area.className = "space-y-2"; 
-                dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="flex items-center gap-4 bg-white p-3 border rounded-xl cursor-pointer"><img src="${d.image}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0"><div><p class="text-xs text-stone-400 font-bold user-select-auto">${d.kana||''}</p><p class="font-bold text-stone-800 user-select-auto">${d.name}</p></div></div>`; }); 
+                dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="flex items-center gap-4 bg-white p-3 border rounded-xl cursor-pointer"><img src="${d.image}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0 clickable-img"><div><p class="text-xs text-stone-400 font-bold user-select-auto">${d.kana||''}</p><p class="font-bold text-stone-800 user-select-auto">${d.name}</p></div></div>`; }); 
             } 
         }
         function toggleDollViewMode() { dollViewMode = (dollViewMode === 'grid') ? 'list' : 'grid'; document.getElementById('toggle-list-view').innerText = (dollViewMode === 'grid') ? '名前を表示' : 'サムネのみ'; renderDollList(); }
@@ -720,7 +739,7 @@
         function addAnniversaryInput(v = {name:'', date:''}) { 
             const id = Date.now() + Math.random(), div = document.createElement('div'); 
             div.className = "p-4 bg-stone-100/50 rounded-2xl space-y-2 border"; 
-            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none user-select-auto" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; 
+            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none user-select-auto" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="${v.date?new Date(v.date).getDate():''}">${v.date?new Date(v.date).getDate():'日'}</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; 
             document.getElementById('anniversary-inputs').appendChild(div); 
             if(v.date) setDateValue(v.date, `date-${id}`, `m-${id}`, `d-${id}`); 
         }
@@ -770,7 +789,7 @@
         function addPostBlock(data = {img: '', text: ''}) { 
             const id = Date.now() + Math.random(), div = document.createElement('div'); 
             div.className = "post-block p-4 border rounded-xl mb-4 bg-stone-50"; 
-            div.innerHTML = `<div class="preview-sq mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'}"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''}">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><textarea class="w-full text-sm p-3 border rounded-xl h-24 mt-2 outline-none auto-expand user-select-auto" placeholder="文章を入力...">${data.text||''}</textarea><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`; 
+            div.innerHTML = `<div class="preview-sq mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'} clickable-img"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''}">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><textarea class="w-full text-sm p-3 border rounded-xl h-24 mt-2 outline-none auto-expand user-select-auto" placeholder="文章を入力...">${data.text||''}</textarea><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`; 
             document.getElementById('post-blocks-container').appendChild(div); 
         }
 
@@ -907,14 +926,12 @@
             }); 
         }
 
-        function setupImageProtection() { 
-            document.addEventListener('dragstart', (e) => { 
-                if(e.target.tagName === 'IMG') e.preventDefault(); 
-            });
-            // 追加：画像上での右クリックを禁止（コンテキストメニュー全体はbodyで制御済みだが念の為）
-            document.addEventListener('contextmenu', (e) => {
-                if(e.target.tagName === 'IMG') e.preventDefault();
-            }, false);
+        function setupImageProtection() {
+            document.addEventListener('touchstart', (e) => {
+                if (e.target.tagName === 'IMG' && !e.target.classList.contains('clickable-img') && !e.target.classList.contains('film-frame')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
         }
     </script>
 </body>
