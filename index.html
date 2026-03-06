@@ -32,7 +32,7 @@
         /* クリックが必要な画像（フィルムロールなど） */
         .clickable-img, .film-frame { pointer-events: auto !important; }
         
-        /* 【修正点】テキストエリア・入力フォームをコピペ可能に */
+        /* テキストエリア・入力フォームを完全にコピペ可能に */
         textarea, input[type="text"], input[type="date"], select, .user-select-auto { 
             user-select: text !important; 
             -webkit-user-select: text !important;
@@ -82,7 +82,7 @@
         body.is-admin .viewer-only { display: none !important; }
     </style>
 </head>
-<body class="text-stone-800 pb-20" oncontextmenu="return false;">
+<body class="text-stone-800 pb-20" oncontextmenu="if(event.target.tagName !== 'TEXTAREA' && event.target.tagName !== 'INPUT') return false;">
 
     <div class="app-container">
         <div id="custom-dialog">
@@ -610,7 +610,6 @@
             });
         }
 
-        /* 【修正点】メニューボタンの挙動を安定化 */
         function toggleMenu(id) { 
             const el = document.getElementById(id); 
             if (el.style.display === 'none' || el.style.display === '') {
@@ -699,7 +698,7 @@
 
         function initDateSelectors() { ["f-bday", "f-welcome"].forEach(p => { const m = document.getElementById(p+"-m"), d = document.getElementById(p+"-d"); if(m){for(let i=1; i<=12; i++) m.innerHTML += `<option value="${i}">${i}</option>`;} if(d){for(let i=1; i<=31; i++) d.innerHTML += `<option value="${i}">${i}</option>`;} }); }
         function initColorPalettes() { ["bg", "text", "cal"].forEach(t => { const g = document.getElementById(t+"-color-grid"), def = (t==='bg'?'#ffffff':(t==='text'?'#000000':'#E11D48')); palette100.forEach(c => { const chip = document.createElement('div'); chip.className = `color-chip ${t}-chip`; chip.style.backgroundColor = c; if(c.toLowerCase() === def.toLowerCase()) chip.classList.add('selected'); chip.onclick = e => { e.stopPropagation(); selectPaletteColor(t, c, chip); }; g.appendChild(chip); }); document.getElementById(t+"-select-icon").style.backgroundColor = def; }); }
-        function selectPaletteColor(type, color, el) { document.querySelectorAll("."+type+"-chip").forEach(c => c.classList.remove('selected')); el.classList.add('selected'); document.getElementById("f-"+type+"-color").value = color; document.getElementById(type+"-select-icon").style.backgroundColor = color; document.getElementById(type+"-color-grid").classList.remove('grid-open'); }
+        function selectPaletteColor(type, color, el) { document.querySelectorAll("."+type+"-chip").forEach(c => c.classList.remove('selected')); el.classList.add('selected'); document.getElementById("f-"+type+"color").value = color; document.getElementById(type+"-select-icon").style.backgroundColor = color; document.getElementById(type+"-color-grid").classList.remove('grid-open'); }
         function toggleColorGrid(type) { const g = document.getElementById(type+"-color-grid"), open = g.classList.contains('grid-open'); document.querySelectorAll('.color-grid').forEach(x => x.classList.remove('grid-open')); if(!open) g.classList.add('grid-open'); }
         function updateCrop(imgId, hId, vId) { document.getElementById(imgId).style.objectPosition = `${document.getElementById(hId).value}% ${document.getElementById(vId).value}%`; }
         function openModalWithClear() { clearDollForm(); document.getElementById('modal-title').innerText = "うちの子登録"; document.getElementById('modal').style.display='flex'; if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); }
@@ -937,7 +936,7 @@
             }); 
         }
 
-        /* 画像保護: IMGタグのみtouchstartイベントを無効化（フォーム要素は除外） */
+        /* 画像保護: IMGタグのみtouchstartイベントを制限（入力系は除外） */
         function setupImageProtection() {
             document.addEventListener('touchstart', (e) => {
                 if (e.target.tagName === 'IMG' && !e.target.classList.contains('clickable-img') && !e.target.classList.contains('film-frame')) {
