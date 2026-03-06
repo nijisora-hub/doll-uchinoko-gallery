@@ -32,12 +32,14 @@
         /* クリックが必要な画像（フィルムロールなど） */
         .clickable-img, .film-frame { pointer-events: auto !important; }
         
-        /* テキストエリア・入力フォームを完全にコピペ可能に */
-        textarea, input[type="text"], input[type="date"], select, .user-select-auto { 
+        /* 【重要】テキストエリア・入力フォーム・指定クラスを完全にコピペ可能に */
+        textarea, input, select, .user-select-auto { 
             user-select: text !important; 
             -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
             pointer-events: auto !important;
-            -webkit-touch-callout: default !important; /* 長押しメニューを許可 */
+            -webkit-touch-callout: default !important; /* iOSで長押しメニュー（コピー等）を許可 */
         }
 
         .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
@@ -82,7 +84,7 @@
         body.is-admin .viewer-only { display: none !important; }
     </style>
 </head>
-<body class="text-stone-800 pb-20" oncontextmenu="if(event.target.tagName !== 'TEXTAREA' && event.target.tagName !== 'INPUT') return false;">
+<body class="text-stone-800 pb-20">
 
     <div class="app-container">
         <div id="custom-dialog">
@@ -202,12 +204,12 @@
                 <div class="space-y-6">
                     <input type="file" id="doll-file" accept="image/*" class="hidden" onchange="loadImg(event, 'doll')">
                     <input type="hidden" id="edit-id">
-                    <input type="text" id="f-name" class="w-full border-b p-2 font-bold text-lg outline-none user-select-auto" placeholder="お名前">
-                    <input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none user-select-auto" placeholder="ふりがな">
+                    <input type="text" id="f-name" class="w-full border-b p-2 font-bold text-lg outline-none" placeholder="お名前">
+                    <input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none" placeholder="ふりがな">
                     <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
-                        <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none user-select-auto" placeholder="SIZE">
-                        <input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none user-select-auto" placeholder="BODY">
-                        <input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none user-select-auto" placeholder="HEAD">
+                        <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE">
+                        <input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="BODY">
+                        <input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="HEAD">
                     </div>
                     <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
                         <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">カラー設定</p>
@@ -230,7 +232,7 @@
                     </div>
                     <div id="anniversary-inputs" class="space-y-3"></div>
                     <button onclick="addAnniversaryInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-400 font-bold">+ 記念日を追加</button>
-                    <textarea id="f-profile" class="w-full border p-4 rounded-2xl h-48 text-sm outline-none auto-expand user-select-auto" placeholder="プロフィール"></textarea>
+                    <textarea id="f-profile" class="w-full border p-4 rounded-2xl h-48 text-sm outline-none auto-expand" placeholder="プロフィール"></textarea>
                     <button onclick="saveDollData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg shadow-xl">保存する</button>
                 </div>
             </div>
@@ -261,8 +263,8 @@
                 <input type="range" id="o-crop-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('owner-preview', 'o-crop-h', 'o-crop-v')">
                 <div class="space-y-4">
                     <input type="file" id="owner-file" accept="image/*" class="hidden" onchange="loadImg(event, 'owner')">
-                    <input type="text" id="o-name" class="w-full border-b p-2 font-bold user-select-auto" placeholder="オーナー名">
-                    <textarea id="o-bio" class="w-full border p-3 rounded-xl h-32 text-sm auto-expand user-select-auto" placeholder="自己紹介"></textarea>
+                    <input type="text" id="o-name" class="w-full border-b p-2 font-bold" placeholder="オーナー名">
+                    <textarea id="o-bio" class="w-full border p-3 rounded-xl h-32 text-sm auto-expand" placeholder="自己紹介"></textarea>
                     <div id="sns-inputs-container" class="space-y-3"></div>
                     <button onclick="addSnsInput()" class="w-full py-2 bg-stone-100 rounded text-xs font-bold">+ SNSリンクを追加</button>
                     <button onclick="saveOwner()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">保存</button>
@@ -275,7 +277,7 @@
                 <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
                 <h3 id="post-modal-title" class="text-xl font-bold mb-4">投稿作成</h3>
                 <input type="hidden" id="edit-post-id">
-                <input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-4 outline-none user-select-auto" placeholder="タイトル">
+                <input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-4 outline-none" placeholder="タイトル">
                 <div id="post-blocks-container" class="space-y-4"></div>
                 <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ 追加</button>
                 <div class="flex gap-4 p-4 bg-stone-50 rounded-2xl text-xs mt-6 items-center"><label><input type="radio" name="p-pos" value="home" checked> ホーム</label><label><input type="radio" name="p-pos" value="menu"> メニュー</label></div>
@@ -318,7 +320,7 @@
             initDateSelectors();
             initColorPalettes();
             setupAutoExpand();
-            setupImageProtection();
+            setupUnifiedProtection(); // 保護機能を初期化
             
             const { data: { session } } = await sbClient.auth.getSession();
             currentUser = session?.user || null;
@@ -342,6 +344,8 @@
                 renderAll();
             });
         };
+
+        // --- 中略（データ取得・保存系の関数はそのまま） ---
 
         function checkAdminStatus() {
             const isAdmin = currentUser && (galleryId === currentUser.id);
@@ -525,6 +529,7 @@
             renderCalendar(); renderAnni(); setupInfiniteScroll();
         }
 
+        // --- 中略（カレンダー・記念日系関数はそのまま） ---
         function renderAnni() {
             const area = document.getElementById('closest-anniversary'), happyArea = document.getElementById('happy-anniversary'), happyListArea = document.getElementById('happy-anniversary-list');
             area.innerHTML = ''; happyListArea.innerHTML = ''; happyArea.classList.add('hidden');
@@ -749,7 +754,7 @@
         function addAnniversaryInput(v = {name:'', date:''}) { 
             const id = Date.now() + Math.random(), div = document.createElement('div'); 
             div.className = "p-4 bg-stone-100/50 rounded-2xl space-y-2 border"; 
-            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none user-select-auto" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="${v.date?new Date(v.date).getDate():''}">${v.date?new Date(v.date).getDate():'日'}</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; 
+            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="${v.date?new Date(v.date).getDate():''}">${v.date?new Date(v.date).getDate():'日'}</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; 
             document.getElementById('anniversary-inputs').appendChild(div); 
             if(v.date) setDateValue(v.date, `date-${id}`, `m-${id}`, `d-${id}`); 
         }
@@ -771,7 +776,7 @@
         function addSnsInput(v = {type:'X(旧Twitter)', val:''}) { 
             const div = document.createElement('div'); 
             div.className = "sns-input-row flex gap-2 items-center"; 
-            div.innerHTML = `<select class="sns-type text-sm border p-2 rounded-lg bg-white h-10 outline-none">${['X(旧Twitter)','Instagram','mixi2','Bluesky','Misskey','その他URL'].map(t => `<option ${v.type===t?'selected':''}>${t}</option>`).join('')}</select><input type="text" class="sns-val flex-1 text-sm border p-2 rounded-lg h-10 outline-none user-select-auto" placeholder="ID or URL" value="${v.val}"><button onclick="this.parentElement.remove()" class="p-2 text-stone-400">✕</button>`; 
+            div.innerHTML = `<select class="sns-type text-sm border p-2 rounded-lg bg-white h-10 outline-none">${['X(旧Twitter)','Instagram','mixi2','Bluesky','Misskey','その他URL'].map(t => `<option ${v.type===t?'selected':''}>${t}</option>`).join('')}</select><input type="text" class="sns-val flex-1 text-sm border p-2 rounded-lg h-10 outline-none" placeholder="ID or URL" value="${v.val}"><button onclick="this.parentElement.remove()" class="p-2 text-stone-400">✕</button>`; 
             document.getElementById('sns-inputs-container').appendChild(div); 
         }
 
@@ -799,7 +804,7 @@
         function addPostBlock(data = {img: '', text: ''}) { 
             const id = Date.now() + Math.random(), div = document.createElement('div'); 
             div.className = "post-block p-4 border rounded-xl mb-4 bg-stone-50"; 
-            div.innerHTML = `<div class="preview-sq mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'} clickable-img"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''}">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><textarea class="w-full text-sm p-3 border rounded-xl h-24 mt-2 outline-none auto-expand user-select-auto" placeholder="文章を入力...">${data.text||''}</textarea><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`; 
+            div.innerHTML = `<div class="preview-sq mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'} clickable-img"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''}">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><textarea class="w-full text-sm p-3 border rounded-xl h-24 mt-2 outline-none auto-expand" placeholder="文章を入力...">${data.text||''}</textarea><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`; 
             document.getElementById('post-blocks-container').appendChild(div); 
         }
 
@@ -936,10 +941,27 @@
             }); 
         }
 
-        /* 画像保護: IMGタグのみtouchstartイベントを制限（入力系は除外） */
-        function setupImageProtection() {
+        /* 【修正の核】統合された保護機能 
+           入力フォーム（TEXTAREA, INPUT）や指定クラス（.user-select-auto）以外への
+           右クリック・長押しメニューを制限します。
+        */
+        function setupUnifiedProtection() {
+            // 1. 右クリック（コンテキストメニュー）の制御
+            document.addEventListener('contextmenu', (e) => {
+                // 入力フォーム、または user-select-auto クラスを持つ要素なら許可
+                if (['TEXTAREA', 'INPUT'].includes(e.target.tagName) || e.target.closest('.user-select-auto')) {
+                    return; 
+                }
+                // それ以外は右クリック禁止
+                e.preventDefault();
+            }, false);
+
+            // 2. スマホの長押し（画像保護）
             document.addEventListener('touchstart', (e) => {
+                // 画像、かつクリック可能指定がない場合のみ制限
                 if (e.target.tagName === 'IMG' && !e.target.classList.contains('clickable-img') && !e.target.classList.contains('film-frame')) {
+                    // ここで preventDefault をすると「長押し保存」メニューが出なくなります
+                    // ただし、入力フォーム上での操作を阻害しないよう、ターゲットを厳密にチェックしています
                     e.preventDefault();
                 }
             }, { passive: false });
