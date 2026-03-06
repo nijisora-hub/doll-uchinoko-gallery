@@ -46,7 +46,6 @@
         }
         .animate-anni { animation: pulse-anni 2s infinite ease-in-out; border: 2px solid #f472b6 !important; }
         
-        /* 管理メニュー制御用クラス */
         .admin-only { display: none !important; }
         body.is-admin .admin-only { display: block !important; }
         body.is-admin .admin-only-flex { display: flex !important; }
@@ -85,7 +84,6 @@
             <div class="bg-white w-72 h-full ml-auto p-6 flex flex-col overflow-y-auto" onclick="event.stopPropagation()">
                 <div class="space-y-1">
                     <button onclick="showHome(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">🏠 ホーム</button>
-                    <button onclick="openModalWithClear()" class="text-left py-4 font-bold border-b text-blue-600 w-full admin-only">✨ うちの子を登録する</button>
                     <button onclick="showDollList()" class="text-left py-4 font-bold border-b w-full text-stone-800">📸 うちの子一覧</button>
                     <button onclick="showPostListPage()" class="text-left py-4 font-bold border-b w-full text-stone-800">📝 投稿一覧</button>
                     <button onclick="requestCreateGallery()" class="text-left py-4 font-bold border-b text-blue-600 w-full viewer-only">✨ 新規作成する</button>
@@ -96,8 +94,9 @@
                 </div>
                 
                 <div class="py-10 space-y-4 admin-only">
+                    <button onclick="openModalWithClear()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm">📸 うちの子を登録する</button>
+                    <button onclick="openPostModal()" class="w-full py-4 bg-stone-800 text-white rounded-2xl text-sm font-bold shadow-lg">📝 投稿を追加する</button>
                     <button onclick="openOwnerModal()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm">👤 オーナー設定</button>
-                    <button onclick="openPostModal()" class="w-full py-4 bg-stone-800 text-white rounded-2xl text-sm font-bold shadow-lg">📝 投稿を追加</button>
                 </div>
 
                 <div class="mt-auto pt-10 admin-only">
@@ -296,8 +295,8 @@
             currentUser = session?.user || null;
 
             if (currentUser && !galleryId) {
-                location.href = `?id=${currentUser.id}`;
-                return;
+                history.replaceState(null, null, `?id=${currentUser.id}`);
+                galleryId = currentUser.id;
             }
 
             if (galleryId) {
@@ -308,8 +307,15 @@
 
             checkAdminStatus();
 
-            sbClient.auth.onAuthStateChanged((_event, session) => {
+            sbClient.auth.onAuthStateChanged(async (_event, session) => {
+                const oldUser = currentUser;
                 currentUser = session?.user || null;
+                
+                if (currentUser && (!oldUser || oldUser.id !== currentUser.id)) {
+                    history.replaceState(null, null, `?id=${currentUser.id}`);
+                    galleryId = currentUser.id;
+                    await loadAllData(galleryId);
+                }
                 checkAdminStatus();
                 renderAll();
             });
@@ -327,9 +333,9 @@
                     sbClient.from('dolls').select('*').eq('owner_id', uid),
                     sbClient.from('posts').select('*').eq('owner_id', uid).order('created_at', { ascending: false })
                 ]);
-                if (ownerRes.data) owner = ownerRes.data;
-                if (dollsRes.data) dolls = dollsRes.data;
-                if (postsRes.data) posts = postsRes.data;
+                owner = ownerRes.data || { name: "Owner Name", bio: "", sns: [], image:"" };
+                dolls = dollsRes.data || [];
+                posts = postsRes.data || [];
                 renderAll();
             } catch (e) { console.error(e); renderAll(); }
         }
@@ -379,8 +385,13 @@
                 profile: document.getElementById('f-profile').value
             };
             if (id) payload.id = id;
-            const { error } = await sbClient.from('dolls').upsert(payload);
-            if(error) showAlert(error.message); else location.reload();
+            const { data, error } = await sbClient.from('dolls').upsert(payload).select();
+            if(error) showAlert(error.message); 
+            else {
+                closeModal();
+                await loadAllData(currentUser.id);
+                showAlert("保存しました");
+            }
         }
 
         async function saveOwner() {
@@ -399,7 +410,12 @@
                 })).filter(s => s.val)
             };
             const { error } = await sbClient.from('owners').upsert(payload);
-            if(error) showAlert(error.message); else location.reload();
+            if(error) showAlert(error.message); 
+            else {
+                closeModal();
+                await loadAllData(currentUser.id);
+                showAlert("オーナー情報を更新しました");
+            }
         }
 
         async function savePost() {
@@ -418,7 +434,12 @@
             };
             if (id) payload.id = id;
             const { error } = await sbClient.from('posts').upsert(payload);
-            if(error) showAlert(error.message); else location.reload();
+            if(error) showAlert(error.message); 
+            else {
+                closeModal();
+                await loadAllData(currentUser.id);
+                showAlert("投稿しました");
+            }
         }
 
         function renderAll() {
@@ -596,7 +617,11 @@
             b.classList.toggle('hidden', !hasInfo);
             document.getElementById('view-profile').innerText = d.profile || "";
             document.getElementById('detail-edit-btn').onclick = () => editDoll(idx);
-            document.getElementById('detail-del-btn').onclick = () => showConfirm("このデータを削除しますか？", async () => { await sbClient.from('dolls').delete().eq('id', d.id); location.reload(); });
+            document.getElementById('detail-del-btn').onclick = () => showConfirm("このデータを削除しますか？", async () => { 
+                await sbClient.from('dolls').delete().eq('id', d.id); 
+                closeProfile();
+                await loadAllData(galleryId);
+            });
             overlay.classList.remove('hidden');
         }
 
@@ -734,7 +759,7 @@
             const p = posts[idx]; 
             showConfirm("削除しますか？", async () => { 
                 await sbClient.from('posts').delete().eq('id', p.id); 
-                location.reload(); 
+                await loadAllData(galleryId);
             }); 
         }
 
@@ -748,7 +773,11 @@
                 if(b.text) { const t = document.createElement('p'); t.className = "text-stone-700 whitespace-pre-wrap leading-relaxed mb-6 user-select-auto"; t.innerText = b.text; c.appendChild(t); } 
             }); 
             document.getElementById('art-edit-btn').onclick = () => { closeArticle(); editPost(idx); }; 
-            document.getElementById('art-del-btn').onclick = () => showConfirm("削除しますか？", async () => { await sbClient.from('posts').delete().eq('id', p.id); location.reload(); }); 
+            document.getElementById('art-del-btn').onclick = () => showConfirm("削除しますか？", async () => { 
+                await sbClient.from('posts').delete().eq('id', p.id); 
+                closeArticle();
+                await loadAllData(galleryId);
+            }); 
             document.getElementById('article-page').style.display = 'block'; 
         }
 
@@ -763,14 +792,14 @@
         }
 
         function shareSNS(type) { 
-            const url = window.location.origin + window.location.pathname + (galleryId ? '?id='+galleryId : ''); 
+            const url = window.location.href; 
             if(type === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank'); 
             else if(type === 'x') window.open(`https://twitter.com/intent/tweet?text=Doll Uchinoko Gallery&url=${encodeURIComponent(url)}`, '_blank'); 
         }
 
         function copyURL() { 
-            const url = window.location.origin + window.location.pathname + (galleryId ? '?id='+galleryId : ''); 
-            navigator.clipboard.writeText(url).then(() => { showAlert("コピーしました"); }); 
+            const url = window.location.href; 
+            navigator.clipboard.writeText(url).then(() => { showAlert("ギャラリーのURLをコピーしました"); }); 
         }
 
         async function requestClearAll() { 
@@ -781,8 +810,7 @@
                         sbClient.from('dolls').delete().eq('owner_id', currentUser.id), 
                         sbClient.from('posts').delete().eq('owner_id', currentUser.id)
                     ]); 
-                    await sbClient.auth.signOut();
-                    location.href = window.location.origin + window.location.pathname;
+                    await handleLogout();
                 } 
             }, "完全に削除して初期化する"); 
         }
