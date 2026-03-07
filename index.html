@@ -45,19 +45,21 @@
         .film-outer { 
             background: #1a1a1a; 
             overflow-x: auto; /* 手動スクロールを許可 */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE */
             padding: 20px 0; 
             position: relative; 
             min-height: 120px; 
+            /* スクロールバーを非表示 */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            scroll-behavior: auto;
         }
-        .film-outer::-webkit-scrollbar { display: none; } /* Chrome, Safari */
+        .film-outer::-webkit-scrollbar { display: none; }
 
         .film-scroll-track { 
             display: flex; 
             gap: 12px; 
             width: max-content; 
-            padding: 0 12px;
+            padding: 0 6px;
         }
 
         .film-frame { 
@@ -329,6 +331,9 @@
         let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null };
         let currentUser = null, galleryId = new URLSearchParams(window.location.search).get('id');
 
+        let isManualScrolling = false;
+        const scrollSpeed = 0.8;
+
         const palette100 = (() => {
             const hues = [0, 30, 60, 120, 150, 180, 220, 280, 330], colors = [];
             for(let i=0; i<10; i++) colors.push(`hsl(0, 0%, ${Math.min(0 + (i * 11), 100)}%)`);
@@ -341,6 +346,7 @@
             initColorPalettes();
             setupAutoExpand();
             setupUnifiedProtection();
+            setupFilmScrollEvents();
             
             const { data: { session } } = await sbClient.auth.getSession();
             currentUser = session?.user || null;
@@ -374,6 +380,30 @@
                 renderAll();
             });
         };
+
+        function setupFilmScrollEvents() {
+            const container = document.getElementById('film-container');
+            const onStart = () => { isManualScrolling = true; };
+            const onEnd = () => { isManualScrolling = false; };
+            container.addEventListener('touchstart', onStart, {passive: true});
+            container.addEventListener('touchend', onEnd, {passive: true});
+            container.addEventListener('mousedown', onStart);
+            window.addEventListener('mouseup', onEnd);
+        }
+
+        function autoScrollLoop() {
+            const container = document.getElementById('film-container');
+            const track = document.getElementById('top-film-roll');
+            if (!isManualScrolling && track && track.children.length > 0) {
+                container.scrollLeft += scrollSpeed;
+                // 3セット用意しているので、2枚目のセットが終わる頃に1枚目に戻る
+                const singleSetWidth = track.scrollWidth / 3;
+                if (container.scrollLeft >= singleSetWidth * 2) {
+                    container.scrollLeft -= singleSetWidth;
+                }
+            }
+            requestAnimationFrame(autoScrollLoop);
+        }
 
         async function checkAdminStatus() {
             if (!currentUser || !galleryId) {
@@ -503,36 +533,33 @@
             if(error) showAlert(error.message); else location.reload();
         }
 
-        // フィルムロール用グローバル変数
-        let filmAutoScrollReq = null;
-        let filmIsTouching = false;
-        const filmScrollSpeed = 0.5;
-
         function renderAll() {
             if (currentUser && localStorage.getItem('pending_custom_id')) { completeRegistration(); }
             document.getElementById('login-btn').style.display = currentUser ? 'none' : 'block';
             document.getElementById('logout-btn').style.display = currentUser ? 'block' : 'none';
 
-            // フィルムロール描画
             const track = document.getElementById('top-film-roll'); track.innerHTML = '';
             const itemsWithImg = dolls.filter(d => d.image);
 
             if (itemsWithImg.length > 0) {
                 document.getElementById('empty-msg').style.display = 'none';
-                // 無限ループ（バーチャルスクロール）用に2セット作成
-                const loopItems = [...itemsWithImg, ...itemsWithImg];
-                loopItems.forEach((d, i) => {
-                    const img = document.createElement('img'); 
-                    img.src = d.image; 
-                    img.className = "film-frame clickable-img";
-                    const originalIdx = dolls.findIndex(orig => orig.id === d.id);
-                    img.onclick = () => showDetail(originalIdx); 
-                    track.appendChild(img);
-                });
-                startFilmAutoScroll();
+                // 無限ループのために3セット分作成
+                for (let s = 0; s < 3; s++) {
+                    itemsWithImg.forEach((d) => {
+                        const img = document.createElement('img'); 
+                        img.src = d.image; 
+                        img.className = "film-frame clickable-img";
+                        const originalIdx = dolls.findIndex(orig => orig.id === d.id);
+                        img.onclick = () => showDetail(originalIdx); 
+                        track.appendChild(img);
+                    });
+                }
+                if(!window.autoScrollStarted) {
+                    autoScrollLoop();
+                    window.autoScrollStarted = true;
+                }
             } else { 
                 document.getElementById('empty-msg').style.display = 'flex'; 
-                cancelAnimationFrame(filmAutoScrollReq);
             }
 
             const oImg = document.getElementById('display-owner-img');
@@ -578,45 +605,6 @@
                 }
             });
             renderCalendar(); renderAnni(); 
-        }
-
-        // フィルムロール自動スクロールエンジン（手動操作対応）
-        function startFilmAutoScroll() {
-            const container = document.getElementById('film-container');
-            if (!container) return;
-
-            // イベントリスナー設定（一度だけ）
-            if (!container.dataset.init) {
-                container.addEventListener('touchstart', () => filmIsTouching = true);
-                container.addEventListener('touchend', () => filmIsTouching = false);
-                container.addEventListener('mousedown', () => filmIsTouching = true);
-                container.addEventListener('mouseup', () => filmIsTouching = false);
-                container.addEventListener('mouseleave', () => filmIsTouching = false);
-                
-                // 手動スクロール中もループ位置をチェック
-                container.addEventListener('scroll', () => {
-                    const half = container.scrollWidth / 2;
-                    if (container.scrollLeft >= half) {
-                        container.scrollLeft -= half;
-                    } else if (container.scrollLeft <= 0) {
-                        container.scrollLeft += half;
-                    }
-                });
-                container.dataset.init = "true";
-            }
-
-            cancelAnimationFrame(filmAutoScrollReq);
-            const step = () => {
-                if (!filmIsTouching) {
-                    container.scrollLeft += filmScrollSpeed;
-                    const half = container.scrollWidth / 2;
-                    if (container.scrollLeft >= half) {
-                        container.scrollLeft = 0;
-                    }
-                }
-                filmAutoScrollReq = requestAnimationFrame(step);
-            };
-            filmAutoScrollReq = requestAnimationFrame(step);
         }
 
         function renderAnni() {
