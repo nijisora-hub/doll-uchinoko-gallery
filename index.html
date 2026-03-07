@@ -582,25 +582,64 @@
         function renderAnni() {
             const area = document.getElementById('closest-anniversary'), happyArea = document.getElementById('happy-anniversary'), happyListArea = document.getElementById('happy-anniversary-list');
             area.innerHTML = ''; happyListArea.innerHTML = ''; happyArea.classList.add('hidden');
-            let list = [], happyEvents = []; const now = new Date(), todayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            let list = [], happyEvents = []; 
+            const now = new Date();
+            const todayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
             dolls.forEach((d, idx) => {
-                const ds = [{ type: 'birth', n: "誕生日", d: d.birthday }, { type: 'welcome', n: "お迎え日", d: d.welcome_day }, ...(d.anniversaries || []).map(a => ({ type: 'custom', n: a.name, d: a.date }))];
+                const ds = [
+                    { type: 'birth', n: "誕生日", d: d.birthday }, 
+                    { type: 'welcome', n: "お迎え日", d: d.welcome_day }, 
+                    ...(d.anniversaries || []).map(a => ({ type: 'custom', n: a.name, d: a.date }))
+                ];
+
                 ds.forEach(v => {
                     if(v.d) {
                         const originDate = new Date(v.d);
-                        const isToday = (originDate.getMonth() === now.getMonth() && originDate.getDate() === now.getDate());
+                        const originZero = new Date(originDate.getFullYear(), originDate.getMonth(), originDate.getDate());
+                        
+                        // 経過日数の計算
+                        const diffMs = todayZero.getTime() - originZero.getTime();
+                        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                        
+                        // 1. 年単位の判定
+                        const isAnniDay = (originDate.getMonth() === now.getMonth() && originDate.getDate() === now.getDate());
                         const diffYears = now.getFullYear() - originDate.getFullYear();
-                        let next = new Date(now.getFullYear(), originDate.getMonth(), originDate.getDate());
-                        if(next < todayZero) next.setFullYear(now.getFullYear() + 1);
-                        const daysToNext = Math.ceil((next - todayZero) / (1000 * 60 * 60 * 24));
-                        if (isToday && diffYears >= 0) {
+                        
+                        // 次の年記念日までの日数
+                        let nextAnni = new Date(now.getFullYear(), originDate.getMonth(), originDate.getDate());
+                        if(nextAnni < todayZero) nextAnni.setFullYear(now.getFullYear() + 1);
+                        const daysToNextAnni = Math.ceil((nextAnni - todayZero) / (1000 * 60 * 60 * 24));
+
+                        // 2. 100日ごとの判定 (お迎え日と記念日のみ)
+                        let is100Day = false;
+                        if (v.type !== 'birth' && diffDays > 0 && diffDays % 100 === 0) {
+                            is100Day = true;
+                        }
+
+                        // お祝い表示の生成
+                        if (isAnniDay && diffYears >= 0) {
                             let text = (v.type === 'birth') ? `${d.name} の誕生日 ${diffYears}歳` : (v.type === 'welcome' ? (diffYears === 0 ? `${d.name} と出会った日！` : `${d.name} と出会って ${diffYears}年`) : (diffYears === 0 ? `${d.name} の ${v.n}` : `${d.name} の ${v.n} ${diffYears}年`));
                             happyEvents.push({ text, img: d.image, dollIdx: idx });
                         }
-                        list.push({ doll: d.name, title: v.n, color: d.cal_color || '#E11D48', diff: daysToNext, isToday, idx });
+
+                        if (is100Day) {
+                            let text = (v.type === 'welcome') ? `${d.name} と 出会って ${diffDays}日` : `${d.name} の ${v.n} ${diffDays}日`;
+                            happyEvents.push({ text, img: d.image, dollIdx: idx });
+                        }
+
+                        // Next Anniversary リストへの追加 (年単位)
+                        list.push({ doll: d.name, title: v.n, color: d.cal_color || '#E11D48', diff: daysToNextAnni, isToday: isAnniDay, idx });
+
+                        // Next Anniversary リストへの追加 (100日単位)
+                        if (v.type !== 'birth') {
+                            const daysToNext100 = 100 - (diffDays % 100);
+                            list.push({ doll: d.name, title: v.n + " (100日記念)", color: d.cal_color || '#E11D48', diff: daysToNext100 === 100 ? 0 : daysToNext100, isToday: is100Day, idx });
+                        }
                     }
                 });
             });
+
             if (happyEvents.length > 0) {
                 happyArea.classList.remove('hidden');
                 happyEvents.forEach(ev => {
@@ -610,6 +649,7 @@
                     happyListArea.appendChild(div);
                 });
             }
+
             if(list.length > 0) {
                 list.sort((a,b) => a.diff - b.diff);
                 const closest = list.filter(item => item.diff === list[0].diff);
