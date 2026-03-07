@@ -597,8 +597,10 @@
                         if(nextAnni < todayZero) nextAnni.setFullYear(now.getFullYear() + 1);
                         const daysToNextAnni = Math.ceil((nextAnni - todayZero) / (1000 * 60 * 60 * 24));
 
+                        // 西暦が2000年（日付のみ用）でない、はっきりした年数が設定されている場合のみ100日お祝いを有効にする
+                        const hasFullYear = (originDate.getFullYear() !== 2000);
                         let is100Day = false;
-                        if (v.type !== 'birth' && diffDays > 0 && diffDays % 100 === 0) {
+                        if (hasFullYear && v.type !== 'birth' && diffDays > 0 && diffDays % 100 === 0) {
                             is100Day = true;
                         }
 
@@ -620,12 +622,8 @@
                             happyEvents.push({ text, img: d.image, dollIdx: idx });
                         }
 
-                        // 次の記念日までのリスト
+                        // 次の記念日までのリスト（100日ごとの未来表示は行わない）
                         list.push({ doll: d.name, title: v.n, color: d.cal_color || '#E11D48', diff: daysToNextAnni, isToday: isAnniDay, idx });
-                        if (v.type !== 'birth') {
-                            const daysToNext100 = 100 - (diffDays % 100);
-                            list.push({ doll: d.name, title: v.n + " (100日ごと)", color: d.cal_color || '#E11D48', diff: daysToNext100 === 100 ? 0 : daysToNext100, isToday: is100Day, idx });
-                        }
                     }
                 });
             });
@@ -1062,8 +1060,11 @@
         function setupAutoExpand() { 
             document.addEventListener('input', (e) => { 
                 if (e.target.classList.contains('auto-expand')) { 
+                    // 高さを変える前に現在のスクロール位置を保持（ガタつき防止）
+                    const scrollPos = window.pageYOffset;
                     e.target.style.height = 'auto'; 
                     e.target.style.height = e.target.scrollHeight + 'px'; 
+                    window.scrollTo(0, scrollPos);
                 } 
             }); 
         }
