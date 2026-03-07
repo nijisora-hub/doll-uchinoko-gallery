@@ -367,14 +367,18 @@
 
         async function loadAllData(gid) {
             try {
+                // オーナー情報を先に取得
                 const { data: ownerRecord } = await sbClient.from('owners').select('*').eq('custom_id', gid).single();
                 if (ownerRecord) {
                     owner = ownerRecord;
                     const uid = ownerRecord.id;
+                    
+                    // うちの子と投稿を並列で取得して高速化
                     const [dollsRes, postsRes] = await Promise.all([
-                        sbClient.from('dolls').select('*').eq('owner_id', uid),
+                        sbClient.from('dolls').select('*').eq('owner_id', uid).order('created_at', { ascending: true }),
                         sbClient.from('posts').select('*').eq('owner_id', uid).order('created_at', { ascending: false })
                     ]);
+                    
                     if (dollsRes.data) dolls = dollsRes.data;
                     if (postsRes.data) posts = postsRes.data;
                 }
@@ -496,20 +500,25 @@
             document.getElementById('login-btn').style.display = currentUser ? 'none' : 'block';
             document.getElementById('logout-btn').style.display = currentUser ? 'block' : 'none';
 
+            // フィルムロールの描画（登録順＝配列順に左から）
             const track = document.getElementById('top-film-roll'); track.innerHTML = '';
-            const items = dolls.filter(d => d.image);
+            const itemsWithImg = dolls.filter(d => d.image);
             clearInterval(loopInterval);
 
-            if (items.length > 0) {
+            if (itemsWithImg.length > 0) {
                 document.getElementById('empty-msg').style.display = 'none';
-                const displayItems = items.length >= 5 ? [...items, ...items, ...items] : items;
+                // 無限ループ用に複製。配列の順序をそのまま使用
+                const displayItems = itemsWithImg.length >= 5 ? [...itemsWithImg, ...itemsWithImg, ...itemsWithImg] : itemsWithImg;
                 displayItems.forEach((d, i) => {
                     const img = document.createElement('img'); img.src = d.image; img.className = "film-frame";
-                    img.onclick = () => showDetail(dolls.indexOf(items[i % items.length])); track.appendChild(img);
+                    // 元のインデックスを参照するためにfindを使用
+                    const originalIdx = dolls.findIndex(orig => orig.id === d.id);
+                    img.onclick = () => showDetail(originalIdx); 
+                    track.appendChild(img);
                 });
-                if(items.length >= 5) {
+                if(itemsWithImg.length >= 5) {
                     const container = document.getElementById('film-container');
-                    setTimeout(() => { container.scrollLeft = items.length * (80+12); }, 50);
+                    setTimeout(() => { container.scrollLeft = itemsWithImg.length * (80+12); }, 50);
                     loopInterval = setInterval(() => { container.scrollLeft += 0.5; }, 16);
                 }
             } else { document.getElementById('empty-msg').style.display = 'flex'; }
@@ -700,14 +709,20 @@
         function showHome() { document.getElementById('home-content').classList.remove('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); document.getElementById('main-header').classList.remove('hidden'); closeArticle(); renderCalendar(); }
         function showDollList() { if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); document.getElementById('home-content').classList.add('hidden'); document.getElementById('post-list-page').classList.add('hidden'); document.getElementById('doll-list-page').classList.remove('hidden'); renderDollList(); }
         function showPostListPage() { if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); document.getElementById('home-content').classList.add('hidden'); document.getElementById('doll-list-page').classList.add('hidden'); document.getElementById('post-list-page').classList.remove('hidden'); }
+        
         function renderDollList() {
             const area = document.getElementById('doll-display-area'); area.innerHTML = ''; 
+            // dollsはloadAllDataでcreated_at順（登録順）に取得されているため、そのまま描画
             if (dollViewMode === 'grid') { 
                 area.className = "grid grid-cols-3 gap-2"; 
-                dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="aspect-square bg-white border rounded-xl overflow-hidden cursor-pointer"><img src="${d.image}" class="w-full h-full object-cover clickable-img"></div>`; }); 
+                dolls.forEach((d, i) => { 
+                    area.innerHTML += `<div onclick="showDetail(${i})" class="aspect-square bg-white border rounded-xl overflow-hidden cursor-pointer"><img src="${d.image}" class="w-full h-full object-cover clickable-img"></div>`; 
+                }); 
             } else { 
                 area.className = "space-y-2"; 
-                dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="flex items-center gap-4 bg-white p-3 border rounded-xl cursor-pointer"><img src="${d.image}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0 clickable-img"><div><p class="text-xs text-stone-400 font-bold user-select-auto">${d.kana||''}</p><p class="font-bold text-stone-800 user-select-auto">${d.name}</p></div></div>`; }); 
+                dolls.forEach((d, i) => { 
+                    area.innerHTML += `<div onclick="showDetail(${i})" class="flex items-center gap-4 bg-white p-3 border rounded-xl cursor-pointer"><img src="${d.image}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0 clickable-img"><div><p class="text-xs text-stone-400 font-bold user-select-auto">${d.kana||''}</p><p class="font-bold text-stone-800 user-select-auto">${d.name}</p></div></div>`; 
+                }); 
             } 
         }
         function toggleDollViewMode() { dollViewMode = (dollViewMode === 'grid') ? 'list' : 'grid'; document.getElementById('toggle-list-view').innerText = (dollViewMode === 'grid') ? '名前を表示' : 'サムネのみ'; renderDollList(); }
@@ -974,8 +989,8 @@
         function setupInfiniteScroll() { 
             const container = document.getElementById('film-container'); 
             container.addEventListener('scroll', () => { 
-                const items = dolls.filter(d => d.image); if (items.length < 5) return; 
-                const w = items.length * (80 + 12); 
+                const itemsWithImg = dolls.filter(d => d.image); if (itemsWithImg.length < 5) return; 
+                const w = itemsWithImg.length * (80 + 12); 
                 if (container.scrollLeft < w * 0.5) container.scrollLeft += w; 
                 if (container.scrollLeft > w * 1.5) container.scrollLeft -= w; 
             }); 
@@ -1060,7 +1075,6 @@
         function setupAutoExpand() { 
             document.addEventListener('input', (e) => { 
                 if (e.target.classList.contains('auto-expand')) { 
-                    // 高さを変える前に現在のスクロール位置を保持（ガタつき防止）
                     const scrollPos = window.pageYOffset;
                     e.target.style.height = 'auto'; 
                     e.target.style.height = e.target.scrollHeight + 'px'; 
@@ -1084,3 +1098,4 @@
     </script>
 </body>
 </html>
+
