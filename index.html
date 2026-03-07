@@ -44,7 +44,7 @@
 
         .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .film-outer::-webkit-scrollbar { display: none; }
-        .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 20px; }
+        .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 20px; will-change: transform; }
         .film-frame { width: 80px; height: 80px; background: #333; border: 2px solid #eee; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; position: relative; z-index: 10; }
         
         .modal-base { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 10px; }
@@ -285,7 +285,7 @@
             </div>
         </div>
 
-        <div id="article-page" style="display:none; position:fixed; inset:0; background:white; z-index:10001; overflow-y:auto;">
+        <div id="article-page" style="display:none; position:fixed; inset:0; background:white; v-index:10001; overflow-y:auto;">
             <div class="max-w-2xl mx-auto p-6 pb-20">
                 <div class="flex justify-between items-center py-6 mb-10 border-b">
                     <button onclick="closeArticle()" class="text-sm font-bold text-stone-400">← 戻る</button>
@@ -306,7 +306,7 @@
         const sbClient = supabase.createClient(SB_URL, SB_KEY);
 
         let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"", custom_id: "" }, posts = [], calOffset = 0;
-        let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null }, loopInterval;
+        let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null }, animationId = null;
         let currentUser = null, galleryId = new URLSearchParams(window.location.search).get('id');
 
         const palette100 = (() => {
@@ -367,18 +367,14 @@
 
         async function loadAllData(gid) {
             try {
-                // オーナー情報を先に取得
                 const { data: ownerRecord } = await sbClient.from('owners').select('*').eq('custom_id', gid).single();
                 if (ownerRecord) {
                     owner = ownerRecord;
                     const uid = ownerRecord.id;
-                    
-                    // うちの子と投稿を並列で取得して高速化
                     const [dollsRes, postsRes] = await Promise.all([
                         sbClient.from('dolls').select('*').eq('owner_id', uid).order('created_at', { ascending: true }),
                         sbClient.from('posts').select('*').eq('owner_id', uid).order('created_at', { ascending: false })
                     ]);
-                    
                     if (dollsRes.data) dolls = dollsRes.data;
                     if (postsRes.data) posts = postsRes.data;
                 }
@@ -500,26 +496,23 @@
             document.getElementById('login-btn').style.display = currentUser ? 'none' : 'block';
             document.getElementById('logout-btn').style.display = currentUser ? 'block' : 'none';
 
-            // フィルムロールの描画（登録順＝配列順に左から）
+            // フィルムロールの描画（バーチャルスクロール化）
             const track = document.getElementById('top-film-roll'); track.innerHTML = '';
             const itemsWithImg = dolls.filter(d => d.image);
-            clearInterval(loopInterval);
+            if (animationId) cancelAnimationFrame(animationId);
 
             if (itemsWithImg.length > 0) {
                 document.getElementById('empty-msg').style.display = 'none';
-                // 無限ループ用に複製。配列の順序をそのまま使用
-                const displayItems = itemsWithImg.length >= 5 ? [...itemsWithImg, ...itemsWithImg, ...itemsWithImg] : itemsWithImg;
+                // シームレスなループのために3セット分描画
+                const displayItems = [...itemsWithImg, ...itemsWithImg, ...itemsWithImg];
                 displayItems.forEach((d, i) => {
                     const img = document.createElement('img'); img.src = d.image; img.className = "film-frame";
-                    // 元のインデックスを参照するためにfindを使用
                     const originalIdx = dolls.findIndex(orig => orig.id === d.id);
                     img.onclick = () => showDetail(originalIdx); 
                     track.appendChild(img);
                 });
-                if(itemsWithImg.length >= 5) {
-                    const container = document.getElementById('film-container');
-                    setTimeout(() => { container.scrollLeft = itemsWithImg.length * (80+12); }, 50);
-                    loopInterval = setInterval(() => { container.scrollLeft += 0.5; }, 16);
+                if(itemsWithImg.length >= 1) {
+                    startVirtualScroll(itemsWithImg.length);
                 }
             } else { document.getElementById('empty-msg').style.display = 'flex'; }
 
@@ -574,7 +567,40 @@
                     btn.innerText = "📝 " + p.title; btn.onclick = () => viewPost(i); mpl.appendChild(btn);
                 }
             });
-            renderCalendar(); renderAnni(); setupInfiniteScroll();
+            renderCalendar(); renderAnni();
+        }
+
+        // バーチャルスクロールエンジンの実装
+        function startVirtualScroll(itemCount) {
+            const container = document.getElementById('film-container');
+            const itemWidth = 80 + 12; // width + gap
+            const totalWidth = itemCount * itemWidth;
+            
+            // 初回位置を中央セット（2セット目の頭）
+            container.scrollLeft = totalWidth;
+
+            const step = () => {
+                container.scrollLeft += 0.5; // スピード調整
+                
+                // 境界を超えたら瞬間的にループ（バーチャルスクロールの肝）
+                if (container.scrollLeft >= totalWidth * 2) {
+                    container.scrollLeft -= totalWidth;
+                } else if (container.scrollLeft <= totalWidth * 0.5) {
+                    container.scrollLeft += totalWidth;
+                }
+                animationId = requestAnimationFrame(step);
+            };
+            animationId = requestAnimationFrame(step);
+
+            // ユーザーが手動でスクロールした際もシームレスに補正
+            let isScrolling;
+            container.onscroll = () => {
+                window.clearTimeout(isScrolling);
+                isScrolling = setTimeout(() => {
+                    if (container.scrollLeft >= totalWidth * 2) container.scrollLeft -= totalWidth;
+                    if (container.scrollLeft <= totalWidth * 0.5) container.scrollLeft += totalWidth;
+                }, 66);
+            };
         }
 
         function renderAnni() {
@@ -595,10 +621,8 @@
                     if(v.d) {
                         const originDate = new Date(v.d);
                         const originZero = new Date(originDate.getFullYear(), originDate.getMonth(), originDate.getDate());
-                        
                         const diffMs = todayZero.getTime() - originZero.getTime();
                         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                        
                         const isAnniDay = (originDate.getMonth() === now.getMonth() && originDate.getDate() === now.getDate());
                         const diffYears = now.getFullYear() - originDate.getFullYear();
                         
@@ -606,23 +630,17 @@
                         if(nextAnni < todayZero) nextAnni.setFullYear(now.getFullYear() + 1);
                         const daysToNextAnni = Math.ceil((nextAnni - todayZero) / (1000 * 60 * 60 * 24));
 
-                        // 西暦が2000年（日付のみ用）でない、はっきりした年数が設定されている場合のみ100日お祝いを有効にする
                         const hasFullYear = (originDate.getFullYear() !== 2000);
                         let is100Day = false;
                         if (hasFullYear && v.type !== 'birth' && diffDays > 0 && diffDays % 100 === 0) {
                             is100Day = true;
                         }
 
-                        // お祝い表示（当日）
                         if (isAnniDay && diffYears >= 0) {
                             let text = "";
-                            if(v.type === 'birth') {
-                                text = `${d.name} の誕生日 ${diffYears}歳`;
-                            } else if(v.type === 'welcome') {
-                                text = (diffYears === 0) ? `${d.name} と出会った日！` : `${d.name} と出会って ${diffYears}年`;
-                            } else {
-                                text = (diffYears === 0) ? `${d.name} の ${v.n}` : `${d.name} の ${v.n} ${diffYears}年`;
-                            }
+                            if(v.type === 'birth') text = `${d.name} の誕生日 ${diffYears}歳`;
+                            else if(v.type === 'welcome') text = (diffYears === 0) ? `${d.name} と出会った日！` : `${d.name} と出会って ${diffYears}年`;
+                            else text = (diffYears === 0) ? `${d.name} の ${v.n}` : `${d.name} の ${v.n} ${diffYears}年`;
                             happyEvents.push({ text, img: d.image, dollIdx: idx });
                         }
 
@@ -630,8 +648,6 @@
                             let text = (v.type === 'welcome') ? `${d.name} と 出会って ${diffDays}日` : `${d.name} の ${v.n} ${diffDays}日`;
                             happyEvents.push({ text, img: d.image, dollIdx: idx });
                         }
-
-                        // 次の記念日までのリスト（100日ごとの未来表示は行わない）
                         list.push({ doll: d.name, title: v.n, color: d.cal_color || '#E11D48', diff: daysToNextAnni, isToday: isAnniDay, idx });
                     }
                 });
@@ -712,7 +728,6 @@
         
         function renderDollList() {
             const area = document.getElementById('doll-display-area'); area.innerHTML = ''; 
-            // dollsはloadAllDataでcreated_at順（登録順）に取得されているため、そのまま描画
             if (dollViewMode === 'grid') { 
                 area.className = "grid grid-cols-3 gap-2"; 
                 dolls.forEach((d, i) => { 
@@ -894,7 +909,7 @@
         function addAnniversaryInput(v = {name:'', date:''}) { 
             const id = Date.now() + Math.random(), div = document.createElement('div'); 
             div.className = "p-4 bg-stone-100/50 rounded-2xl space-y-2 border"; 
-            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; 
+            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="${v.date?new Date(v.date).getDate():''}">${v.date?new Date(v.date).getDate():'日'}</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; 
             document.getElementById('anniversary-inputs').appendChild(div); 
             if(v.date) setDateValue(v.date, `date-${id}`, `m-${id}`, `d-${id}`); 
         }
@@ -984,16 +999,6 @@
             document.getElementById('art-edit-btn').onclick = () => { closeArticle(); editPost(idx); }; 
             document.getElementById('art-del-btn').onclick = () => showConfirm("削除しますか？", async () => { await sbClient.from('posts').delete().eq('id', p.id); location.reload(); }); 
             document.getElementById('article-page').style.display = 'block'; 
-        }
-
-        function setupInfiniteScroll() { 
-            const container = document.getElementById('film-container'); 
-            container.addEventListener('scroll', () => { 
-                const itemsWithImg = dolls.filter(d => d.image); if (itemsWithImg.length < 5) return; 
-                const w = itemsWithImg.length * (80 + 12); 
-                if (container.scrollLeft < w * 0.5) container.scrollLeft += w; 
-                if (container.scrollLeft > w * 1.5) container.scrollLeft -= w; 
-            }); 
         }
 
         function shareSNS(type) { 
@@ -1098,4 +1103,3 @@
     </script>
 </body>
 </html>
-
