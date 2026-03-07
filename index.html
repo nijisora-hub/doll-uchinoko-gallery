@@ -325,7 +325,6 @@
             const { data: { session } } = await sbClient.auth.getSession();
             currentUser = session?.user || null;
 
-            // ログイン中かつURLにIDがない場合、自身のカスタムIDを探してリダイレクト
             if (currentUser && !galleryId) {
                 const { data: myOwner } = await sbClient.from('owners').select('custom_id').eq('id', currentUser.id).single();
                 if (myOwner && myOwner.custom_id) {
@@ -345,7 +344,6 @@
             sbClient.auth.onAuthStateChanged(async (_event, session) => {
                 currentUser = session?.user || null;
                 if (currentUser) {
-                    // ログイン直後のリダイレクト処理（カスタムIDとの紐付け確認）
                     const { data: myOwner } = await sbClient.from('owners').select('custom_id').eq('id', currentUser.id).single();
                     if (myOwner && myOwner.custom_id && galleryId !== myOwner.custom_id) {
                         location.href = `?id=${myOwner.custom_id}`;
@@ -362,7 +360,6 @@
                 document.body.classList.remove('is-admin');
                 return;
             }
-            // URLのIDがログインユーザーの所有するものかチェック
             const { data } = await sbClient.from('owners').select('id').eq('custom_id', galleryId).single();
             const isAdmin = data && (data.id === currentUser.id);
             document.body.classList.toggle('is-admin', isAdmin);
@@ -370,7 +367,6 @@
 
         async function loadAllData(gid) {
             try {
-                // まずはカスタムIDからオーナーの内部UUIDを特定
                 const { data: ownerRecord } = await sbClient.from('owners').select('*').eq('custom_id', gid).single();
                 if (ownerRecord) {
                     owner = ownerRecord;
@@ -387,7 +383,6 @@
         }
 
         async function loginWithGoogle(targetCustomId = null) {
-            // 新規作成時（targetCustomIdがある場合）は、localStorageに一時保存してログイン後に紐付ける
             if (targetCustomId) {
                 localStorage.setItem('pending_custom_id', targetCustomId);
             }
@@ -397,7 +392,6 @@
 
         async function handleLogout() {
             await sbClient.auth.signOut();
-            // ログアウトしても現在のギャラリーURL（閲覧モード）を維持
             location.reload();
         }
 
@@ -405,16 +399,12 @@
             showInputDialog("ギャラリーの表示IDを入力してください\n(半角英数字)", async (cid) => {
                 const validId = cid.replace(/[^a-zA-Z0-9]/g, '');
                 if(!validId) { showAlert("有効なIDを入力してください"); return; }
-                
-                // 重複チェック
                 const { data } = await sbClient.from('owners').select('custom_id').eq('custom_id', validId).single();
                 if (data) { showAlert("このIDは既に使用されています"); return; }
-                
                 loginWithGoogle(validId);
             });
         }
 
-        // ログイン後のカスタムID紐付け処理（初期オーナー作成）
         async function completeRegistration() {
             const pendingId = localStorage.getItem('pending_custom_id');
             if (currentUser && pendingId) {
@@ -467,7 +457,7 @@
             
             const payload = {
                 id: currentUser.id,
-                custom_id: owner.custom_id, // IDは変更しない
+                custom_id: owner.custom_id,
                 name: document.getElementById('o-name').value,
                 bio: document.getElementById('o-bio').value,
                 image: img,
@@ -499,7 +489,6 @@
         }
 
         function renderAll() {
-            // 初回ログイン時のID登録完了チェック
             if (currentUser && localStorage.getItem('pending_custom_id')) {
                 completeRegistration();
             }
@@ -602,15 +591,10 @@
                         const diffMs = todayZero.getTime() - originZero.getTime();
                         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
                         
-                        // 1. 年単位の判定
+                        // 1. 当日判定（年単位）
                         const isAnniDay = (originDate.getMonth() === now.getMonth() && originDate.getDate() === now.getDate());
                         const diffYears = now.getFullYear() - originDate.getFullYear();
                         
-                        // 次の年記念日までの日数
-                        let nextAnni = new Date(now.getFullYear(), originDate.getMonth(), originDate.getDate());
-                        if(nextAnni < todayZero) nextAnni.setFullYear(now.getFullYear() + 1);
-                        const daysToNextAnni = Math.ceil((nextAnni - todayZero) / (1000 * 60 * 60 * 24));
-
                         // 2. 100日ごとの判定 (お迎え日と記念日のみ)
                         let is100Day = false;
                         if (v.type !== 'birth' && diffDays > 0 && diffDays % 100 === 0) {
@@ -618,23 +602,35 @@
                         }
 
                         // お祝い表示の生成
+                        // 当日（年単位）のお祝い
                         if (isAnniDay && diffYears >= 0) {
-                            let text = (v.type === 'birth') ? `${d.name} の誕生日 ${diffYears}歳` : (v.type === 'welcome' ? (diffYears === 0 ? `${d.name} と出会った日！` : `${d.name} と出会って ${diffYears}年`) : (diffYears === 0 ? `${d.name} の ${v.n}` : `${d.name} の ${v.n} ${diffYears}年`));
+                            let text = "";
+                            if (v.type === 'birth') {
+                                text = `${d.name} の誕生日 ${diffYears}歳`;
+                            } else if (v.type === 'welcome') {
+                                text = (diffYears === 0) ? `${d.name} と出会った日！` : `${d.name} と出会って ${diffYears}年`;
+                            } else {
+                                text = (diffYears === 0) ? `${d.name} の ${v.n}` : `${d.name} の ${v.n} ${diffYears}年`;
+                            }
                             happyEvents.push({ text, img: d.image, dollIdx: idx });
                         }
 
+                        // 100日ごとの節目のお祝い (誕生日以外)
                         if (is100Day) {
                             let text = (v.type === 'welcome') ? `${d.name} と 出会って ${diffDays}日` : `${d.name} の ${v.n} ${diffDays}日`;
                             happyEvents.push({ text, img: d.image, dollIdx: idx });
                         }
 
-                        // Next Anniversary リストへの追加 (年単位)
+                        // 次の記念日までの計算（表示用）
+                        let nextAnni = new Date(now.getFullYear(), originDate.getMonth(), originDate.getDate());
+                        if(nextAnni < todayZero) nextAnni.setFullYear(now.getFullYear() + 1);
+                        const daysToNextAnni = Math.ceil((nextAnni - todayZero) / (1000 * 60 * 60 * 24));
                         list.push({ doll: d.name, title: v.n, color: d.cal_color || '#E11D48', diff: daysToNextAnni, isToday: isAnniDay, idx });
 
-                        // Next Anniversary リストへの追加 (100日単位)
                         if (v.type !== 'birth') {
                             const daysToNext100 = 100 - (diffDays % 100);
-                            list.push({ doll: d.name, title: v.n + " (100日記念)", color: d.cal_color || '#E11D48', diff: daysToNext100 === 100 ? 0 : daysToNext100, isToday: is100Day, idx });
+                            const finalDiff100 = (daysToNext100 === 100) ? 0 : daysToNext100;
+                            list.push({ doll: d.name, title: v.n + " (100日記念)", color: d.cal_color || '#E11D48', diff: finalDiff100, isToday: is100Day, idx });
                         }
                     }
                 });
