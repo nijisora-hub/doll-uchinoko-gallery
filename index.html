@@ -31,14 +31,30 @@
         }
         .clickable-img, .film-frame { pointer-events: auto !important; }
         
-        /* テキストエリア・入力フォーム */
-        textarea, input, select, .user-select-auto { 
+        /* テキストエリアと表示の完全一致設定 */
+        textarea, .wysiwyg-text { 
             user-select: text !important; 
             -webkit-user-select: text !important;
-            -moz-user-select: text !important;
-            -ms-user-select: text !important;
             pointer-events: auto !important;
             -webkit-touch-callout: default !important;
+            font-size: 16px !important; /* スマホのズーム防止と読みやすさ */
+            line-height: 1.6 !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            white-space: pre-wrap !important;
+            word-wrap: break-word !important;
+            border: none;
+            padding: 0;
+            background: transparent;
+            outline: none;
+        }
+        
+        /* 入力枠がある場合の調整 */
+        .input-bordered {
+            border: 1px solid #e5e7eb !important;
+            border-radius: 12px !important;
+            padding: 12px !important;
+            background: #ffffff !important;
         }
 
         /* フィルムロール */
@@ -53,20 +69,8 @@
             scroll-behavior: auto;
         }
         .film-outer::-webkit-scrollbar { display: none; }
-
-        .film-scroll-track { 
-            display: flex; 
-            gap: 12px; 
-            width: max-content; 
-            padding: 0 6px;
-        }
-
-        .film-frame { 
-            width: 80px; height: 80px; background: #333; 
-            border: 2px solid #eee; border-radius: 8px; 
-            object-fit: cover; flex-shrink: 0; cursor: pointer; 
-            position: relative; z-index: 10; 
-        }
+        .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 6px; }
+        .film-frame { width: 80px; height: 80px; background: #333; border: 2px solid #eee; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; position: relative; z-index: 10; }
         
         .modal-base { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 10px; }
         .modal-content { background: white; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; border-radius: 24px; padding: 24px; position: relative; }
@@ -76,11 +80,9 @@
         .v-bar-box { width: 20px; height: 180px; display: flex; align-items: center; justify-content: center; }
         .vertical-range { writing-mode: vertical-lr; direction: rtl; appearance: slider-vertical; width: 8px; height: 100%; }
         
-        /* プレビュー設定：うちの子用（正方形固定） */
         .preview-sq { flex: 1; aspect-ratio: 1/1; background: #f3f3f3; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid #eee; }
         .preview-sq img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; pointer-events: none; }
         
-        /* プレビュー設定：投稿用（可変長方形） */
         .preview-post { width: 100%; background: #f3f3f3; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid #eee; min-height: 80px; }
         .preview-post img { width: 100%; height: auto; display: block; position: relative; top:0; left:0; pointer-events: none; }
         
@@ -167,7 +169,7 @@
             <section id="owner-section" class="p-8 bg-white text-center">
                 <img id="display-owner-img" class="w-24 h-24 rounded-full object-cover mx-auto mb-4 border-4 border-stone-5 hidden clickable-img">
                 <h2 id="owner-name" class="text-2xl font-bold mb-2"></h2>
-                <p id="owner-bio" class="text-sm text-stone-500 px-4 mb-6 whitespace-pre-wrap user-select-auto"></p>
+                <p id="owner-bio" class="wysiwyg-text text-stone-500 px-4 mb-6"></p>
                 <div id="owner-sns-links" class="flex flex-col items-center gap-3"></div>
             </section>
 
@@ -259,19 +261,23 @@
                     </div>
                     <div id="anniversary-inputs" class="space-y-3"></div>
                     <button onclick="addAnniversaryInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-400 font-bold">+ 記念日を追加</button>
-                    <textarea id="f-profile" class="w-full border p-4 rounded-2xl h-48 text-sm outline-none auto-expand" placeholder="プロフィール"></textarea>
+                    <div class="input-bordered">
+                        <textarea id="f-profile" class="auto-expand" placeholder="プロフィール"></textarea>
+                    </div>
                     <button onclick="saveDollData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg shadow-xl">保存する</button>
                 </div>
             </div>
         </div>
 
         <div id="profile-overlay" class="fixed inset-0 bg-white z-[10000] hidden overflow-y-auto">
-            <div id="profile-bg" class="min-h-full p-6 pb-32">
-                <button onclick="closeProfile()" class="bg-white text-stone-800 shadow px-6 py-2 rounded-full text-xs font-bold mb-6">閉じる</button>
-                <img id="view-img" class="w-full aspect-square object-cover rounded-3xl shadow-xl mb-8 clickable-img">
-                <div class="text-center mb-8"><p id="view-kana" class="text-sm opacity-70 mb-1"></p><h2 id="view-name" class="text-3xl font-bold"></h2></div>
-                <div id="detail-box" class="bg-white/20 backdrop-blur-md p-6 rounded-3xl space-y-4 mb-8 text-[16px] hidden"></div>
-                <p id="view-profile" class="whitespace-pre-wrap leading-relaxed px-2 text-[18px] font-medium user-select-auto"></p>
+            <div id="profile-bg" class="min-h-full p-6 pb-32 flex flex-col items-center">
+                <div class="w-full max-w-[440px]">
+                    <button onclick="closeProfile()" class="bg-white text-stone-800 shadow px-6 py-2 rounded-full text-xs font-bold mb-6">閉じる</button>
+                    <img id="view-img" class="w-full aspect-square object-cover rounded-3xl shadow-xl mb-8 clickable-img">
+                    <div class="text-center mb-8"><p id="view-kana" class="text-sm opacity-70 mb-1"></p><h2 id="view-name" class="text-3xl font-bold"></h2></div>
+                    <div id="detail-box" class="bg-white/20 backdrop-blur-md p-6 rounded-3xl space-y-4 mb-8 text-[16px] hidden"></div>
+                    <p id="view-profile" class="wysiwyg-text px-2"></p>
+                </div>
                 <div class="fixed bottom-6 inset-x-0 px-6 flex gap-4 max-w-[440px] mx-auto admin-only-flex hidden">
                     <button id="detail-edit-btn" class="flex-1 bg-stone-800 text-white py-4 rounded-full font-bold">編集</button>
                     <button id="detail-del-btn" class="flex-1 bg-red-50 text-red-400 py-4 rounded-full font-bold border border-red-100">削除</button>
@@ -291,7 +297,9 @@
                 <div class="space-y-4">
                     <input type="file" id="owner-file" accept="image/*" class="hidden" onchange="loadImg(event, 'owner')">
                     <input type="text" id="o-name" class="w-full border-b p-2 font-bold" placeholder="オーナー名">
-                    <textarea id="o-bio" class="w-full border p-3 rounded-xl h-32 text-sm auto-expand" placeholder="自己紹介"></textarea>
+                    <div class="input-bordered">
+                        <textarea id="o-bio" class="auto-expand" placeholder="自己紹介"></textarea>
+                    </div>
                     <div id="sns-inputs-container" class="space-y-3"></div>
                     <button onclick="addSnsInput()" class="w-full py-2 bg-stone-100 rounded text-xs font-bold">+ SNSリンクを追加</button>
                     <button onclick="saveOwner()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">保存</button>
@@ -304,7 +312,9 @@
                 <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
                 <h3 id="post-modal-title" class="text-xl font-bold mb-4">投稿作成</h3>
                 <input type="hidden" id="edit-post-id">
-                <input type="text" id="p-title" class="w-full border-b p-3 font-bold mb-4 outline-none" placeholder="タイトル">
+                <div class="input-bordered mb-4">
+                    <textarea id="p-title" class="auto-expand font-bold" placeholder="タイトル"></textarea>
+                </div>
                 <div id="post-blocks-container" class="space-y-4"></div>
                 <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ 追加</button>
                 <div class="flex gap-4 p-4 bg-stone-50 rounded-2xl text-xs mt-6 items-center"><label><input type="radio" name="p-pos" value="home" checked> ホーム</label><label><input type="radio" name="p-pos" value="menu"> メニュー</label></div>
@@ -321,7 +331,7 @@
                         <button id="art-del-btn" class="text-xs font-bold bg-red-50 text-red-400 px-4 py-2 rounded-full border border-red-100">削除</button>
                     </div>
                 </div>
-                <h2 id="art-title" class="text-3xl font-bold text-center mb-12 user-select-auto"></h2>
+                <h2 id="art-title" class="wysiwyg-text text-3xl font-bold text-center mb-12"></h2>
                 <div id="art-content" class="space-y-6"></div>
             </div>
         </div>
@@ -519,7 +529,9 @@
                 bio: document.getElementById('o-bio').value,
                 image: img,
                 sns: Array.from(document.querySelectorAll('.sns-input-row')).map(row => ({ 
-                    type: row.querySelector('.sns-type').value, val: row.querySelector('.sns-val').value 
+                    type: row.querySelector('.sns-type').value, 
+                    val: row.querySelector('.sns-val').value,
+                    label: row.querySelector('.sns-label') ? row.querySelector('.sns-label').value : ''
                 })).filter(s => s.val)
             };
             const { error } = await sbClient.from('owners').upsert(payload);
@@ -593,7 +605,8 @@
                     if(base) url = 'https://' + base + s.val.replace('@', '');
                 }
                 const a = document.createElement('a'); a.href = url; a.target = "_blank"; a.className = "block w-full max-w-[200px] text-center bg-white border py-2 rounded-xl text-xs font-bold shadow-sm";
-                a.innerText = "🔗 " + s.type; snsArea.appendChild(a);
+                a.innerText = (s.type === 'その他URL' && s.label) ? "🔗 " + s.label : "🔗 " + s.type; 
+                snsArea.appendChild(a);
             });
 
             const hp = document.getElementById('home-posts'); hp.innerHTML = '';
@@ -611,13 +624,13 @@
                         btnDiv.innerHTML = `<button onclick="editPost(${i})" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-xs font-bold">編集</button><button onclick="deletePostDirectly(${i})" class="bg-red-50 text-red-400 px-4 py-2 rounded-lg text-xs font-bold border border-red-100">削除</button>`;
                         card.appendChild(btnDiv);
                     }
-                    const title = document.createElement('h4'); title.className="font-bold mb-4 text-lg border-b pb-2 user-select-auto"; title.innerText = p.title; card.appendChild(title);
+                    const title = document.createElement('h4'); title.className="wysiwyg-text font-bold mb-4 border-b pb-2"; title.innerText = p.title; card.appendChild(title);
                     let firstImg = (p.blocks || []).find(b => b.img);
                     if(firstImg) { const img = document.createElement('img'); img.src = firstImg.img; img.className="w-full rounded-2xl mb-4 clickable-img"; card.appendChild(img); }
                     const readMore = document.createElement('p'); readMore.className = "text-center text-stone-400 text-xs font-bold mt-2"; readMore.innerText = "── 続きを読む ──"; card.appendChild(readMore);
                     hp.appendChild(card);
                 } else {
-                    const btn = document.createElement('button'); btn.className = "w-full text-left py-4 px-6 bg-white border rounded-2xl text-stone-700 font-bold shadow-sm mb-2";
+                    const btn = document.createElement('button'); btn.className = "w-full text-left py-4 px-6 bg-white border rounded-2xl text-stone-700 font-bold shadow-sm mb-2 whitespace-pre-wrap";
                     btn.innerText = "📝 " + p.title; btn.onclick = () => viewPost(i); mpl.appendChild(btn);
                 }
             });
@@ -674,7 +687,7 @@
                 happyEvents.forEach(ev => {
                     const div = document.createElement('div'); div.className = "bg-white p-3 rounded-2xl shadow-sm mb-3 animate-anni flex items-center gap-3 cursor-pointer";
                     div.onclick = () => showDetail(ev.dollIdx);
-                    div.innerHTML = `<img src="${ev.img}" class="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-pink-200 clickable-img"><p class="font-bold text-stone-800 text-sm user-select-auto">${ev.text}</p><span class="ml-auto text-xl">🎉</span>`;
+                    div.innerHTML = `<img src="${ev.img}" class="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-pink-200 clickable-img"><p class="font-bold text-stone-800 text-sm">${ev.text}</p><span class="ml-auto text-xl">🎉</span>`;
                     happyListArea.appendChild(div);
                 });
             }
@@ -683,7 +696,7 @@
                 list.sort((a,b) => a.diff - b.diff);
                 const closest = list.filter(item => item.diff === list[0].diff);
                 let html = `<div class="space-y-3">`;
-                closest.forEach(b => { html += `<div class="bg-white p-5 border-l-4 rounded shadow-sm flex justify-between items-center" style="border-color:${b.color}"><div><p class="text-[10px] text-stone-400 font-bold user-select-auto">${b.doll}</p><p class="font-bold user-select-auto">${b.title}</p></div><b class="text-lg">${b.isToday ? "Today" : "あと "+b.diff+" 日"}</b></div>`; });
+                closest.forEach(b => { html += `<div class="bg-white p-5 border-l-4 rounded shadow-sm flex justify-between items-center" style="border-color:${b.color}"><div><p class="text-[10px] text-stone-400 font-bold">${b.doll}</p><p class="font-bold">${b.title}</p></div><b class="text-lg">${b.isToday ? "Today" : "あと "+b.diff+" 日"}</b></div>`; });
                 area.innerHTML = html + `</div>`;
             }
         }
@@ -717,7 +730,7 @@
                     div.appendChild(dots);
                     div.onclick = () => {
                         const evC = document.getElementById('day-events'); evC.innerHTML = '';
-                        annis.forEach(a => { const r=document.createElement('div'); r.className="p-5 rounded-2xl shadow-sm border text-lg space-y-1"; r.style.backgroundColor=a.uBg; r.style.color=a.uTxt; r.innerHTML=`<div class="font-bold user-select-auto">${a.dollName}：${a.mm}/${a.dd}</div><div class="opacity-80 user-select-auto">${a.eventName}</div>`; evC.appendChild(r); });
+                        annis.forEach(a => { const r=document.createElement('div'); r.className="p-5 rounded-2xl shadow-sm border text-lg space-y-1"; r.style.backgroundColor=a.uBg; r.style.color=a.uTxt; r.innerHTML=`<div class="font-bold">${a.dollName}：${a.mm}/${a.dd}</div><div class="opacity-80">${a.eventName}</div>`; evC.appendChild(r); });
                     };
                 }
                 area.appendChild(div);
@@ -759,7 +772,7 @@
                 dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="aspect-square bg-white border rounded-xl overflow-hidden cursor-pointer"><img src="${d.image}" class="w-full h-full object-cover clickable-img"></div>`; }); 
             } else { 
                 area.className = "space-y-2"; 
-                dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="flex items-center gap-4 bg-white p-3 border rounded-xl cursor-pointer"><img src="${d.image}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0 clickable-img"><div><p class="text-xs text-stone-400 font-bold user-select-auto">${d.kana||''}</p><p class="font-bold text-stone-800 user-select-auto">${d.name}</p></div></div>`; }); 
+                dolls.forEach((d, i) => { area.innerHTML += `<div onclick="showDetail(${i})" class="flex items-center gap-4 bg-white p-3 border rounded-xl cursor-pointer"><img src="${d.image}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0 clickable-img"><div><p class="text-xs text-stone-400 font-bold">${d.kana||''}</p><p class="font-bold text-stone-800">${d.name}</p></div></div>`; }); 
             } 
         }
         function toggleDollViewMode() { dollViewMode = (dollViewMode === 'grid') ? 'list' : 'grid'; document.getElementById('toggle-list-view').innerText = (dollViewMode === 'grid') ? '名前を表示' : 'サムネのみ'; renderDollList(); }
@@ -773,12 +786,12 @@
                 if(!s) return ""; const dt = new Date(s); if(isNaN(dt.getTime())) return s;
                 return dt.getFullYear() === 2000 ? `${dt.getMonth() + 1}/${dt.getDate()}` : `${dt.getFullYear()}/${dt.getMonth() + 1}/${dt.getDate()}`; 
             };
-            if(d.size_label) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Size</span><b class="user-select-auto">${d.size_label}</b></div>`; hasInfo = true; }
-            if(d.body_make) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Body</span><b class="user-select-auto">${d.body_make}</b></div>`; hasInfo = true; }
-            if(d.head_info) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Head</span><b class="user-select-auto">${d.head_info}</b></div>`; hasInfo = true; }
-            if(d.birthday) { b.innerHTML += `<div class="flex flex-col mb-4"><span>🎂 誕生日</span><b class="user-select-auto">${fmt(d.birthday)}</b></div>`; hasInfo = true; }
-            if(d.welcome_day) { b.innerHTML += `<div class="flex flex-col mb-4"><span>🤝 お迎え日</span><b class="user-select-auto">${fmt(d.welcome_day)}</b></div>`; hasInfo = true; }
-            (d.anniversaries || []).forEach(a => { if(a.date) { b.innerHTML += `<div class="flex flex-col mb-4"><span>✨ ${a.name}</span><b class="user-select-auto">${fmt(a.date)}</b></div>`; hasInfo = true; } });
+            if(d.size_label) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Size</span><b>${d.size_label}</b></div>`; hasInfo = true; }
+            if(d.body_make) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Body</span><b>${d.body_make}</b></div>`; hasInfo = true; }
+            if(d.head_info) { b.innerHTML += `<div class="mb-4"><span class="text-[10px] opacity-60 font-bold block uppercase">Head</span><b>${d.head_info}</b></div>`; hasInfo = true; }
+            if(d.birthday) { b.innerHTML += `<div class="flex flex-col mb-4"><span>🎂 誕生日</span><b>${fmt(d.birthday)}</b></div>`; hasInfo = true; }
+            if(d.welcome_day) { b.innerHTML += `<div class="flex flex-col mb-4"><span>🤝 お迎え日</span><b>${fmt(d.welcome_day)}</b></div>`; hasInfo = true; }
+            (d.anniversaries || []).forEach(a => { if(a.date) { b.innerHTML += `<div class="flex flex-col mb-4"><span>✨ ${a.name}</span><b>${fmt(a.date)}</b></div>`; hasInfo = true; } });
             b.classList.toggle('hidden', !hasInfo);
             document.getElementById('view-profile').innerText = d.profile || "";
             document.getElementById('detail-edit-btn').onclick = () => editDoll(idx);
@@ -814,6 +827,7 @@
         function toggleColorGrid(type) { const g = document.getElementById(type+"-color-grid"), open = g.classList.contains('grid-open'); document.querySelectorAll('.color-grid').forEach(x => x.classList.remove('grid-open')); if(!open) g.classList.add('grid-open'); }
         function updateCrop(imgId, hId, vId) { document.getElementById(imgId).style.objectPosition = `${document.getElementById(hId).value}% ${document.getElementById(vId).value}%`; }
         function openModalWithClear() { clearDollForm(); document.getElementById('modal-title').innerText = "うちの子登録"; document.getElementById('modal').style.display='flex'; if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); }
+        
         function clearDollForm() { 
             document.getElementById('edit-id').value = ""; document.getElementById('f-name').value = ""; document.getElementById('f-kana').value = ""; 
             document.getElementById('f-size-label').value = ""; document.getElementById('f-body-make').value = ""; document.getElementById('f-head').value = ""; 
@@ -822,6 +836,7 @@
             document.getElementById('anniversary-inputs').innerHTML = ''; document.getElementById('f-profile').value = ""; 
             document.getElementById('crop-preview').classList.add('hidden'); document.getElementById('doll-hint').classList.remove('hidden'); currentRawImg.doll = null; 
             const colors = {bg:'#ffffff', text:'#000000', cal:'#E11D48'}; Object.keys(colors).forEach(t => { document.getElementById("f-"+t+"-color").value = colors[t]; document.getElementById(t+"-select-icon").style.backgroundColor = colors[t]; });
+            updateAllTextareaHeights();
         }
         
         function loadImg(e, type) { 
@@ -844,6 +859,7 @@
             ['bg', 'text', 'cal'].forEach(t => { const color = d[t+'_color'] || (t==='bg'?'#ffffff':(t==='text'?'#000000':'#E11D48')); document.getElementById('f-'+t+'-color').value = color; document.getElementById(t+'-select-icon').style.backgroundColor = color; });
             if(d.image) { const p = document.getElementById('crop-preview'); p.src = d.image; p.classList.remove('hidden'); document.getElementById('doll-hint').classList.add('hidden'); } 
             document.getElementById('modal').style.display = 'flex'; 
+            updateAllTextareaHeights();
         }
 
         function addAnniversaryInput(v = {name:'', date:''}) { 
@@ -857,30 +873,52 @@
             document.getElementById('sns-inputs-container').innerHTML = ''; (owner.sns || []).forEach(s => addSnsInput(s)); 
             if(owner.image) { const p = document.getElementById('owner-preview'); p.src = owner.image; p.classList.remove('hidden'); document.getElementById('owner-hint').classList.add('hidden'); } 
             document.getElementById('owner-modal').style.display='flex'; if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); 
+            updateAllTextareaHeights();
         }
 
-        function addSnsInput(v = {type:'X(旧Twitter)', val:''}) { 
-            const div = document.createElement('div'); div.className = "sns-input-row flex gap-2 items-center"; 
-            div.innerHTML = `<select class="sns-type text-sm border p-2 rounded-lg bg-white h-10 outline-none">${['X(旧Twitter)','Instagram','mixi2','Bluesky','Misskey','その他URL'].map(t => `<option ${v.type===t?'selected':''}>${t}</option>`).join('')}</select><input type="text" class="sns-val flex-1 text-sm border p-2 rounded-lg h-10 outline-none" placeholder="ID or URL" value="${v.val}"><button onclick="this.parentElement.remove()" class="p-2 text-stone-400">✕</button>`; 
+        function addSnsInput(v = {type:'X(旧Twitter)', val:'', label:''}) { 
+            const id = Date.now() + Math.random();
+            const div = document.createElement('div'); div.className = "sns-input-row flex flex-col gap-2 p-3 bg-stone-50 rounded-xl border"; 
+            div.innerHTML = `
+                <div class="flex gap-2 items-center">
+                    <select class="sns-type text-sm border p-2 rounded-lg bg-white h-10 outline-none flex-1" onchange="toggleSnsLabel(this, '${id}')">
+                        ${['X(旧Twitter)','Instagram','mixi2','Bluesky','Misskey','その他URL'].map(t => `<option ${v.type===t?'selected':''}>${t}</option>`).join('')}
+                    </select>
+                    <button onclick="this.parentElement.parentElement.remove()" class="p-2 text-stone-400">✕</button>
+                </div>
+                <div id="sns-label-container-${id}" class="${v.type === 'その他URL' ? '' : 'hidden'}">
+                    <input type="text" class="sns-label w-full text-sm border p-2 rounded-lg h-10 outline-none" placeholder="ボタンに表示する名前" value="${v.label||''}">
+                </div>
+                <input type="text" class="sns-val w-full text-sm border p-2 rounded-lg h-10 outline-none" placeholder="ID or URL" value="${v.val||''}">
+            `; 
             document.getElementById('sns-inputs-container').appendChild(div); 
+        }
+
+        function toggleSnsLabel(select, id) {
+            const container = document.getElementById(`sns-label-container-${id}`);
+            if (select.value === 'その他URL') container.classList.remove('hidden');
+            else container.classList.add('hidden');
         }
 
         function openPostModal() { 
             document.getElementById('edit-post-id').value = ""; document.getElementById('post-modal-title').innerText = "投稿作成"; 
             document.getElementById('p-title').value = ""; document.getElementById('post-blocks-container').innerHTML = ''; addPostBlock(); 
             document.getElementById('post-modal').style.display='flex'; if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu'); 
+            updateAllTextareaHeights();
         }
 
         function editPost(idx) { 
             const p = posts[idx]; document.getElementById('edit-post-id').value = p.id; document.getElementById('post-modal-title').innerText = "投稿編集"; 
             document.getElementById('p-title').value = p.title; document.getElementById('post-blocks-container').innerHTML = ''; p.blocks.forEach(b => addPostBlock(b)); 
             document.querySelector(`input[name="p-pos"][value="${p.pos}"]`).checked = true; document.getElementById('post-modal').style.display = 'flex'; 
+            updateAllTextareaHeights();
         }
 
         function addPostBlock(data = {img: '', text: ''}) { 
             const id = Date.now() + Math.random(), div = document.createElement('div'); div.className = "post-block p-4 border rounded-xl mb-4 bg-stone-50"; 
-            div.innerHTML = `<div class="preview-post mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'} clickable-img"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''} absolute inset-0 flex items-center justify-center font-bold">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><textarea class="w-full text-sm p-3 border rounded-xl h-24 mt-2 outline-none auto-expand" placeholder="文章を入力...">${data.text||''}</textarea><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`; 
+            div.innerHTML = `<div class="preview-post mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'} clickable-img"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''} absolute inset-0 flex items-center justify-center font-bold">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><div class="input-bordered mt-2"><textarea class="auto-expand" placeholder="文章を入力...">${data.text||''}</textarea></div><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`; 
             document.getElementById('post-blocks-container').appendChild(div); 
+            setTimeout(() => updateAllTextareaHeights(), 0);
         }
 
         async function loadBlockImg(e, id) { 
@@ -902,7 +940,7 @@
             const c = document.getElementById('art-content'); c.innerHTML = ''; 
             p.blocks.forEach(b => { 
                 if(b.img) { const i = document.createElement('img'); i.src = b.img; i.className = "w-full rounded-2xl mb-4 clickable-img"; c.appendChild(i); } 
-                if(b.text) { const t = document.createElement('p'); t.className = "text-stone-700 whitespace-pre-wrap leading-relaxed mb-6 user-select-auto"; t.innerText = b.text; c.appendChild(t); } 
+                if(b.text) { const t = document.createElement('p'); t.className = "wysiwyg-text text-stone-700 mb-6"; t.innerText = b.text; c.appendChild(t); } 
             }); 
             document.getElementById('art-edit-btn').onclick = () => { closeArticle(); editPost(idx); }; 
             document.getElementById('art-del-btn').onclick = () => showConfirm("削除しますか？", async () => { await sbClient.from('posts').delete().eq('id', p.id); location.reload(); }); 
@@ -951,16 +989,26 @@
             const b2 = document.createElement('button'); b2.className = "w-full bg-stone-100 py-4 rounded-full font-bold"; b2.innerText = "キャンセル"; b2.onclick = closeDialog; bA.append(b1, b2); d.style.display = 'flex'; input.focus(); 
         }
 
+        function updateAllTextareaHeights() {
+            document.querySelectorAll('textarea.auto-expand').forEach(textarea => {
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            });
+        }
+
         function setupAutoExpand() { 
+            // 文字入力・削除時に高さを調整しつつ、表示位置を固定
             document.addEventListener('input', (e) => { 
                 if (e.target.classList.contains('auto-expand')) { 
-                    const scrollPos = window.pageYOffset; e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; window.scrollTo(0, scrollPos);
+                    const textarea = e.target;
+                    textarea.style.height = 'auto'; 
+                    textarea.style.height = textarea.scrollHeight + 'px'; 
                 } 
             }); 
         }
 
         function setupUnifiedProtection() {
-            document.addEventListener('contextmenu', (e) => { if (['TEXTAREA', 'INPUT'].includes(e.target.tagName) || e.target.closest('.user-select-auto')) return; e.preventDefault(); }, false);
+            document.addEventListener('contextmenu', (e) => { if (['TEXTAREA', 'INPUT'].includes(e.target.tagName) || e.target.closest('.wysiwyg-text')) return; e.preventDefault(); }, false);
             document.addEventListener('touchstart', (e) => { if (e.target.tagName === 'IMG' && !e.target.classList.contains('clickable-img') && !e.target.classList.contains('film-frame')) { e.preventDefault(); } }, { passive: false });
         }
 
