@@ -524,7 +524,7 @@
             (owner.sns || []).forEach(s => {
                 let url = s.val;
                 if (s.type !== 'その他URL' && !s.val.startsWith('http')) {
-                    const base = {'X(旧Twitter)':'x.com/', Instagram:'instagram.com/', mixi2:'mixi.social/@', Bluesky:'bsky.app/profile/', Misskey:'misskey.io/@'}[s.type];
+                    const base = {'X(旧Twitter)':'x.com/', Instagram:'instagram.com/', mixi2:'mixi.social/@', Bluesky:'bsky.app/profile/', Misskey:'mixi.social/@'}[s.type];
                     if(base) url = 'https://' + base + s.val.replace('@', '');
                 }
                 const a = document.createElement('a'); a.href = url; a.target = "_blank"; a.className = "block w-full max-w-[200px] text-center bg-white border py-2 rounded-xl text-xs font-bold shadow-sm";
@@ -587,27 +587,27 @@
                         const originDate = new Date(v.d);
                         const originZero = new Date(originDate.getFullYear(), originDate.getMonth(), originDate.getDate());
                         
-                        // 経過日数の計算
                         const diffMs = todayZero.getTime() - originZero.getTime();
                         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
                         
-                        // 1. 当日判定（年単位）
                         const isAnniDay = (originDate.getMonth() === now.getMonth() && originDate.getDate() === now.getDate());
                         const diffYears = now.getFullYear() - originDate.getFullYear();
                         
-                        // 2. 100日ごとの判定 (お迎え日と記念日のみ)
+                        let nextAnni = new Date(now.getFullYear(), originDate.getMonth(), originDate.getDate());
+                        if(nextAnni < todayZero) nextAnni.setFullYear(now.getFullYear() + 1);
+                        const daysToNextAnni = Math.ceil((nextAnni - todayZero) / (1000 * 60 * 60 * 24));
+
                         let is100Day = false;
                         if (v.type !== 'birth' && diffDays > 0 && diffDays % 100 === 0) {
                             is100Day = true;
                         }
 
-                        // お祝い表示の生成
-                        // 当日（年単位）のお祝い
+                        // お祝い表示（当日）
                         if (isAnniDay && diffYears >= 0) {
                             let text = "";
-                            if (v.type === 'birth') {
+                            if(v.type === 'birth') {
                                 text = `${d.name} の誕生日 ${diffYears}歳`;
-                            } else if (v.type === 'welcome') {
+                            } else if(v.type === 'welcome') {
                                 text = (diffYears === 0) ? `${d.name} と出会った日！` : `${d.name} と出会って ${diffYears}年`;
                             } else {
                                 text = (diffYears === 0) ? `${d.name} の ${v.n}` : `${d.name} の ${v.n} ${diffYears}年`;
@@ -615,22 +615,16 @@
                             happyEvents.push({ text, img: d.image, dollIdx: idx });
                         }
 
-                        // 100日ごとの節目のお祝い (誕生日以外)
                         if (is100Day) {
                             let text = (v.type === 'welcome') ? `${d.name} と 出会って ${diffDays}日` : `${d.name} の ${v.n} ${diffDays}日`;
                             happyEvents.push({ text, img: d.image, dollIdx: idx });
                         }
 
-                        // 次の記念日までの計算（表示用）
-                        let nextAnni = new Date(now.getFullYear(), originDate.getMonth(), originDate.getDate());
-                        if(nextAnni < todayZero) nextAnni.setFullYear(now.getFullYear() + 1);
-                        const daysToNextAnni = Math.ceil((nextAnni - todayZero) / (1000 * 60 * 60 * 24));
+                        // 次の記念日までのリスト
                         list.push({ doll: d.name, title: v.n, color: d.cal_color || '#E11D48', diff: daysToNextAnni, isToday: isAnniDay, idx });
-
                         if (v.type !== 'birth') {
                             const daysToNext100 = 100 - (diffDays % 100);
-                            const finalDiff100 = (daysToNext100 === 100) ? 0 : daysToNext100;
-                            list.push({ doll: d.name, title: v.n + " (100日記念)", color: d.cal_color || '#E11D48', diff: finalDiff100, isToday: is100Day, idx });
+                            list.push({ doll: d.name, title: v.n + " (100日ごと)", color: d.cal_color || '#E11D48', diff: daysToNext100 === 100 ? 0 : daysToNext100, isToday: is100Day, idx });
                         }
                     }
                 });
