@@ -332,7 +332,7 @@
         let currentUser = null, galleryId = new URLSearchParams(window.location.search).get('id');
 
         let isManualScrolling = false;
-        const scrollSpeed = 0.8;
+        const scrollSpeed = 0.5; // 0.8から0.5に減速
 
         const palette100 = (() => {
             const hues = [0, 30, 60, 120, 150, 180, 220, 280, 330], colors = [];
@@ -347,6 +347,7 @@
             setupAutoExpand();
             setupUnifiedProtection();
             setupFilmScrollEvents();
+            setupBackButton(); // 戻るボタン監視開始
             
             const { data: { session } } = await sbClient.auth.getSession();
             currentUser = session?.user || null;
@@ -396,7 +397,6 @@
             const track = document.getElementById('top-film-roll');
             if (!isManualScrolling && track && track.children.length > 0) {
                 container.scrollLeft += scrollSpeed;
-                // 3セット用意しているので、2枚目のセットが終わる頃に1枚目に戻る
                 const singleSetWidth = track.scrollWidth / 3;
                 if (container.scrollLeft >= singleSetWidth * 2) {
                     container.scrollLeft -= singleSetWidth;
@@ -429,6 +429,14 @@
                     if (postsRes.data) posts = postsRes.data;
                 }
                 renderAll();
+
+                // 編集後に戻るためのIDチェック
+                const lastEditedPostId = localStorage.getItem('last_edited_post_id');
+                if (lastEditedPostId) {
+                    localStorage.removeItem('last_edited_post_id');
+                    const idx = posts.findIndex(p => p.id === lastEditedPostId);
+                    if (idx !== -1) viewPost(idx);
+                }
             } catch (e) { console.error(e); renderAll(); }
         }
 
@@ -529,8 +537,15 @@
                 pos: document.querySelector('input[name="p-pos"]:checked').value
             };
             if (id) payload.id = id;
-            const { error } = await sbClient.from('posts').upsert(payload);
-            if(error) showAlert(error.message); else location.reload();
+            
+            // 保存時にIDを再取得して保持
+            const { data, error } = await sbClient.from('posts').upsert(payload).select();
+            if(error) {
+                showAlert(error.message);
+            } else {
+                if(data && data[0]) localStorage.setItem('last_edited_post_id', data[0].id);
+                location.reload();
+            }
         }
 
         function renderAll() {
@@ -543,7 +558,6 @@
 
             if (itemsWithImg.length > 0) {
                 document.getElementById('empty-msg').style.display = 'none';
-                // 無限ループのために3セット分作成
                 for (let s = 0; s < 3; s++) {
                     itemsWithImg.forEach((d) => {
                         const img = document.createElement('img'); 
@@ -869,7 +883,9 @@
         function deletePostDirectly(idx) { const p = posts[idx]; showConfirm("削除しますか？", async () => { await sbClient.from('posts').delete().eq('id', p.id); location.reload(); }); }
 
         function viewPost(idx) { 
-            const p = posts[idx]; document.getElementById('art-title').innerText = p.title; 
+            const p = posts[idx]; 
+            if(!p) return;
+            document.getElementById('art-title').innerText = p.title; 
             const c = document.getElementById('art-content'); c.innerHTML = ''; 
             p.blocks.forEach(b => { 
                 if(b.img) { const i = document.createElement('img'); i.src = b.img; i.className = "w-full rounded-2xl mb-4 clickable-img"; c.appendChild(i); } 
@@ -933,6 +949,47 @@
         function setupUnifiedProtection() {
             document.addEventListener('contextmenu', (e) => { if (['TEXTAREA', 'INPUT'].includes(e.target.tagName) || e.target.closest('.user-select-auto')) return; e.preventDefault(); }, false);
             document.addEventListener('touchstart', (e) => { if (e.target.tagName === 'IMG' && !e.target.classList.contains('clickable-img') && !e.target.classList.contains('film-frame')) { e.preventDefault(); } }, { passive: false });
+        }
+
+        // 端末の戻るボタンを制御
+        function setupBackButton() {
+            // ダミーの履歴を追加して戻るボタンをフック
+            history.pushState({page: 'base'}, "");
+            window.onpopstate = function(event) {
+                const article = document.getElementById('article-page');
+                const profile = document.getElementById('profile-overlay');
+                const sideMenu = document.getElementById('side-menu');
+                const modal = document.getElementById('modal');
+                const ownerModal = document.getElementById('owner-modal');
+                const postModal = document.getElementById('post-modal');
+                const dollList = document.getElementById('doll-list-page');
+                const postList = document.getElementById('post-list-page');
+
+                // 何かレイヤーが開いていれば閉じてホームに戻る
+                if (article.style.display === 'block') {
+                    closeArticle();
+                    history.pushState({page: 'base'}, "");
+                } else if (!profile.classList.contains('hidden')) {
+                    closeProfile();
+                    history.pushState({page: 'base'}, "");
+                } else if (sideMenu.style.display === 'flex') {
+                    toggleMenu('side-menu');
+                    history.pushState({page: 'base'}, "");
+                } else if (modal.style.display === 'flex' || ownerModal.style.display === 'flex' || postModal.style.display === 'flex') {
+                    closeModal();
+                    history.pushState({page: 'base'}, "");
+                } else if (!dollList.classList.contains('hidden') || !postList.classList.contains('hidden')) {
+                    showHome();
+                    history.pushState({page: 'base'}, "");
+                } else {
+                    // ホーム画面の場合のみログアウトダイアログを表示
+                    showConfirm("ログアウトしますか？", async () => {
+                        await handleLogout();
+                    }, "ログアウトする");
+                    // キャンセルされた時のために再度ダミー履歴を追加
+                    history.pushState({page: 'base'}, "");
+                }
+            };
         }
     </script>
 </body>
