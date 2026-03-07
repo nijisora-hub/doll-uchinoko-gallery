@@ -42,9 +42,8 @@
             -webkit-touch-callout: default !important;
         }
 
-        .film-outer { background: #1a1a1a; overflow-x: auto; overflow-y: hidden; padding: 20px 0; position: relative; min-height: 120px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-        .film-outer::-webkit-scrollbar { display: none; }
-        .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 20px; will-change: transform; }
+        .film-outer { background: #1a1a1a; overflow: hidden; padding: 20px 0; position: relative; min-height: 120px; }
+        .film-scroll-track { display: flex; gap: 12px; position: absolute; left: 0; top: 20px; will-change: transform; }
         .film-frame { width: 80px; height: 80px; background: #333; border: 2px solid #eee; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; position: relative; z-index: 10; }
         
         .modal-base { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 10px; }
@@ -102,7 +101,7 @@
             <div id="empty-msg" class="absolute inset-0 flex items-center justify-center text-stone-500 text-xs font-bold">画像が登録されるとここに並びます</div>
         </div>
 
-        <header id="main-header" class="p-4 bg-white border-b sticky top-0 z-[100] flex justify-between items-center">
+        <header id="main-header" class="p-4 bg-white border-b flex justify-between items-center">
             <h1 onclick="showHome()" class="logo-font text-3xl cursor-pointer">Doll Uchinoko Gallery</h1>
             <div id="menu-trigger" onclick="toggleMenu('side-menu')" class="p-2 cursor-pointer">
                 <div class="w-6 h-0.5 bg-stone-800 mb-1.5"></div>
@@ -285,7 +284,7 @@
             </div>
         </div>
 
-        <div id="article-page" style="display:none; position:fixed; inset:0; background:white; v-index:10001; overflow-y:auto;">
+        <div id="article-page" style="display:none; position:fixed; inset:0; background:white; z-index:10001; overflow-y:auto;">
             <div class="max-w-2xl mx-auto p-6 pb-20">
                 <div class="flex justify-between items-center py-6 mb-10 border-b">
                     <button onclick="closeArticle()" class="text-sm font-bold text-stone-400">← 戻る</button>
@@ -306,8 +305,12 @@
         const sbClient = supabase.createClient(SB_URL, SB_KEY);
 
         let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"", custom_id: "" }, posts = [], calOffset = 0;
-        let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null }, animationId = null;
+        let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null };
         let currentUser = null, galleryId = new URLSearchParams(window.location.search).get('id');
+
+        // バーチャルスクロール用の変数
+        let filmScrollX = 0;
+        let filmAnimationFrameId = null;
 
         const palette100 = (() => {
             const hues = [0, 30, 60, 120, 150, 180, 220, 280, 330], colors = [];
@@ -496,25 +499,8 @@
             document.getElementById('login-btn').style.display = currentUser ? 'none' : 'block';
             document.getElementById('logout-btn').style.display = currentUser ? 'block' : 'none';
 
-            // フィルムロールの描画（バーチャルスクロール化）
-            const track = document.getElementById('top-film-roll'); track.innerHTML = '';
-            const itemsWithImg = dolls.filter(d => d.image);
-            if (animationId) cancelAnimationFrame(animationId);
-
-            if (itemsWithImg.length > 0) {
-                document.getElementById('empty-msg').style.display = 'none';
-                // シームレスなループのために3セット分描画
-                const displayItems = [...itemsWithImg, ...itemsWithImg, ...itemsWithImg];
-                displayItems.forEach((d, i) => {
-                    const img = document.createElement('img'); img.src = d.image; img.className = "film-frame";
-                    const originalIdx = dolls.findIndex(orig => orig.id === d.id);
-                    img.onclick = () => showDetail(originalIdx); 
-                    track.appendChild(img);
-                });
-                if(itemsWithImg.length >= 1) {
-                    startVirtualScroll(itemsWithImg.length);
-                }
-            } else { document.getElementById('empty-msg').style.display = 'flex'; }
+            // フィルムロールの描画
+            renderFilmRoll();
 
             const oImg = document.getElementById('display-owner-img');
             if(owner.image) { oImg.src = owner.image; oImg.classList.remove('hidden'); }
@@ -570,37 +556,45 @@
             renderCalendar(); renderAnni();
         }
 
-        // バーチャルスクロールエンジンの実装
-        function startVirtualScroll(itemCount) {
-            const container = document.getElementById('film-container');
-            const itemWidth = 80 + 12; // width + gap
-            const totalWidth = itemCount * itemWidth;
+        // フィルムロール：バーチャルスクロール実装
+        function renderFilmRoll() {
+            const track = document.getElementById('top-film-roll');
+            track.innerHTML = '';
+            const itemsWithImg = dolls.filter(d => d.image);
             
-            // 初回位置を中央セット（2セット目の頭）
-            container.scrollLeft = totalWidth;
+            if (filmAnimationFrameId) cancelAnimationFrame(filmAnimationFrameId);
 
-            const step = () => {
-                container.scrollLeft += 0.5; // スピード調整
+            if (itemsWithImg.length > 0) {
+                document.getElementById('empty-msg').style.display = 'none';
                 
-                // 境界を超えたら瞬間的にループ（バーチャルスクロールの肝）
-                if (container.scrollLeft >= totalWidth * 2) {
-                    container.scrollLeft -= totalWidth;
-                } else if (container.scrollLeft <= totalWidth * 0.5) {
-                    container.scrollLeft += totalWidth;
+                // 必要十分な数だけ複製してトラックに配置
+                const repeatCount = itemsWithImg.length < 10 ? Math.ceil(20 / itemsWithImg.length) : 3;
+                for (let r = 0; r < repeatCount; r++) {
+                    itemsWithImg.forEach((d) => {
+                        const img = document.createElement('img');
+                        img.src = d.image;
+                        img.className = "film-frame";
+                        const originalIdx = dolls.findIndex(orig => orig.id === d.id);
+                        img.onclick = () => showDetail(originalIdx); 
+                        track.appendChild(img);
+                    });
                 }
-                animationId = requestAnimationFrame(step);
-            };
-            animationId = requestAnimationFrame(step);
 
-            // ユーザーが手動でスクロールした際もシームレスに補正
-            let isScrolling;
-            container.onscroll = () => {
-                window.clearTimeout(isScrolling);
-                isScrolling = setTimeout(() => {
-                    if (container.scrollLeft >= totalWidth * 2) container.scrollLeft -= totalWidth;
-                    if (container.scrollLeft <= totalWidth * 0.5) container.scrollLeft += totalWidth;
-                }, 66);
-            };
+                const frameWidth = 80 + 12; // width + gap
+                const totalSetWidth = itemsWithImg.length * frameWidth;
+                
+                function animate() {
+                    filmScrollX -= 0.6; // スピード
+                    if (Math.abs(filmScrollX) >= totalSetWidth) {
+                        filmScrollX = 0;
+                    }
+                    track.style.transform = `translateX(${filmScrollX}px)`;
+                    filmAnimationFrameId = requestAnimationFrame(animate);
+                }
+                animate();
+            } else {
+                document.getElementById('empty-msg').style.display = 'flex';
+            }
         }
 
         function renderAnni() {
@@ -621,8 +615,10 @@
                     if(v.d) {
                         const originDate = new Date(v.d);
                         const originZero = new Date(originDate.getFullYear(), originDate.getMonth(), originDate.getDate());
+                        
                         const diffMs = todayZero.getTime() - originZero.getTime();
                         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                        
                         const isAnniDay = (originDate.getMonth() === now.getMonth() && originDate.getDate() === now.getDate());
                         const diffYears = now.getFullYear() - originDate.getFullYear();
                         
@@ -638,9 +634,13 @@
 
                         if (isAnniDay && diffYears >= 0) {
                             let text = "";
-                            if(v.type === 'birth') text = `${d.name} の誕生日 ${diffYears}歳`;
-                            else if(v.type === 'welcome') text = (diffYears === 0) ? `${d.name} と出会った日！` : `${d.name} と出会って ${diffYears}年`;
-                            else text = (diffYears === 0) ? `${d.name} の ${v.n}` : `${d.name} の ${v.n} ${diffYears}年`;
+                            if(v.type === 'birth') {
+                                text = `${d.name} の誕生日 ${diffYears}歳`;
+                            } else if(v.type === 'welcome') {
+                                text = (diffYears === 0) ? `${d.name} と出会った日！` : `${d.name} と出会って ${diffYears}年`;
+                            } else {
+                                text = (diffYears === 0) ? `${d.name} の ${v.n}` : `${d.name} の ${v.n} ${diffYears}年`;
+                            }
                             happyEvents.push({ text, img: d.image, dollIdx: idx });
                         }
 
@@ -648,6 +648,7 @@
                             let text = (v.type === 'welcome') ? `${d.name} と 出会って ${diffDays}日` : `${d.name} の ${v.n} ${diffDays}日`;
                             happyEvents.push({ text, img: d.image, dollIdx: idx });
                         }
+
                         list.push({ doll: d.name, title: v.n, color: d.cal_color || '#E11D48', diff: daysToNextAnni, isToday: isAnniDay, idx });
                     }
                 });
@@ -909,7 +910,7 @@
         function addAnniversaryInput(v = {name:'', date:''}) { 
             const id = Date.now() + Math.random(), div = document.createElement('div'); 
             div.className = "p-4 bg-stone-100/50 rounded-2xl space-y-2 border"; 
-            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="${v.date?new Date(v.date).getDate():''}">${v.date?new Date(v.date).getDate():'日'}</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; 
+            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-1 text-sm font-bold outline-none" placeholder="記念日名" value="${v.name}"><div class="flex gap-2 items-center"><select id="m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div><input type="date" id="date-${id}" class="date-input f-anni-date">`; 
             document.getElementById('anniversary-inputs').appendChild(div); 
             if(v.date) setDateValue(v.date, `date-${id}`, `m-${id}`, `d-${id}`); 
         }
