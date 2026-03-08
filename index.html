@@ -403,6 +403,7 @@
             const onEnd = () => { isManualScrolling = false; };
             container.addEventListener('touchstart', onStart, {passive: true});
             container.addEventListener('touchend', onEnd, {passive: true});
+            container.addEventListener('touchcancel', onEnd, {passive: true});
             container.addEventListener('mousedown', onStart);
             window.addEventListener('mouseup', onEnd);
         }
@@ -903,7 +904,9 @@
         function initDateSelectors(specificPrefix = null) {
             const prefixes = specificPrefix ? [specificPrefix] : ["f-bday", "f-welcome"];
             prefixes.forEach(p => {
-                const m = document.getElementById(p+"-m"), d = document.getElementById(p+"-d");
+                const mId = p.includes('anni') ? p.replace('-date', '-m') : p+"-m";
+                const dId = p.includes('anni') ? p.replace('-date', '-d') : p+"-d";
+                const m = document.getElementById(mId), d = document.getElementById(dId);
                 if(m && m.options.length <= 1){for(let i=1; i<=12; i++) m.innerHTML += `<option value="${i}">${i}</option>`;}
                 if(d && d.options.length <= 1){for(let i=1; i<=31; i++) d.innerHTML += `<option value="${i}">${i}</option>`;}
             });
@@ -961,6 +964,31 @@
             document.getElementById('crop-preview').classList.add('hidden');
             document.getElementById('doll-hint').classList.remove('hidden');
             currentRawImg.doll = null;
+
+            // カラー設定をリセット
+            const colorDefaults = { bg: '#ffffff', text: '#000000', cal: '#E11D48' };
+            ['bg', 'text', 'cal'].forEach(t => {
+                const def = colorDefaults[t];
+                document.getElementById('f-'+t+'-color').value = def;
+                document.getElementById(t+'-select-icon').style.backgroundColor = def;
+                // パレットの選択状態（枠線）もデフォルト位置にリセット
+                document.querySelectorAll(`.${t}-chip`).forEach(chip => {
+                    const chipColor = chip.style.backgroundColor;
+                    // 背景色のRGB値と比較するため、一時的にCanvas等で正規化が必要な場合もありますが、
+                    // ここでは簡易的に全選択を解除してから、デフォルトの色にselectedを付与します。
+                    chip.classList.remove('selected');
+                    // palette100生成時の定義に合わせ、16進数またはhsl等での比較
+                });
+                // 初期化時と同じロジックでデフォルト色に枠を付ける
+                const chips = document.querySelectorAll(`.${t}-chip`);
+                chips.forEach(c => {
+                    // 背景色から色を取得（ブラウザによりrgb形式になるため注意）
+                    if(c.style.backgroundColor.replace(/\s/g, '') === (t==='bg'?'rgb(255,255,255)':(t==='text'?'rgb(0,0,0)':'rgb(225,29,72)'))) {
+                        c.classList.add('selected');
+                    }
+                });
+            });
+
             document.getElementById('modal').style.display = 'flex';
             if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu');
             updateAllTextareaHeights();
@@ -1009,6 +1037,17 @@
                 const color = d[t+'_color'] || (t==='bg'?'#ffffff':(t==='text'?'#000000':'#E11D48'));
                 document.getElementById('f-'+t+'-color').value = color;
                 document.getElementById(t+'-select-icon').style.backgroundColor = color;
+                // パレットの選択枠を更新
+                document.querySelectorAll(`.${t}-chip`).forEach(chip => {
+                    chip.classList.remove('selected');
+                    // 背景色が一致する場合にselected付与
+                    // rgb文字列同士で比較（ブラウザ依存対策としてreplaceで空白削除）
+                    const targetDiv = document.createElement('div');
+                    targetDiv.style.color = color;
+                    if(chip.style.backgroundColor.replace(/\s/g, '') === targetDiv.style.color.replace(/\s/g, '')) {
+                        chip.classList.add('selected');
+                    }
+                });
             });
             if(d.image) {
                 const p = document.getElementById('crop-preview'); p.src = d.image; p.classList.remove('hidden');
