@@ -506,10 +506,16 @@
                 text_color: document.getElementById('f-text-color').value,
                 cal_color: document.getElementById('f-cal-color').value,
                 profile: document.getElementById('f-profile').value,
-                anniversaries: Array.from(document.querySelectorAll('.f-anni-name')).map((el, i) => ({
-                    name: el.value,
-                    date: document.querySelectorAll('.f-anni-date')[i].value
-                })).filter(a => a.name && a.date)
+                anniversaries: Array.from(document.querySelectorAll('.anni-input-box')).map((box) => {
+                    const name = box.querySelector('.f-anni-name').value;
+                    const mId = box.querySelector('.f-anni-m').id;
+                    const dId = box.querySelector('.f-anni-d').id;
+                    const mainId = box.querySelector('.f-anni-date').id;
+                    return {
+                        name: name,
+                        date: getDateValue(mainId, mId, dId)
+                    };
+                }).filter(a => a.name && a.date)
             };
 
             const { error } = await sbClient.from('dolls').upsert(id ? {id, ...payload} : payload);
@@ -671,11 +677,19 @@
                         const isAnniDay = (originDate.getMonth() === now.getMonth() && originDate.getDate() === now.getDate());
                         const diffYears = now.getFullYear() - originDate.getFullYear();
 
+                        // 通常の記念日（当日）
                         if (isAnniDay && diffYears >= 0) {
                             let text = `${d.name}の${v.n}`;
                             if (v.type === 'welcome') text = `${d.name}お迎え${diffYears}周年`;
                             else if (v.type === 'birth') text = `${d.name}の誕生日`;
                             happyEvents.push({ text, img: d.image, dollIdx: idx });
+                        }
+
+                        // キリ番判定 (年月日が揃っている＝2000年ではない場合)
+                        if (originDate.getFullYear() !== 2000) {
+                            if (diffDays > 0 && diffDays % 100 === 0) {
+                                happyEvents.push({ text: `${d.name}と出会って${diffDays}日！`, img: d.image, dollIdx: idx });
+                            }
                         }
 
                         let next = new Date(now.getFullYear(), originDate.getMonth(), originDate.getDate());
@@ -886,11 +900,12 @@
             }
         }
 
-        function initDateSelectors() {
-            ["f-bday", "f-welcome"].forEach(p => {
+        function initDateSelectors(specificPrefix = null) {
+            const prefixes = specificPrefix ? [specificPrefix] : ["f-bday", "f-welcome"];
+            prefixes.forEach(p => {
                 const m = document.getElementById(p+"-m"), d = document.getElementById(p+"-d");
-                if(m){for(let i=1; i<=12; i++) m.innerHTML += `<option value="${i}">${i}</option>`;}
-                if(d){for(let i=1; i<=31; i++) d.innerHTML += `<option value="${i}">${i}</option>`;}
+                if(m && m.options.length <= 1){for(let i=1; i<=12; i++) m.innerHTML += `<option value="${i}">${i}</option>`;}
+                if(d && d.options.length <= 1){for(let i=1; i<=31; i++) d.innerHTML += `<option value="${i}">${i}</option>`;}
             });
         }
 
@@ -1004,10 +1019,26 @@
         }
 
         function addAnniversaryInput(v = {name:'', date:''}) {
-            const id = Date.now() + Math.random(), div = document.createElement('div');
-            div.className = "p-4 bg-stone-100/50 rounded-2xl space-y-2 border";
-            div.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button></div><input type="text" class="f-anni-name w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="記念日名(例:ハーフバースデー)" value="${v.name}"><input type="date" class="f-anni-date date-input" value="${v.date}">`;
+            const id = Date.now() + Math.random().toString(36).substring(2);
+            const div = document.createElement('div');
+            div.className = "anni-input-box p-4 bg-stone-100/50 rounded-2xl space-y-2 border";
+            div.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button>
+                </div>
+                <input type="text" class="f-anni-name w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="記念日名(例:ハーフバースデー)" value="${v.name}">
+                <div class="flex gap-2 mb-2 items-center">
+                    <select id="f-anni-m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option></select>
+                    <select id="f-anni-d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option></select>
+                </div>
+                <input type="date" id="f-anni-date-${id}" class="f-anni-date date-input" value="${v.date || ''}">
+            `;
             document.getElementById('anniversary-inputs').appendChild(div);
+            initDateSelectors(`f-anni-date-${id}`);
+            if (v.date) {
+                setDateValue(v.date, `f-anni-date-${id}`, `f-anni-m-${id}`, `f-anni-d-${id}`);
+            }
         }
 
         function openOwnerModal() {
