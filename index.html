@@ -47,6 +47,8 @@
             padding: 0;
             background: transparent;
             outline: none;
+            overflow: hidden; /* 自動伸縮のためにスクロールバーを非表示 */
+            resize: none; /* 手動リサイズ無効化 */
         }
         
         /* 入力枠がある場合の調整 */
@@ -313,7 +315,7 @@
                 <h3 id="post-modal-title" class="text-xl font-bold mb-4">投稿作成</h3>
                 <input type="hidden" id="edit-post-id">
                 <div class="input-bordered mb-4">
-                    <textarea id="p-title" class="auto-expand font-bold" placeholder="タイトル"></textarea>
+                    <textarea id="p-title" class="auto-expand font-bold" placeholder="タイトル" rows="1"></textarea>
                 </div>
                 <div id="post-blocks-container" class="space-y-4"></div>
                 <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ 追加</button>
@@ -563,7 +565,7 @@
                     });
                     imgData = await processImageToWebP(raw, 1200, 50, 50, true);
                 }
-                return { img: imgData, text: div.querySelector('textarea').value };
+                return { img: imgData, text: div.querySelector('textarea.auto-expand').value };
             }));
 
             const payload = {
@@ -634,7 +636,7 @@
                     card.className = "bg-white border rounded-3xl overflow-hidden shadow-sm cursor-pointer mb-8";
                     card.onclick = () => viewPost(i);
                     if(p.blocks[0] && p.blocks[0].img) card.innerHTML += `<img src="${p.blocks[0].img}" class="w-full h-48 object-cover clickable-img">`;
-                    card.innerHTML += `<div class="p-6"><h4 class="font-bold text-lg mb-2">${p.title}</h4><p class="text-stone-400 text-xs line-clamp-2">${p.blocks[0]?.text || ''}</p></div>`;
+                    card.innerHTML += `<div class="p-6"><h4 class="font-bold text-lg mb-2 whitespace-pre-wrap">${p.title}</h4><p class="text-stone-400 text-xs line-clamp-2">${p.blocks[0]?.text || ''}</p></div>`;
                     const readMore = document.createElement('p');
                     readMore.className = "text-center text-stone-400 text-xs font-bold mt-2";
                     readMore.innerText = "── 続きを読む ──";
@@ -937,6 +939,8 @@
                         chip.classList.add('selected');
                         document.getElementById('f-'+t+'-color').value = c;
                         document.getElementById(t+'-select-icon').style.backgroundColor = c;
+                        // 色選択後にパレットを収納する
+                        g.classList.remove('grid-open');
                     };
                     g.appendChild(chip);
                 });
@@ -947,12 +951,14 @@
         function toggleColorGrid(type) { document.getElementById(type+'-color-grid').classList.toggle('grid-open'); }
 
         function setupAutoExpand() {
-            document.querySelectorAll('textarea.auto-expand').forEach(el => {
-                el.addEventListener('input', () => {
-                    el.style.height = 'auto';
-                    el.style.height = el.scrollHeight + 'px';
-                });
+            // Event Delegation で動的に追加される textarea にも対応させる
+            document.addEventListener('input', e => {
+                if (e.target && e.target.tagName === 'TEXTAREA' && e.target.classList.contains('auto-expand')) {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = e.target.scrollHeight + 'px';
+                }
             });
+            updateAllTextareaHeights();
         }
 
         function setupUnifiedProtection() {
@@ -1003,7 +1009,7 @@
 
             document.getElementById('modal').style.display = 'flex';
             if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu');
-            updateAllTextareaHeights();
+            setTimeout(updateAllTextareaHeights, 10);
         }
 
         function updateAllTextareaHeights() {
@@ -1066,7 +1072,7 @@
                 document.getElementById('doll-hint').classList.add('hidden');
             }
             document.getElementById('modal').style.display = 'flex';
-            updateAllTextareaHeights();
+            setTimeout(updateAllTextareaHeights, 10);
         }
 
         function addAnniversaryInput(v = {name:'', date:''}) {
@@ -1103,7 +1109,7 @@
             }
             document.getElementById('owner-modal').style.display = 'flex';
             if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu');
-            updateAllTextareaHeights();
+            setTimeout(updateAllTextareaHeights, 10);
         }
 
         function addSnsInput(v = {type:'X(旧Twitter)', val:'', label:''}) {
@@ -1126,7 +1132,7 @@
             addPostBlock();
             document.getElementById('post-modal').style.display='flex';
             if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu');
-            updateAllTextareaHeights();
+            setTimeout(updateAllTextareaHeights, 10);
         }
 
         function editPost(idx) {
@@ -1138,15 +1144,15 @@
             p.blocks.forEach(b => addPostBlock(b));
             document.querySelector(`input[name="p-pos"][value="${p.pos}"]`).checked = true;
             document.getElementById('post-modal').style.display = 'flex';
-            updateAllTextareaHeights();
+            setTimeout(updateAllTextareaHeights, 10);
         }
 
         function addPostBlock(data = {img: '', text: ''}) {
             const id = Date.now() + Math.random(), div = document.createElement('div');
             div.className = "post-block p-4 border rounded-xl mb-4 bg-stone-50";
-            div.innerHTML = `<div class="preview-post mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'} clickable-img"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''} absolute inset-0 flex items-center justify-center font-bold">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><div class="input-bordered mt-2"><textarea class="auto-expand" placeholder="文章を入力...">${data.text||''}</textarea></div><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`;
+            div.innerHTML = `<div class="preview-post mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'} clickable-img"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''} absolute inset-0 flex items-center justify-center font-bold">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><div class="input-bordered mt-2"><textarea class="auto-expand" placeholder="文章を入力..." rows="1">${data.text||''}</textarea></div><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`;
             document.getElementById('post-blocks-container').appendChild(div);
-            setTimeout(() => updateAllTextareaHeights(), 0);
+            setTimeout(() => updateAllTextareaHeights(), 10);
         }
 
         async function loadBlockImg(e, id) {
