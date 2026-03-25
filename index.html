@@ -47,8 +47,6 @@
             padding: 0;
             background: transparent;
             outline: none;
-            overflow: hidden; /* 自動伸縮のためにスクロールバーを非表示 */
-            resize: none; /* 手動リサイズ無効化 */
         }
         
         /* 入力枠がある場合の調整 */
@@ -260,6 +258,13 @@
                             <div class="flex gap-2 mb-2 items-center"><select id="f-welcome-m" class="border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option></select><select id="f-welcome-d" class="border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option></select></div>
                             <input type="date" id="f-welcome" class="date-input">
                         </div>
+                        <div class="border-b pb-4">
+                            <span class="block text-stone-400 text-[10px] font-bold mb-1 uppercase tracking-widest">日数計算（100日祝い等）</span>
+                            <div class="flex flex-col gap-2 mb-2 text-stone-600 text-xs">
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="f-calc-method" value="0" checked> 初日を含まない（0日目スタート）</label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="f-calc-method" value="1"> 初日を含む（1日目スタート）</label>
+                            </div>
+                        </div>
                     </div>
                     <div id="anniversary-inputs" class="space-y-3"></div>
                     <button onclick="addAnniversaryInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-400 font-bold">+ 記念日を追加</button>
@@ -315,7 +320,7 @@
                 <h3 id="post-modal-title" class="text-xl font-bold mb-4">投稿作成</h3>
                 <input type="hidden" id="edit-post-id">
                 <div class="input-bordered mb-4">
-                    <textarea id="p-title" class="auto-expand font-bold" placeholder="タイトル" rows="1"></textarea>
+                    <textarea id="p-title" class="auto-expand font-bold" placeholder="タイトル"></textarea>
                 </div>
                 <div id="post-blocks-container" class="space-y-4"></div>
                 <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ 追加</button>
@@ -505,6 +510,7 @@
                 head_info: document.getElementById('f-head').value,
                 birthday: getDateValue('f-bday', 'f-bday-m', 'f-bday-d') || null,
                 welcome_day: getDateValue('f-welcome', 'f-welcome-m', 'f-welcome-d') || null,
+                calc_include_first_day: document.querySelector('input[name="f-calc-method"]:checked').value === "1",
                 bg_color: document.getElementById('f-bg-color').value,
                 text_color: document.getElementById('f-text-color').value,
                 cal_color: document.getElementById('f-cal-color').value,
@@ -565,7 +571,7 @@
                     });
                     imgData = await processImageToWebP(raw, 1200, 50, 50, true);
                 }
-                return { img: imgData, text: div.querySelector('textarea.auto-expand').value };
+                return { img: imgData, text: div.querySelector('textarea').value };
             }));
 
             const payload = {
@@ -636,7 +642,7 @@
                     card.className = "bg-white border rounded-3xl overflow-hidden shadow-sm cursor-pointer mb-8";
                     card.onclick = () => viewPost(i);
                     if(p.blocks[0] && p.blocks[0].img) card.innerHTML += `<img src="${p.blocks[0].img}" class="w-full h-48 object-cover clickable-img">`;
-                    card.innerHTML += `<div class="p-6"><h4 class="font-bold text-lg mb-2 whitespace-pre-wrap">${p.title}</h4><p class="text-stone-400 text-xs line-clamp-2">${p.blocks[0]?.text || ''}</p></div>`;
+                    card.innerHTML += `<div class="p-6"><h4 class="font-bold text-lg mb-2">${p.title}</h4><p class="text-stone-400 text-xs line-clamp-2">${p.blocks[0]?.text || ''}</p></div>`;
                     const readMore = document.createElement('p');
                     readMore.className = "text-center text-stone-400 text-xs font-bold mt-2";
                     readMore.innerText = "── 続きを読む ──";
@@ -666,6 +672,7 @@
             const todayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
             dolls.forEach((d, idx) => {
+                const includeFirstDay = d.calc_include_first_day || false;
                 const ds = [
                     { type: 'birth', n: "誕生日", d: d.birthday },
                     { type: 'welcome', n: "お迎え日", d: d.welcome_day },
@@ -676,13 +683,14 @@
                         const originDate = new Date(v.d);
                         const originZero = new Date(originDate.getFullYear(), originDate.getMonth(), originDate.getDate());
                         const diffMs = todayZero.getTime() - originZero.getTime();
-                        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                        let diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                        
                         const isAnniDay = (originDate.getMonth() === now.getMonth() && originDate.getDate() === now.getDate());
                         const diffYears = now.getFullYear() - originDate.getFullYear();
 
                         // 通常の記念日（当日）
                         if (isAnniDay && diffYears >= 0) {
-                            let text = `${d.name}の${v.n}`;
+                            let text = `${d.name} の ${v.n}`;
                             if (v.type === 'welcome') text = `${d.name}お迎え${diffYears}周年`;
                             else if (v.type === 'birth') text = `${d.name}の誕生日`;
                             happyEvents.push({ text, img: d.image, dollIdx: idx });
@@ -690,8 +698,17 @@
 
                         // キリ番判定 (年月日が揃っている＝2000年ではない場合)
                         if (originDate.getFullYear() !== 2000) {
-                            if (diffDays > 0 && diffDays % 100 === 0) {
-                                happyEvents.push({ text: `${d.name}と出会って${diffDays}日！`, img: d.image, dollIdx: idx });
+                            let calcDays = diffDays;
+                            if (includeFirstDay) {
+                                calcDays += 1;
+                            }
+                            if (calcDays > 0 && calcDays % 100 === 0) {
+                                let evText = "";
+                                if (v.type === 'welcome') evText = `${d.name}をお迎えして${calcDays}日！`;
+                                else if (v.type === 'birth') evText = `${d.name}の誕生から${calcDays}日！`;
+                                else evText = `${d.name}の${v.n}から${calcDays}日！`;
+                                
+                                happyEvents.push({ text: evText, img: d.image, dollIdx: idx });
                             }
                         }
 
@@ -939,8 +956,6 @@
                         chip.classList.add('selected');
                         document.getElementById('f-'+t+'-color').value = c;
                         document.getElementById(t+'-select-icon').style.backgroundColor = c;
-                        // 色選択後にパレットを収納する
-                        g.classList.remove('grid-open');
                     };
                     g.appendChild(chip);
                 });
@@ -951,14 +966,12 @@
         function toggleColorGrid(type) { document.getElementById(type+'-color-grid').classList.toggle('grid-open'); }
 
         function setupAutoExpand() {
-            // Event Delegation で動的に追加される textarea にも対応させる
-            document.addEventListener('input', e => {
-                if (e.target && e.target.tagName === 'TEXTAREA' && e.target.classList.contains('auto-expand')) {
-                    e.target.style.height = 'auto';
-                    e.target.style.height = e.target.scrollHeight + 'px';
-                }
+            document.querySelectorAll('textarea.auto-expand').forEach(el => {
+                el.addEventListener('input', () => {
+                    el.style.height = 'auto';
+                    el.style.height = el.scrollHeight + 'px';
+                });
             });
-            updateAllTextareaHeights();
         }
 
         function setupUnifiedProtection() {
@@ -977,6 +990,7 @@
             document.getElementById('f-welcome').value = "";
             document.getElementById('f-bday-m').value = ""; document.getElementById('f-bday-d').value = "";
             document.getElementById('f-welcome-m').value = ""; document.getElementById('f-welcome-d').value = "";
+            document.querySelector('input[name="f-calc-method"][value="0"]').checked = true;
             document.getElementById('f-profile').value = "";
             document.getElementById('anniversary-inputs').innerHTML = '';
             document.getElementById('crop-preview').classList.add('hidden');
@@ -1009,7 +1023,7 @@
 
             document.getElementById('modal').style.display = 'flex';
             if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu');
-            setTimeout(updateAllTextareaHeights, 10);
+            updateAllTextareaHeights();
         }
 
         function updateAllTextareaHeights() {
@@ -1047,6 +1061,11 @@
             document.getElementById('f-head').value = d.head_info || "";
             setDateValue(d.birthday, 'f-bday', 'f-bday-m', 'f-bday-d');
             setDateValue(d.welcome_day, 'f-welcome', 'f-welcome-m', 'f-welcome-d');
+            
+            const calcVal = d.calc_include_first_day ? "1" : "0";
+            const calcEl = document.querySelector(`input[name="f-calc-method"][value="${calcVal}"]`);
+            if(calcEl) calcEl.checked = true;
+
             const anniA = document.getElementById('anniversary-inputs');
             anniA.innerHTML = '';
             (d.anniversaries || []).forEach(a => addAnniversaryInput(a));
@@ -1072,7 +1091,7 @@
                 document.getElementById('doll-hint').classList.add('hidden');
             }
             document.getElementById('modal').style.display = 'flex';
-            setTimeout(updateAllTextareaHeights, 10);
+            updateAllTextareaHeights();
         }
 
         function addAnniversaryInput(v = {name:'', date:''}) {
@@ -1109,7 +1128,7 @@
             }
             document.getElementById('owner-modal').style.display = 'flex';
             if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu');
-            setTimeout(updateAllTextareaHeights, 10);
+            updateAllTextareaHeights();
         }
 
         function addSnsInput(v = {type:'X(旧Twitter)', val:'', label:''}) {
@@ -1132,7 +1151,7 @@
             addPostBlock();
             document.getElementById('post-modal').style.display='flex';
             if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu');
-            setTimeout(updateAllTextareaHeights, 10);
+            updateAllTextareaHeights();
         }
 
         function editPost(idx) {
@@ -1144,15 +1163,15 @@
             p.blocks.forEach(b => addPostBlock(b));
             document.querySelector(`input[name="p-pos"][value="${p.pos}"]`).checked = true;
             document.getElementById('post-modal').style.display = 'flex';
-            setTimeout(updateAllTextareaHeights, 10);
+            updateAllTextareaHeights();
         }
 
         function addPostBlock(data = {img: '', text: ''}) {
             const id = Date.now() + Math.random(), div = document.createElement('div');
             div.className = "post-block p-4 border rounded-xl mb-4 bg-stone-50";
-            div.innerHTML = `<div class="preview-post mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'} clickable-img"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''} absolute inset-0 flex items-center justify-center font-bold">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><div class="input-bordered mt-2"><textarea class="auto-expand" placeholder="文章を入力..." rows="1">${data.text||''}</textarea></div><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`;
+            div.innerHTML = `<div class="preview-post mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'} clickable-img"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''} absolute inset-0 flex items-center justify-center font-bold">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><div class="input-bordered mt-2"><textarea class="auto-expand" placeholder="文章を入力...">${data.text||''}</textarea></div><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`;
             document.getElementById('post-blocks-container').appendChild(div);
-            setTimeout(() => updateAllTextareaHeights(), 10);
+            setTimeout(() => updateAllTextareaHeights(), 0);
         }
 
         async function loadBlockImg(e, id) {
