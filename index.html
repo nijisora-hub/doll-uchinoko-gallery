@@ -2,1310 +2,1214 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Doll Uchinoko Gallery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doll Eye Print Studio - ドールアイ印刷工房</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,700;1,400&family=Shippori+Mincho:wght@400;600;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Dancing+Script:wght@700&display=swap');
-        
-        /* 基本設定 */
-        body { 
-            font-family: 'Noto Sans JP', sans-serif; 
-            background-color: #fcfaf8; 
-            margin: 0; 
-            padding: 0; 
-            -webkit-tap-highlight-color: transparent; 
+        body {
+            background-color: #fbf8f3;
+            color: #4a3b32;
+            font-family: 'Zen Maru Gothic', 'Shippori Mincho', sans-serif;
         }
-        
-        .app-container { max-width: 480px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative; }
-        .logo-font { font-family: 'Dancing Script', cursive; }
-        
-        /* 画像保護の設定 */
-        img { 
-            -webkit-touch-callout: none; 
-            -webkit-user-select: none !important; 
-            user-select: none !important; 
-            pointer-events: none; 
-            -webkit-user-drag: none; 
+        .font-serif {
+            font-family: 'Shippori Mincho', 'Cormorant Garamond', serif;
         }
-        .clickable-img, .film-frame { pointer-events: auto !important; }
-        
-        /* テキストエリアと表示の完全一致設定 */
-        textarea, .wysiwyg-text { 
-            user-select: text !important; 
-            -webkit-user-select: text !important;
-            pointer-events: auto !important;
-            -webkit-touch-callout: default !important;
-            font-size: 16px !important; /* スマホのズーム防止と読みやすさ */
-            line-height: 1.6 !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-            white-space: pre-wrap !important;
-            word-wrap: break-word !important;
-            border: none;
-            padding: 0;
-            background: transparent;
-            outline: none;
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
-        
-        /* 入力枠がある場合の調整 */
-        .input-bordered {
-            border: 1px solid #e5e7eb !important;
-            border-radius: 12px !important;
-            padding: 12px !important;
-            background: #ffffff !important;
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f4ede1;
+            border-radius: 3px;
         }
-
-        /* フィルムロール */
-        .film-outer { 
-            background: #1a1a1a; 
-            overflow-x: auto; 
-            padding: 20px 0; 
-            position: relative; 
-            min-height: 120px; 
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-            scroll-behavior: auto;
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #dfbf97;
+            border-radius: 3px;
         }
-        .film-outer::-webkit-scrollbar { display: none; }
-        .film-scroll-track { display: flex; gap: 12px; width: max-content; padding: 0 6px; }
-        .film-frame { width: 80px; height: 80px; background: #333; border: 2px solid #eee; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; position: relative; z-index: 10; }
-        
-        .modal-base { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 10px; }
-        .modal-content { background: white; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; border-radius: 24px; padding: 24px; position: relative; }
-        #custom-dialog { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100000; align-items: center; justify-content: center; padding: 20px; }
-        
-        .crop-area { display: flex; flex-direction: row-reverse; gap: 10px; align-items: center; margin-bottom: 10px; }
-        .v-bar-box { width: 20px; height: 180px; display: flex; align-items: center; justify-content: center; }
-        .vertical-range { writing-mode: vertical-lr; direction: rtl; appearance: slider-vertical; width: 8px; height: 100%; }
-        
-        .preview-sq { flex: 1; aspect-ratio: 1/1; background: #f3f3f3; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid #eee; }
-        .preview-sq img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; pointer-events: none; }
-        
-        .preview-post { width: 100%; background: #f3f3f3; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid #eee; min-height: 80px; }
-        .preview-post img { width: 100%; height: auto; display: block; position: relative; top:0; left:0; pointer-events: none; }
-        
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; border-radius: 50%; cursor: pointer; position: relative; border: 1px solid transparent; }
-        .cal-today { border: 2px solid #888; font-weight: bold; background-color: #f9f9f9; }
-        .cal-dots { display: flex; gap: 2px; justify-content: center; position: absolute; bottom: 4px; width: 100%; height: 4px; overflow: hidden; }
-        .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
-        
-        .color-grid { grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 12px; padding: 4px; display: none; }
-        .color-grid.grid-open { display: grid; }
-        .color-chip { aspect-ratio: 1; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; }
-        .color-chip.selected { outline: 3px solid #000; outline-offset: 1px; z-index: 2; }
-        .color-select-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #ddd; cursor: pointer; box-shadow: 0 0 0 2px #fff; }
-        .date-input { font-size: 16px !important; padding: 8px; border-radius: 8px; border: 1px solid #e5e7eb; width: 100%; }
-        
-        @keyframes pulse-anni {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 114, 182, 0.4); }
-            70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(244, 114, 182, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 114, 182, 0); }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #c59b27;
         }
-        .animate-anni { animation: pulse-anni 2s infinite ease-in-out; border: 2px solid #f472b6 !important; }
-        
-        .admin-only { display: none !important; }
-        body.is-admin .admin-only { display: block !important; }
-        body.is-admin .admin-only-flex { display: flex !important; }
-        .viewer-only { display: block !important; }
-        body.is-admin .viewer-only { display: none !important; }
     </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        antique: {
+                            bg: '#fbf8f3',
+                            card: '#f4ede1',
+                            border: '#dfbf97',
+                            primary: '#872f3e',
+                            primaryHover: '#6d2430',
+                            accent: '#c59b27',
+                            text: '#4a3b32',
+                            subtext: '#7a6a5f'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Shippori Mincho"', '"Cormorant Garamond"', 'serif'],
+                        sans: ['"Zen Maru Gothic"', 'sans-serif'],
+                        latin: ['"Cormorant Garamond"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="text-stone-800 pb-20">
+<body class="min-h-screen flex flex-col justify-between selection:bg-antique-primary selection:text-white">
 
-    <div class="app-container">
-        <div id="custom-dialog">
-            <div class="bg-white w-full max-w-xs p-8 rounded-3xl shadow-2xl text-center">
-                <p id="dialog-message" class="text-[16px] mb-8 leading-relaxed font-bold whitespace-pre-wrap text-stone-700"></p>
-                <div id="dialog-input-container" class="hidden mb-6">
-                    <input type="text" id="dialog-text-input" class="w-full border-b-2 p-2 text-center outline-none font-bold text-lg" placeholder="半角英数字">
+    <!-- Header -->
+    <header class="w-full bg-antique-card border-b border-antique-border py-4 px-6 shadow-sm">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <span class="text-antique-primary text-2xl font-serif">✦</span>
+                <h1 class="text-xl sm:text-2xl font-serif font-bold tracking-wider text-antique-primary" data-i18n="appTitle">
+                    Doll Eye Print Studio
+                </h1>
+                <span class="text-antique-primary text-2xl font-serif">✦</span>
+            </div>
+            
+            <!-- Language Toggle Switcher -->
+            <div class="flex items-center bg-antique-bg border-2 border-antique-border rounded-full p-1 shadow-sm cursor-pointer select-none" id="langToggleBtn" onclick="toggleLanguage()">
+                <div id="langJpTab" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 bg-antique-primary text-white shadow-sm">
+                    🇯🇵 JP
                 </div>
-                <div id="dialog-buttons" class="flex flex-col gap-3"></div>
+                <div id="langEnTab" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 text-antique-subtext hover:text-antique-primary">
+                    🇬🇧 EN
+                </div>
             </div>
         </div>
+    </header>
 
-        <div class="film-outer" id="film-container">
-            <div id="top-film-roll" class="film-scroll-track"></div>
-            <div id="empty-msg" class="absolute inset-0 flex items-center justify-center text-stone-500 text-xs font-bold">画像が登録されるとここに並びます</div>
-        </div>
-
-        <header id="main-header" class="p-4 bg-white border-b relative z-[100] flex justify-between items-center">
-            <h1 onclick="showHome()" class="logo-font text-3xl cursor-pointer">Doll Uchinoko Gallery</h1>
-            <div id="menu-trigger" onclick="toggleMenu('side-menu')" class="p-2 cursor-pointer">
-                <div class="w-6 h-0.5 bg-stone-800 mb-1.5"></div>
-                <div class="w-6 h-0.5 bg-stone-800 mb-1.5"></div>
-                <div class="w-6 h-0.5 bg-stone-800"></div>
-            </div>
-        </header>
-
-        <div id="side-menu" class="modal-base" onclick="toggleMenu('side-menu')" style="display: none;">
-            <div class="bg-white w-72 h-full ml-auto p-6 flex flex-col overflow-y-auto" onclick="event.stopPropagation()">
-                <div class="space-y-1">
-                    <button onclick="showHome(); toggleMenu('side-menu');" class="text-left py-4 font-bold border-b w-full text-stone-800">🏠 ホーム</button>
-                    <button onclick="showDollList()" class="text-left py-4 font-bold border-b w-full text-stone-800">📸 うちの子一覧</button>
-                    <button onclick="showPostListPage()" class="text-left py-4 font-bold border-b w-full text-stone-800">📝 投稿一覧</button>
-                    <button onclick="requestCreateGallery()" class="text-left py-4 font-bold border-b text-blue-600 w-full viewer-only">✨ 新規作成する</button>
-                </div>
-                <div class="py-6 space-y-2 border-b">
-                    <button id="login-btn" onclick="loginWithGoogle()" class="w-full py-3 bg-stone-800 rounded-xl text-xs font-bold text-white">Googleでログイン</button>
-                    <button id="logout-btn" onclick="handleLogout()" class="w-full py-3 bg-red-50 rounded-xl text-xs font-bold text-red-400 hidden">ログアウト</button>
+    <!-- Main Container -->
+    <main class="flex-grow max-w-5xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
+        
+        <div class="bg-antique-card border border-antique-border rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col gap-6 custom-scroll">
+            
+            <!-- Step 1: Shape Selection & Template Download -->
+            <div class="space-y-3">
+                <div class="flex items-center gap-2 border-b border-antique-border pb-2">
+                    <span class="text-antique-primary font-serif font-bold">I.</span>
+                    <h2 class="font-serif font-bold text-antique-primary text-lg" data-i18n="step1Title">瞳の形状選択・テンプレート</h2>
                 </div>
                 
-                <div class="py-10 space-y-4 admin-only">
-                    <button onclick="openModalWithClear()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm">📸 うちの子を登録する</button>
-                    <button onclick="openPostModal()" class="w-full py-4 bg-stone-800 text-white rounded-2xl text-sm font-bold shadow-lg">📝 投稿を追加する</button>
-                    <button onclick="openOwnerModal()" class="w-full py-4 bg-stone-100 rounded-2xl text-sm font-bold shadow-sm">👤 オーナー設定</button>
+                <!-- Pupil Shape Selection -->
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-antique-subtext" data-i18n="pupilShapeLabel">瞳の形状:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="shapeAnimeBtn" onclick="setShape('anime')" class="py-2.5 px-3 rounded-xl border border-antique-primary bg-antique-primary text-white text-xs font-bold transition-all shadow-sm" data-i18n="shapeAnime">
+                            アニメアイ (楕円)
+                        </button>
+                        <button type="button" id="shapeRoundBtn" onclick="setShape('round')" class="py-2.5 px-3 rounded-xl border border-antique-border bg-antique-bg text-antique-text text-xs font-bold transition-all hover:border-antique-primary" data-i18n="shapeRound">
+                            リアルアイ (正円)
+                        </button>
+                    </div>
                 </div>
 
-                <div class="mt-auto pt-10 admin-only">
-                    <button onclick="requestClearAll()" class="w-full py-3 bg-red-50 text-red-400 rounded-xl text-xs font-bold border border-red-100 shadow-sm">⚠️ データを全削除</button>
+                <!-- Template Preview & Download Options -->
+                <div class="bg-antique-bg p-3.5 rounded-xl border border-antique-border/70 space-y-3">
+                    <label class="block text-xs font-bold text-antique-primary" data-i18n="templatePreviewTitle">テンプレートプレビュー</label>
+                    <div class="flex justify-center bg-white border border-antique-border rounded-lg p-2">
+                        <canvas id="templateCanvas" class="max-w-full max-h-[180px] object-contain"></canvas>
+                    </div>
+                    
+                    <div class="flex items-center justify-end gap-2 pt-1">
+                        <button type="button" onclick="openDownloadModal('template')" class="py-2 px-4 bg-antique-primary hover:bg-antique-primaryHover text-white font-bold rounded-lg text-xs shadow-sm transition-all flex items-center gap-1">
+                            <span>✦</span> <span data-i18n="downloadTemplateBtn">テンプレート保存</span>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <main id="home-content">
-            <section id="owner-section" class="p-8 bg-white text-center">
-                <img id="display-owner-img" class="w-24 h-24 rounded-full object-cover mx-auto mb-4 border-4 border-stone-5 hidden clickable-img">
-                <h2 id="owner-name" class="text-2xl font-bold mb-2"></h2>
-                <p id="owner-bio" class="wysiwyg-text text-stone-500 px-4 mb-6"></p>
-                <div id="owner-sns-links" class="flex flex-col items-center gap-3"></div>
-            </section>
-
-            <section class="p-6 bg-stone-50">
-                <div id="happy-anniversary" class="mb-8 hidden">
-                    <h3 class="text-[10px] font-bold text-pink-500 uppercase mb-4 tracking-widest border-b border-pink-100 pb-2">Happy Anniversary!</h3>
-                    <div id="happy-anniversary-list"></div>
+            <!-- Step 2: Image Upload (Up to 10 images) -->
+            <div class="space-y-3">
+                <div class="flex items-center gap-2 border-b border-antique-border pb-2 justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-antique-primary font-serif font-bold">II.</span>
+                        <h2 class="font-serif font-bold text-antique-primary text-lg" data-i18n="step2Title">画像アップロード (最大10枚)</h2>
+                    </div>
+                    <button type="button" onclick="clearAllImages()" class="text-[11px] text-antique-primary hover:underline font-bold" data-i18n="clearAllBtn">全消去</button>
                 </div>
-                <h3 class="text-[10px] font-bold text-stone-400 uppercase mb-4 tracking-widest border-b pb-2">Next Anniversary</h3>
-                <div id="closest-anniversary"></div>
-            </section>
 
-            <section class="p-8 bg-white mt-4 border-t">
-                <div class="flex justify-between items-center mb-6">
-                    <button onclick="changeMonth(-1)" class="p-2">◀</button>
-                    <h3 id="cal-month" class="font-bold text-lg"></h3>
-                    <button onclick="changeMonth(1)" class="p-2">▶</button>
+                <!-- Bulk Import -->
+                <div class="flex items-center gap-2">
+                    <input type="file" id="bulkUploadInput" accept="image/*" multiple onchange="handleBulkUpload(this)" class="hidden">
+                    <button type="button" onclick="document.getElementById('bulkUploadInput').click()" class="w-full py-2 px-3 bg-antique-bg border border-antique-border hover:border-antique-primary text-antique-primary font-bold rounded-xl text-xs transition-all text-center">
+                        ＋ <span data-i18n="bulkUploadBtn">一括画像アップロード</span>
+                    </button>
                 </div>
-                <div id="cal-days" class="cal-grid mb-6"></div>
-                <div id="day-events" class="space-y-3"></div>
-            </section>
 
-            <div id="home-posts" class="p-6 space-y-8"></div>
-
-            <section class="p-10 bg-stone-100 mt-10 text-center border-t">
-                <p class="text-[10px] font-bold text-stone-400 mb-8 tracking-widest uppercase">Share this gallery</p>
-                <div class="flex flex-col gap-4 max-w-[280px] mx-auto">
-                    <button onclick="shareSNS('x')" class="share-btn w-full h-14 bg-black rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">X (旧Twitter)</span></button>
-                    <button onclick="shareSNS('line')" class="share-btn w-full h-14 bg-[#06C755] rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">LINE</span></button>
-                    <button onclick="copyURL()" class="share-btn w-full h-14 bg-stone-400 rounded-full flex items-center justify-center shadow-md"><span class="text-white font-bold tracking-wider">URL Copy</span></button>
+                <!-- Individual Upload Rows (1 ~ 10) -->
+                <div class="space-y-1.5 bg-antique-bg p-3 rounded-xl border border-antique-border/70 max-h-[220px] overflow-y-auto custom-scroll" id="imageRowsContainer">
                 </div>
-            </section>
-        </main>
 
-        <div id="doll-list-page" class="hidden p-6">
-            <div class="flex justify-between items-center mb-6">
-                <button onclick="showHome()" class="text-sm font-bold bg-stone-100 px-4 py-2 rounded-full">戻る</button>
-                <button id="toggle-list-view" onclick="toggleDollViewMode()" class="text-xs font-bold bg-stone-800 text-white px-4 py-2 rounded-full">名前を表示</button>
-            </div>
-            <div id="doll-display-area"></div>
-        </div>
-
-        <div id="post-list-page" class="hidden p-6">
-            <div class="mb-6"><button onclick="showHome()" class="text-sm font-bold bg-stone-100 px-4 py-2 rounded-full">戻る</button></div>
-            <h2 class="text-xl font-bold mb-6">投稿一覧</h2>
-            <div id="menu-post-list" class="space-y-2"></div>
-        </div>
-
-        <div id="modal" class="modal-base" onclick="closeModal()">
-            <div class="modal-content" onclick="event.stopPropagation()">
-                <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
-                <h3 id="modal-title" class="text-xl font-bold mb-6">うちの子登録</h3>
-                <div class="crop-area">
-                    <div class="preview-sq" onclick="document.getElementById('doll-file').click()">
-                        <img id="crop-preview" class="hidden">
-                        <span id="doll-hint" class="text-stone-300 text-xs font-bold">画像を選択</span>
+                <div class="space-y-2 pt-1">
+                    <label class="block text-xs font-medium text-antique-subtext" data-i18n="sampleColorLabel">サンプルカラー選択 (画像未選択用)</label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="setSampleColor('#c83232')" class="sample-color-btn w-7 h-7 rounded-full bg-red-600 border-2 border-white shadow-sm hover:scale-110 transition-transform" data-color="#c83232" title="Red"></button>
+                        <button type="button" onclick="setSampleColor('#2864c8')" class="sample-color-btn w-7 h-7 rounded-full bg-blue-600 border-2 border-white shadow-sm hover:scale-110 transition-transform" data-color="#2864c8" title="Blue"></button>
+                        <button type="button" onclick="setSampleColor('#28a050')" class="sample-color-btn w-7 h-7 rounded-full bg-green-600 border-2 border-white shadow-sm hover:scale-110 transition-transform" data-color="#28a050" title="Green"></button>
+                        <button type="button" onclick="setSampleColor('#dcb932')" class="sample-color-btn w-7 h-7 rounded-full bg-yellow-500 border-2 border-white shadow-sm hover:scale-110 transition-transform" data-color="#dcb932" title="Yellow"></button>
+                        <button type="button" onclick="setSampleColor('#dc649b')" class="sample-color-btn w-7 h-7 rounded-full bg-pink-500 border-2 border-white shadow-sm hover:scale-110 transition-transform" data-color="#dc649b" title="Pink"></button>
+                        <button type="button" onclick="setSampleColor('#8c3cc8')" class="sample-color-btn w-7 h-7 rounded-full bg-purple-600 border-2 border-white shadow-sm hover:scale-110 transition-transform" data-color="#8c3cc8" title="Purple"></button>
                     </div>
-                    <div class="v-bar-box"><input type="range" id="crop-v" min="0" max="100" class="vertical-range" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')"></div>
-                </div>
-                <input type="range" id="crop-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('crop-preview', 'crop-h', 'crop-v')">
-                <div class="space-y-6">
-                    <input type="file" id="doll-file" accept="image/*" class="hidden" onchange="loadImg(event, 'doll')">
-                    <input type="hidden" id="edit-id">
-                    <input type="text" id="f-name" class="w-full border-b p-2 font-bold text-lg outline-none" placeholder="お名前">
-                    <input type="text" id="f-kana" class="w-full border-b p-2 text-sm outline-none" placeholder="ふりがな">
-                    <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
-                        <input type="text" id="f-size-label" class="w-full border-b bg-transparent py-2 text-sm font-bold outline-none" placeholder="SIZE">
-                        <input type="text" id="f-body-make" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="BODY">
-                        <input type="text" id="f-head" class="w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="HEAD">
-                    </div>
-                    <div class="p-4 bg-stone-50 rounded-2xl space-y-4">
-                        <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">カラー設定</p>
-                        <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('bg')"><span class="text-xs text-stone-500 font-bold">背景色</span><div id="bg-select-icon" class="color-select-btn"></div></div>
-                        <div id="bg-color-grid" class="color-grid"></div><input type="hidden" id="f-bg-color" value="#ffffff">
-                        <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('text')"><span class="text-xs text-stone-500 font-bold">文字色</span><div id="text-select-icon" class="color-select-btn"></div></div>
-                        <div id="text-color-grid" class="color-grid"></div><input type="hidden" id="f-text-color" value="#000000">
-                        <div class="flex items-center justify-between border-b pb-2 cursor-pointer" onclick="toggleColorGrid('cal')"><span class="text-xs text-stone-500 font-bold">カレンダー強調色</span><div id="cal-select-icon" class="color-select-btn"></div></div>
-                        <div id="cal-color-grid" class="color-grid"></div><input type="hidden" id="f-cal-color" value="#E11D48">
-                    </div>
-                    <div class="space-y-4 text-sm px-2">
-                        <div class="border-b pb-4"><span class="block text-stone-400 text-[10px] font-bold mb-1 uppercase tracking-widest">誕生日</span>
-                            <div class="flex gap-2 mb-2 items-center"><select id="f-bday-m" class="border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option></select><select id="f-bday-d" class="border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option></select></div>
-                            <input type="date" id="f-bday" class="date-input">
-                        </div>
-                        <div class="border-b pb-4"><span class="block text-stone-400 text-[10px] font-bold mb-1 uppercase tracking-widest">お迎え日</span>
-                            <div class="flex gap-2 mb-2 items-center"><select id="f-welcome-m" class="border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option></select><select id="f-welcome-d" class="border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option></select></div>
-                            <input type="date" id="f-welcome" class="date-input">
-                        </div>
-                        <div class="border-b pb-4">
-                            <span class="block text-stone-400 text-[10px] font-bold mb-1 uppercase tracking-widest">日数計算（100日祝い等）</span>
-                            <div class="flex flex-col gap-2 mb-2 text-stone-600 text-xs">
-                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="f-calc-method" value="0" checked> 初日を含まない（0日目スタート）</label>
-                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="f-calc-method" value="1"> 初日を含む（1日目スタート）</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="anniversary-inputs" class="space-y-3"></div>
-                    <button onclick="addAnniversaryInput()" class="w-full py-3 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-400 font-bold">+ 記念日を追加</button>
-                    <div class="input-bordered">
-                        <textarea id="f-profile" class="auto-expand" placeholder="プロフィール" style="min-height: 200px;"></textarea>
-                    </div>
-                    <button onclick="saveDollData()" class="w-full bg-stone-800 text-white py-5 rounded-2xl font-bold text-lg shadow-xl">保存する</button>
                 </div>
             </div>
-        </div>
 
-        <div id="profile-overlay" class="fixed inset-0 bg-white z-[10000] hidden overflow-y-auto">
-            <div id="profile-bg" class="min-h-full p-6 pb-32 flex flex-col items-center">
-                <div class="w-full max-w-[440px]">
-                    <button onclick="closeProfile()" class="bg-white text-stone-800 shadow px-6 py-2 rounded-full text-xs font-bold mb-6">閉じる</button>
-                    <img id="view-img" class="w-full aspect-square object-cover rounded-3xl shadow-xl mb-8 clickable-img">
-                    <div class="text-center mb-8"><p id="view-kana" class="text-sm opacity-70 mb-1"></p><h2 id="view-name" class="text-3xl font-bold"></h2></div>
-                    <div id="detail-box" class="bg-white/20 backdrop-blur-md p-6 rounded-3xl space-y-4 mb-8 text-[16px] hidden"></div>
-                    <p id="view-profile" class="wysiwyg-text px-2"></p>
+            <!-- Step 3: Detailed Size & Ratio Settings -->
+            <div class="space-y-3">
+                <div class="flex items-center gap-2 border-b border-antique-border pb-2">
+                    <span class="text-antique-primary font-serif font-bold">III.</span>
+                    <h2 class="font-serif font-bold text-antique-primary text-lg" data-i18n="step3Title">詳細サイズ・比率設定</h2>
                 </div>
-                <div class="fixed bottom-6 inset-x-0 px-6 flex gap-4 max-w-[440px] mx-auto admin-only-flex hidden">
-                    <button id="detail-edit-btn" class="flex-1 bg-stone-800 text-white py-4 rounded-full font-bold">編集</button>
-                    <button id="detail-del-btn" class="flex-1 bg-red-50 text-red-400 py-4 rounded-full font-bold border border-red-100">削除</button>
-                </div>
-            </div>
-        </div>
 
-        <div id="owner-modal" class="modal-base" onclick="closeModal()">
-            <div class="modal-content" onclick="event.stopPropagation()">
-                <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
-                <h3 class="text-xl font-bold mb-6">オーナー設定</h3>
-                <div class="crop-area">
-                    <div class="preview-sq" onclick="document.getElementById('owner-file').click()"><img id="owner-preview" class="hidden"><span id="owner-hint" class="text-stone-300 text-xs font-bold">画像を選択</span></div>
-                    <div class="v-bar-box"><input type="range" id="o-crop-v" min="0" max="100" class="vertical-range" oninput="updateCrop('owner-preview', 'o-crop-h', 'o-crop-v')"></div>
-                </div>
-                <input type="range" id="o-crop-h" min="0" max="100" class="w-full mb-6" oninput="updateCrop('owner-preview', 'o-crop-h', 'o-crop-v')">
-                <div class="space-y-4">
-                    <input type="file" id="owner-file" accept="image/*" class="hidden" onchange="loadImg(event, 'owner')">
-                    <input type="text" id="o-name" class="w-full border-b p-2 font-bold" placeholder="オーナー名">
-                    <div class="input-bordered">
-                        <textarea id="o-bio" class="auto-expand" placeholder="自己紹介"></textarea>
-                    </div>
-                    <div id="sns-inputs-container" class="space-y-3"></div>
-                    <button onclick="addSnsInput()" class="w-full py-2 bg-stone-100 rounded text-xs font-bold">+ SNSリンクを追加</button>
-                    <button onclick="saveOwner()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold">保存</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="post-modal" class="modal-base" onclick="closeModal()">
-            <div class="modal-content" onclick="event.stopPropagation()">
-                <button onclick="closeModal()" class="text-xs font-bold text-stone-400 mb-4 block">← 閉じる</button>
-                <h3 id="post-modal-title" class="text-xl font-bold mb-4">投稿作成</h3>
-                <input type="hidden" id="edit-post-id">
-                <div class="input-bordered mb-4">
-                    <textarea id="p-title" class="auto-expand font-bold" placeholder="タイトル"></textarea>
-                </div>
-                <div id="post-blocks-container" class="space-y-4"></div>
-                <button onclick="addPostBlock()" class="w-full py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 text-sm font-bold mt-4">+ 追加</button>
-                <div class="flex gap-4 p-4 bg-stone-50 rounded-2xl text-xs mt-6 items-center"><label><input type="radio" name="p-pos" value="home" checked> ホーム</label><label><input type="radio" name="p-pos" value="menu"> メニュー</label></div>
-                <button onclick="savePost()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold mt-6">保存</button>
-            </div>
-        </div>
-
-        <div id="article-page" style="display:none; position:fixed; inset:0; background:white; z-index:10001; overflow-y:auto;">
-            <div class="max-w-2xl mx-auto p-6 pb-20">
-                <div class="flex justify-between items-center py-6 mb-10 border-b">
-                    <button onclick="closeArticle()" class="text-sm font-bold text-stone-400">← 戻る</button>
-                    <div class="flex gap-4 admin-only-flex hidden">
-                        <button id="art-edit-btn" class="text-xs font-bold bg-stone-800 text-white px-4 py-2 rounded-full">編集</button>
-                        <button id="art-del-btn" class="text-xs font-bold bg-red-50 text-red-400 px-4 py-2 rounded-full border border-red-100">削除</button>
+                <!-- Sclera Shape Selection -->
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-antique-subtext" data-i18n="scleraShapeLabel">白目の形状 (装着イメージ用):</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="scleraRoundBtn" onclick="setScleraShape('round')" class="py-2 px-3 rounded-xl border border-antique-primary bg-antique-primary text-white text-xs font-bold transition-all shadow-sm" data-i18n="scleraRound">
+                            正円
+                        </button>
+                        <button type="button" id="scleraHorizontalBtn" onclick="setScleraShape('horizontal')" class="py-2 px-3 rounded-xl border border-antique-border bg-antique-bg text-antique-text text-xs font-bold transition-all hover:border-antique-primary" data-i18n="scleraHorizontal">
+                            横楕円 (オーバル型)
+                        </button>
                     </div>
                 </div>
-                <h2 id="art-title" class="wysiwyg-text text-3xl font-bold text-center mb-12"></h2>
-                <div id="art-content" class="space-y-6"></div>
+
+                <!-- Eye Size (Default 22mm) -->
+                <div class="space-y-1 pt-1">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-medium text-antique-subtext" data-i18n="eyeSizeLabel">アイ全体の直径/幅:</span>
+                        <span id="eyeSizeVal" class="font-bold text-antique-primary text-sm font-latin">22 mm</span>
+                    </div>
+                    <input type="range" id="eyeSizeRange" min="5" max="30" step="1" value="22" oninput="updateEyeSize(this.value)" class="w-full accent-antique-primary cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-antique-subtext px-0.5">
+                        <span>5mm</span>
+                        <span>22mm</span>
+                        <span>30mm</span>
+                    </div>
+                </div>
+
+                <!-- Aspect Ratio Slider (0%〜200%, default 100%) -->
+                <div id="aspectRatioGroup" class="space-y-1 pt-2">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-medium text-antique-subtext" data-i18n="aspectRatioLabel">瞳パーツの縦横比率 (縦長度):</span>
+                        <span id="aspectRatioVal" class="font-bold text-antique-primary text-sm font-latin">100% (デフォルト)</span>
+                    </div>
+                    <input type="range" id="aspectRatioRange" min="0" max="200" step="5" value="100" oninput="updateAspectRatio(this.value)" class="w-full accent-antique-primary cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-antique-subtext px-0.5">
+                        <span>0% (正円)</span>
+                        <span>100% (デフォルト)</span>
+                        <span>200% (2倍縦長)</span>
+                    </div>
+                </div>
+
+                <!-- Pupil Scale Ratio (Default 65%) -->
+                <div class="space-y-1 pt-1">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-medium text-antique-subtext" data-i18n="pupilScaleLabel">瞳の比率:</span>
+                        <span id="pupilScaleVal" class="font-bold text-antique-primary text-sm font-latin">65%</span>
+                    </div>
+                    <input type="range" id="pupilScaleRange" min="10" max="90" step="5" value="65" oninput="updatePupilScale(this.value)" class="w-full accent-antique-primary cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-antique-subtext px-0.5">
+                        <span>10%</span>
+                        <span>65%</span>
+                        <span>90%</span>
+                    </div>
+                </div>
+
+                <!-- Cut Margin Slider -->
+                <div class="space-y-1 pt-1 border-t border-antique-border/60">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-medium text-antique-subtext" data-i18n="cutMarginLabel">カット余白（切りしろ）:</span>
+                        <span id="cutMarginVal" class="font-bold text-antique-primary text-sm font-latin">0.5 mm</span>
+                    </div>
+                    <input type="range" id="cutMarginRange" min="0.0" max="2.0" step="0.1" value="0.5" oninput="updateCutMargin(this.value)" class="w-full accent-antique-primary cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-antique-subtext px-0.5">
+                        <span>0.0mm</span>
+                        <span>0.5mm</span>
+                        <span>2.0mm</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Panel -->
+            <div class="border-t border-antique-border/80 pt-5 space-y-4">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-antique-border pb-3">
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="switchTab('fitting')" id="tabFittingBtn" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-antique-primary text-white transition-all shadow-sm" data-i18n="tabFitting">
+                            白目装着イメージ
+                        </button>
+                        <button type="button" onclick="switchTab('print')" id="tabPrintBtn" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-antique-bg text-antique-subtext border border-antique-border hover:text-antique-primary transition-all" data-i18n="tabPrint">
+                            印刷シート
+                        </button>
+                    </div>
+
+                    <!-- Pulldown for selecting which uploaded image to view in Fitting mode -->
+                    <div id="fittingImageSelectContainer" class="flex items-center gap-1.5 w-full sm:w-auto">
+                        <span class="text-[11px] font-medium text-antique-subtext shrink-0" data-i18n="selectFittingImgLabel">対象画像:</span>
+                        <select id="fittingImageSelect" onchange="renderPreview()" class="w-full sm:w-auto text-xs bg-white border border-antique-border rounded-lg px-2 py-1 text-antique-text font-sans focus:outline-none focus:ring-1 focus:ring-antique-primary">
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Canvas Display Area -->
+                <div class="flex items-center justify-center bg-antique-bg border border-antique-border/80 rounded-xl p-4 min-h-[380px] sm:min-h-[460px] relative overflow-hidden">
+                    <canvas id="renderCanvas" class="hidden"></canvas>
+                    <canvas id="displayCanvas" class="max-w-full max-h-[440px] object-contain shadow-md rounded border border-antique-border bg-white"></canvas>
+                </div>
+
+                <!-- Tab Description / Notice -->
+                <div class="bg-antique-bg border border-antique-border/60 rounded-xl p-3 text-center">
+                    <p id="previewNotice" class="text-xs text-antique-subtext leading-relaxed" data-i18n="noticeFitting">
+                        白目パーツに瞳をはめ込んだ際のプレビューです。
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 4: Export Options & Save -->
+            <div class="space-y-3 pt-2">
+                <div class="flex items-center gap-2 border-b border-antique-border pb-2">
+                    <span class="text-antique-primary font-serif font-bold">IV.</span>
+                    <h2 class="font-serif font-bold text-antique-primary text-lg" data-i18n="step4Title">保存と出力</h2>
+                </div>
+                
+                <!-- Paper Size Selection -->
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-antique-subtext" data-i18n="paperSizeLabel">用紙サイズ:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="paperLBtn" onclick="setPaperSize('L')" class="py-2 px-3 rounded-xl border border-antique-primary bg-antique-primary text-white text-xs font-bold transition-all shadow-sm">
+                            L判 (89×127mm)
+                        </button>
+                        <button type="button" id="paperHagakiBtn" onclick="setPaperSize('hagaki')" class="py-2 px-3 rounded-xl border border-antique-border bg-antique-bg text-antique-text text-xs font-bold transition-all hover:border-antique-primary">
+                            ハガキ (100×148mm)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- DPI Selection -->
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-antique-subtext" data-i18n="dpiLabel">印刷解像度 (DPI):</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="dpi300Btn" onclick="setDpi(300)" class="py-2 px-3 rounded-xl border border-antique-primary bg-antique-primary text-white text-xs font-bold transition-all shadow-sm">
+                            300 DPI
+                        </button>
+                        <button type="button" id="dpi600Btn" onclick="setDpi(600)" class="py-2 px-3 rounded-xl border border-antique-border bg-antique-bg text-antique-text text-xs font-bold transition-all hover:border-antique-primary">
+                            600 DPI
+                        </button>
+                    </div>
+                </div>
+
+                <button type="button" onclick="openDownloadModal('main')" class="w-full py-3 px-4 bg-antique-primary hover:bg-antique-primaryHover text-white font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 mt-2">
+                    <span>✦</span> <span id="downloadBtnText" data-i18n="downloadBtn">確認モーダルを開いて保存 (PNG)</span> <span>✦</span>
+                </button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Download Confirmation Modal -->
+    <div id="downloadModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-antique-card border-2 border-antique-border rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200">
+            <div class="flex items-center justify-between border-b border-antique-border pb-3">
+                <h3 class="font-serif font-bold text-antique-primary text-lg flex items-center gap-2">
+                    <span>✦</span> <span data-i18n="modalTitle">ダウンロード確認</span>
+                </h3>
+                <button onclick="closeDownloadModal()" class="text-antique-subtext hover:text-antique-primary font-bold text-lg px-2">×</button>
+            </div>
+            
+            <p class="text-xs text-antique-subtext leading-relaxed" data-i18n="modalDesc">
+                保存するファイル名を確認または変更してください。
+            </p>
+
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-antique-primary" data-i18n="filenameLabel">ファイル名:</label>
+                <input type="text" id="downloadFilenameInput" class="w-full text-xs bg-white border border-antique-border rounded-lg p-2.5 text-antique-text font-latin focus:outline-none focus:ring-2 focus:ring-antique-primary">
+            </div>
+
+            <div class="bg-antique-bg border border-antique-border rounded-xl p-3 flex justify-center items-center max-h-[180px] overflow-hidden">
+                <img id="modalPreviewImg" class="max-h-[160px] object-contain rounded shadow-sm border border-antique-border bg-white" alt="Preview Thumbnail">
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeDownloadModal()" class="flex-1 py-2.5 px-4 bg-antique-bg border border-antique-border text-antique-subtext hover:text-antique-primary font-bold rounded-xl text-xs transition-all" data-i18n="modalCancel">
+                    キャンセル
+                </button>
+                <button type="button" onclick="confirmDownload()" class="flex-1 py-2.5 px-4 bg-antique-primary hover:bg-antique-primaryHover text-white font-bold rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1.5" data-i18n="modalConfirm">
+                    <span>✦</span> 保存を実行する
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="w-full bg-antique-card border-t border-antique-border py-4 px-6 text-center text-xs text-antique-subtext">
+        <p data-i18n="footerText">Doll Eye Print Studio ✦ Craft & Create for Your BJD / Anime Dolls</p>
+    </footer>
+
+    <!-- Script Application Logic -->
     <script>
-        const SB_URL = "https://eegxuxsyaradufdcvzuj.supabase.co";
-        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlZ3h1eHN5YXJhZHVmZGN2enVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDc3ODYsImV4cCI6MjA4ODEyMzc4Nn0.9O7L6iIYJHChTVDu9w3y5FLNunDvYG6jQFGF4laEoRQ";
-        const sbClient = supabase.createClient(SB_URL, SB_KEY);
+        // --- State Management ---
+        let currentLang = 'ja';
+        let currentTab = 'fitting'; 
+        let currentShape = 'anime'; 
+        let scleraShape = 'round';  
+        let currentPaperSize = 'L'; 
+        let currentDpi = 300;       
+        let eyeSizeMm = 22;         
+        let aspectRatio = 100;      // 100% (デフォルト)
+        let pupilScale = 65;        
+        let cutMarginMm = 0.5;      
+        let sampleColor = '#c83232';
+        let rowImages = new Array(10).fill(null); 
+        let rowFileNames = new Array(10).fill(null); 
+        let pendingDownloadType = 'main';
 
-        let dolls = [], owner = { name: "Owner Name", bio: "", sns: [], image:"", custom_id: "" }, posts = [], calOffset = 0;
-        let dollViewMode = 'grid', currentRawImg = { doll: null, owner: null };
-        let currentUser = null, galleryId = new URLSearchParams(window.location.search).get('id');
+        const HORIZONTAL_SCLERA_RATIO = 0.75;
+        const FIXED_ANIME_TEMPLATE_ASPECT = 1.35;
 
-        let isManualScrolling = false;
-        const scrollSpeed = 0.5; 
-
-        const palette100 = (() => {
-            const hues = [0, 30, 60, 120, 150, 180, 220, 280, 330], colors = [];
-            for(let i=0; i<10; i++) colors.push(`hsl(0, 0%, ${Math.min(0 + (i * 11), 100)}%)`);
-            hues.forEach(h => { for(let i=0; i<10; i++) colors.push(`hsl(${h}, 80%, ${Math.min(30 + (i * 7.2), 95)}%)`); });
-            return colors.slice(0, 100);
-        })();
-
-        window.onload = async () => {
-            initDateSelectors();
-            initColorPalettes();
-            setupAutoExpand();
-            setupUnifiedProtection();
-            setupFilmScrollEvents();
-            setupBackButton(); 
-            
-            const { data: { session } } = await sbClient.auth.getSession();
-            currentUser = session?.user || null;
-
-            if (currentUser && !galleryId) {
-                const { data: myOwner } = await sbClient.from('owners').select('custom_id').eq('id', currentUser.id).single();
-                if (myOwner && myOwner.custom_id) {
-                    location.href = `?id=${myOwner.custom_id}`;
-                    return;
-                }
+        const i18n = {
+            ja: {
+                appTitle: "Doll Eye Print Studio",
+                step1Title: "瞳の形状選択・テンプレート",
+                pupilShapeLabel: "瞳の形状:",
+                shapeAnime: "アニメアイ (楕円)",
+                shapeRound: "リアルアイ (正円)",
+                templatePreviewTitle: "テンプレートプレビュー",
+                downloadTemplateBtn: "テンプレート保存",
+                step2Title: "画像アップロード (最大10枚)",
+                clearAllBtn: "全消去",
+                bulkUploadBtn: "一括画像アップロード",
+                sampleColorLabel: "サンプルカラー選択 (画像未選択用)",
+                step3Title: "詳細サイズ・比率設定",
+                scleraShapeLabel: "白目の形状 (装着イメージ用):",
+                scleraRound: "正円",
+                scleraHorizontal: "横楕円 (オーバル型)",
+                eyeSizeLabel: "アイ全体の直径/幅:",
+                aspectRatioLabel: "瞳の縦横比率 (縦長度):",
+                pupilScaleLabel: "瞳の比率:",
+                cutMarginLabel: "カット余白（切りしろ）:",
+                step4Title: "保存と出力",
+                paperSizeLabel: "用紙サイズ:",
+                dpiLabel: "印刷解像度 (DPI):",
+                downloadBtn: "確認モーダルを開いて保存 (PNG)",
+                tabPrint: "印刷シート",
+                tabFitting: "白目装着イメージ",
+                selectFittingImgLabel: "対象画像:",
+                noticePrint: "白目パーツを含めず瞳パーツ本体のみを自動整列。<br>余白を考慮して配置・印刷します。",
+                noticeFitting: "白目パーツに瞳をはめ込んだ際の装着イメージです。",
+                footerText: "Doll Eye Print Studio ✦ Craft & Create for Your BJD / Anime Dolls",
+                modalTitle: "ダウンロード確認",
+                modalDesc: "保存するファイル名を確認または変更してください。",
+                filenameLabel: "ファイル名:",
+                modalCancel: "キャンセル",
+                modalConfirm: "保存を実行する",
+                noFile: "未選択のファイル",
+                browse: "選択"
+            },
+            en: {
+                appTitle: "Doll Eye Print Studio",
+                step1Title: "1. Shape & Template Download",
+                pupilShapeLabel: "Pupil Shape:",
+                shapeAnime: "Anime Eye (Oval)",
+                shapeRound: "Realistic Eye (Round)",
+                templatePreviewTitle: "Template Preview",
+                downloadTemplateBtn: "Download Template",
+                step2Title: "2. Image Upload (Max 10)",
+                clearAllBtn: "Clear All",
+                bulkUploadBtn: "Bulk Upload Images",
+                sampleColorLabel: "Sample Color (For Unset Rows)",
+                step3Title: "3. Size & Ratio Settings",
+                scleraShapeLabel: "Sclera Base Shape:",
+                scleraRound: "Round",
+                scleraHorizontal: "Horizontal Oval",
+                eyeSizeLabel: "Total Eye Diameter / Width:",
+                aspectRatioLabel: "Pupil Aspect Ratio:",
+                pupilScaleLabel: "Pupil-to-Eye Ratio:",
+                cutMarginLabel: "Cut Line Margin:",
+                step4Title: "4. Save & Export",
+                paperSizeLabel: "Paper Size:",
+                dpiLabel: "Resolution (DPI):",
+                downloadBtn: "Save with Confirmation Modal (PNG)",
+                tabPrint: "Print Sheet",
+                tabFitting: "Sclera Fitting View",
+                selectFittingImgLabel: "Image:",
+                noticePrint: "Excludes sclera white base. Aligns pupil parts automatically.",
+                noticeFitting: "Preview showing pupil inside the white sclera base.",
+                footerText: "Doll Eye Print Studio ✦ Craft & Create for Your BJD / Anime Dolls",
+                modalTitle: "Download Confirmation",
+                modalDesc: "Confirm or edit the filename to save.",
+                filenameLabel: "Filename:",
+                modalCancel: "Cancel",
+                modalConfirm: "Execute Download",
+                noFile: "No file chosen",
+                browse: "Browse"
             }
-
-            if (galleryId) {
-                await loadAllData(galleryId);
-            } else {
-                renderAll();
-            }
-
-            checkAdminStatus();
-
-            sbClient.auth.onAuthStateChanged(async (_event, session) => {
-                currentUser = session?.user || null;
-                if (currentUser) {
-                    const { data: myOwner } = await sbClient.from('owners').select('custom_id').eq('id', currentUser.id).single();
-                    if (myOwner && myOwner.custom_id && galleryId !== myOwner.custom_id) {
-                        location.href = `?id=${myOwner.custom_id}`;
-                        return;
-                    }
-                }
-                checkAdminStatus();
-                renderAll();
-            });
         };
 
-        function setupFilmScrollEvents() {
-            const container = document.getElementById('film-container');
-            const onStart = () => { isManualScrolling = true; };
-            const onEnd = () => { isManualScrolling = false; };
-            container.addEventListener('touchstart', onStart, {passive: true});
-            container.addEventListener('touchend', onEnd, {passive: true});
-            container.addEventListener('touchcancel', onEnd, {passive: true});
-            container.addEventListener('mousedown', onStart);
-            window.addEventListener('mouseup', onEnd);
-        }
+        window.addEventListener('DOMContentLoaded', () => {
+            renderImageRowsUI();
+            initSampleColorButtons();
+            updateUIStrings();
+            renderTemplateCanvas();
+            renderPreview();
+        });
 
-        function autoScrollLoop() {
-            const container = document.getElementById('film-container');
-            const track = document.getElementById('top-film-roll');
-            if (!isManualScrolling && track && track.children.length > 0) {
-                container.scrollLeft += scrollSpeed;
-                const singleSetWidth = track.scrollWidth / 3;
-                if (container.scrollLeft >= singleSetWidth * 2) {
-                    container.scrollLeft -= singleSetWidth;
-                }
+        function renderImageRowsUI() {
+            const container = document.getElementById('imageRowsContainer');
+            container.innerHTML = '';
+            const dict = i18n[currentLang];
+
+            for (let i = 0; i < 10; i++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = "flex items-center justify-between gap-2 border-b border-antique-border/40 pb-1.5 last:border-0 text-xs";
+                
+                const label = document.createElement('span');
+                label.className = "text-[11px] font-bold text-antique-primary w-14 shrink-0";
+                label.textContent = `${i + 1}行目`;
+
+                const nameSpan = document.createElement('span');
+                nameSpan.id = `fileName_${i}`;
+                nameSpan.className = "text-[10px] text-antique-subtext truncate flex-grow px-2 bg-white/70 rounded border border-antique-border/40 py-1";
+                nameSpan.textContent = rowFileNames[i] || dict.noFile;
+
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.id = `imageInput_${i}`;
+                fileInput.onchange = (e) => handleSingleImageUpload(i, e.target);
+                fileInput.className = "hidden";
+
+                const selectBtn = document.createElement('button');
+                selectBtn.type = 'button';
+                selectBtn.className = "px-2.5 py-1 bg-antique-bg border border-antique-border hover:border-antique-primary text-antique-primary font-bold rounded text-[10px] shrink-0 transition-all";
+                selectBtn.textContent = dict.browse;
+                selectBtn.onclick = () => fileInput.click();
+
+                const clearBtn = document.createElement('button');
+                clearBtn.type = 'button';
+                clearBtn.className = "text-[10px] text-antique-subtext hover:text-antique-primary font-bold px-1 shrink-0";
+                clearBtn.textContent = "✕";
+                clearBtn.onclick = () => clearSingleImage(i);
+
+                rowDiv.appendChild(label);
+                rowDiv.appendChild(nameSpan);
+                rowDiv.appendChild(fileInput);
+                rowDiv.appendChild(selectBtn);
+                rowDiv.appendChild(clearBtn);
+                container.appendChild(rowDiv);
             }
-            requestAnimationFrame(autoScrollLoop);
+            updateFittingImagePulldown();
         }
 
-        async function checkAdminStatus() {
-            if (!currentUser || !galleryId) {
-                document.body.classList.remove('is-admin');
-                return;
-            }
-            const { data } = await sbClient.from('owners').select('id').eq('custom_id', galleryId).single();
-            const isAdmin = data && (data.id === currentUser.id);
-            document.body.classList.toggle('is-admin', isAdmin);
-        }
-
-        async function loadAllData(gid) {
-            try {
-                const { data: ownerRecord } = await sbClient.from('owners').select('*').eq('custom_id', gid).single();
-                if (ownerRecord) {
-                    owner = ownerRecord;
-                    const uid = ownerRecord.id;
-                    const [dollsRes, postsRes] = await Promise.all([
-                        sbClient.from('dolls').select('*').eq('owner_id', uid).order('created_at', { ascending: true }),
-                        sbClient.from('posts').select('*').eq('owner_id', uid).order('created_at', { ascending: false })
-                    ]);
-                    if (dollsRes.data) dolls = dollsRes.data;
-                    if (postsRes.data) posts = postsRes.data;
-                }
-                renderAll();
-
-                const lastEditedPostId = localStorage.getItem('last_edited_post_id');
-                if (lastEditedPostId) {
-                    localStorage.removeItem('last_edited_post_id');
-                    const idx = posts.findIndex(p => p.id === lastEditedPostId);
-                    if (idx !== -1) viewPost(idx);
-                }
-            } catch (e) { console.error(e); renderAll(); }
-        }
-
-        async function loginWithGoogle(targetCustomId = null) {
-            if (targetCustomId) { localStorage.setItem('pending_custom_id', targetCustomId); }
-            const redirectUrl = window.location.origin + window.location.pathname;
-            await sbClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: redirectUrl } });
-        }
-
-        async function handleLogout() { await sbClient.auth.signOut(); location.reload(); }
-
-        async function requestCreateGallery() {
-            showInputDialog("ギャラリーの表示IDを入力してください\n(半角英数字)", async (cid) => {
-                const validId = cid.replace(/[^a-zA-Z0-9]/g, '');
-                if(!validId) { showAlert("有効なIDを入力してください"); return; }
-                const { data } = await sbClient.from('owners').select('custom_id').eq('custom_id', validId).single();
-                if (data) { showAlert("このIDは既に使用されています"); return; }
-                loginWithGoogle(validId);
-            });
-        }
-
-        async function completeRegistration() {
-            const pendingId = localStorage.getItem('pending_custom_id');
-            if (currentUser && pendingId) {
-                await sbClient.from('owners').upsert({
-                    id: currentUser.id,
-                    custom_id: pendingId,
-                    name: currentUser.user_metadata.full_name || "Owner Name"
-                });
-                localStorage.removeItem('pending_custom_id');
-                location.href = `?id=${pendingId}`;
+        function updateImageRowDisplay(index) {
+            const nameSpan = document.getElementById(`fileName_${index}`);
+            const dict = i18n[currentLang];
+            if (nameSpan) {
+                nameSpan.textContent = rowFileNames[index] || dict.noFile;
             }
         }
 
-        async function saveDollData() {
-            if (!currentUser) return;
-            const id = document.getElementById('edit-id').value;
-            const h = document.getElementById('crop-h').value, v = document.getElementById('crop-v').value;
-            let imgData = (id !== "" && dolls.find(d => d.id === id)) ? dolls.find(d => d.id === id).image : "";
-            if(currentRawImg.doll) imgData = await processImageToWebP(currentRawImg.doll, 800, h, v, false);
-
-            const payload = {
-                owner_id: currentUser.id,
-                name: document.getElementById('f-name').value,
-                kana: document.getElementById('f-kana').value,
-                image: imgData,
-                size_label: document.getElementById('f-size-label').value,
-                body_make: document.getElementById('f-body-make').value,
-                head_info: document.getElementById('f-head').value,
-                birthday: getDateValue('f-bday', 'f-bday-m', 'f-bday-d') || null,
-                welcome_day: getDateValue('f-welcome', 'f-welcome-m', 'f-welcome-d') || null,
-                calc_include_first_day: document.querySelector('input[name="f-calc-method"]:checked').value === "1",
-                bg_color: document.getElementById('f-bg-color').value,
-                text_color: document.getElementById('f-text-color').value,
-                cal_color: document.getElementById('f-cal-color').value,
-                profile: document.getElementById('f-profile').value,
-                anniversaries: Array.from(document.querySelectorAll('.anni-input-box')).map((box) => {
-                    const name = box.querySelector('.f-anni-name').value;
-                    const mId = box.querySelector('.f-anni-m').id;
-                    const dId = box.querySelector('.f-anni-d').id;
-                    const mainId = box.querySelector('.f-anni-date').id;
-                    return {
-                        name: name,
-                        date: getDateValue(mainId, mId, dId)
+        function handleSingleImageUpload(index, input) {
+            const file = input.files[0];
+            if (file) {
+                rowFileNames[index] = file.name;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        rowImages[index] = img;
+                        updateImageRowDisplay(index);
+                        updateFittingImagePulldown();
+                        renderPreview();
                     };
-                }).filter(a => a.name && a.date)
-            };
-
-            const { error } = await sbClient.from('dolls').upsert(id ? {id, ...payload} : payload);
-            if (error) showAlert(error.message);
-            else location.reload();
-        }
-
-        async function saveOwner() {
-            if (!currentUser) return;
-            const h = document.getElementById('o-crop-h').value, v = document.getElementById('o-crop-v').value;
-            let imgData = owner.image || "";
-            if(currentRawImg.owner) imgData = await processImageToWebP(currentRawImg.owner, 400, h, v, false);
-            const payload = {
-                name: document.getElementById('o-name').value,
-                bio: document.getElementById('o-bio').value,
-                image: imgData,
-                sns: Array.from(document.querySelectorAll('.sns-type')).map((el, i) => ({
-                    type: el.value,
-                    val: document.querySelectorAll('.sns-val')[i].value,
-                    label: document.querySelectorAll('.sns-label')[i]?.value || ""
-                })).filter(s => s.val)
-            };
-            const { error } = await sbClient.from('owners').update(payload).eq('id', currentUser.id);
-            if (error) showAlert(error.message);
-            else location.reload();
-        }
-
-        async function savePost() {
-            if (!currentUser) return;
-            const id = document.getElementById('edit-post-id').value;
-            const blocks = await Promise.all(Array.from(document.querySelectorAll('.post-block')).map(async (div, i) => {
-                const imgEl = div.querySelector('img');
-                const fileInput = div.querySelector('input[type="file"]');
-                let imgData = (imgEl && !imgEl.classList.contains('hidden')) ? imgEl.src : "";
-                if(fileInput.files[0]) {
-                    const raw = await new Promise(r => {
-                        const rd = new FileReader();
-                        rd.onload = (re) => {
-                            const img = new Image();
-                            img.onload = () => r(img);
-                            img.src = re.target.result;
-                        };
-                        rd.readAsDataURL(fileInput.files[0]);
-                    });
-                    imgData = await processImageToWebP(raw, 1200, 50, 50, true);
-                }
-                return { img: imgData, text: div.querySelector('textarea').value };
-            }));
-
-            const payload = {
-                owner_id: currentUser.id,
-                title: document.getElementById('p-title').value,
-                blocks: blocks,
-                pos: document.querySelector('input[name="p-pos"]:checked').value
-            };
-            if(id) payload.id = id;
-            const { data, error } = await sbClient.from('posts').upsert(payload).select();
-            if(error) { showAlert(error.message); }
-            else {
-                if(data && data[0]) localStorage.setItem('last_edited_post_id', data[0].id);
-                location.reload();
-            }
-        }
-
-        function renderAll() {
-            if (currentUser && localStorage.getItem('pending_custom_id')) { completeRegistration(); }
-            document.getElementById('login-btn').style.display = currentUser ? 'none' : 'block';
-            document.getElementById('logout-btn').style.display = currentUser ? 'block' : 'none';
-
-            const track = document.getElementById('top-film-roll');
-            track.innerHTML = '';
-            const itemsWithImg = dolls.filter(d => d.image);
-            if (itemsWithImg.length > 0) {
-                document.getElementById('empty-msg').style.display = 'none';
-                for (let s = 0; s < 3; s++) {
-                    itemsWithImg.forEach((d) => {
-                        const img = document.createElement('img');
-                        img.src = d.image;
-                        img.className = "film-frame clickable-img";
-                        const originalIdx = dolls.findIndex(orig => orig.id === d.id);
-                        img.onclick = () => showDetail(originalIdx);
-                        track.appendChild(img);
-                    });
-                }
-                if(!window.autoScrollStarted) {
-                    autoScrollLoop();
-                    window.autoScrollStarted = true;
-                }
-            } else {
-                document.getElementById('empty-msg').style.display = 'flex';
-            }
-
-            const oImg = document.getElementById('display-owner-img');
-            if(owner.image) { oImg.src = owner.image; oImg.classList.remove('hidden'); } else { oImg.classList.add('hidden'); }
-            document.getElementById('owner-name').innerText = owner.name || "Owner Name";
-            document.getElementById('owner-bio').innerText = owner.bio || "";
-            const snsArea = document.getElementById('owner-sns-links');
-            snsArea.innerHTML = '';
-            (owner.sns || []).forEach(s => {
-                let url = s.val;
-                if (s.type !== 'その他URL' && !s.val.startsWith('http')) {
-                    const base = {'X(旧Twitter)':'x.com/', Instagram:'instagram.com/', mixi2:'mixi2.social/u/', Bluesky:'bsky.app/profile/', Threads:'threads.net/@'};
-                    url = 'https://' + (base[s.type] || '') + s.val;
-                }
-                snsArea.innerHTML += `<a href="${url}" target="_blank" class="w-full max-w-[240px] py-3 bg-stone-50 border border-stone-100 rounded-full text-xs font-bold shadow-sm text-stone-600 hover:bg-stone-100 transition-colors">${s.label || s.type}</a>`;
-            });
-
-            const hp = document.getElementById('home-posts');
-            hp.innerHTML = '';
-            const mpl = document.getElementById('menu-post-list');
-            mpl.innerHTML = '';
-            posts.forEach((p, i) => {
-                if(p.pos === 'home') {
-                    const card = document.createElement('div');
-                    card.className = "bg-white border rounded-3xl overflow-hidden shadow-sm cursor-pointer mb-8";
-                    card.onclick = () => viewPost(i);
-                    if(p.blocks[0] && p.blocks[0].img) card.innerHTML += `<img src="${p.blocks[0].img}" class="w-full h-48 object-cover clickable-img">`;
-                    card.innerHTML += `<div class="p-6"><h4 class="font-bold text-lg mb-2">${p.title}</h4><p class="text-stone-400 text-xs line-clamp-2">${p.blocks[0]?.text || ''}</p></div>`;
-                    const readMore = document.createElement('p');
-                    readMore.className = "text-center text-stone-400 text-xs font-bold mt-2";
-                    readMore.innerText = "── 続きを読む ──";
-                    card.appendChild(readMore);
-                    hp.appendChild(card);
-                } else {
-                    const btn = document.createElement('button');
-                    btn.className = "w-full text-left py-4 px-6 bg-white border rounded-2xl text-stone-700 font-bold shadow-sm mb-2 whitespace-pre-wrap";
-                    btn.innerText = "📝 " + p.title;
-                    btn.onclick = () => viewPost(i);
-                    mpl.appendChild(btn);
-                }
-            });
-
-            renderCalendar();
-            renderAnni();
-        }
-
-        function renderAnni() {
-            const area = document.getElementById('closest-anniversary'),
-                  happyArea = document.getElementById('happy-anniversary'),
-                  happyListArea = document.getElementById('happy-anniversary-list');
-            area.innerHTML = ''; happyListArea.innerHTML = '';
-            happyArea.classList.add('hidden');
-            let list = [], happyEvents = [];
-            const now = new Date();
-            const todayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-            dolls.forEach((d, idx) => {
-                const includeFirstDay = d.calc_include_first_day || false;
-                const ds = [
-                    { type: 'birth', n: "誕生日", d: d.birthday },
-                    { type: 'welcome', n: "お迎え日", d: d.welcome_day },
-                    ...(d.anniversaries || []).map(a => ({ type: 'custom', n: a.name, d: a.date }))
-                ];
-                ds.forEach(v => {
-                    if(v.d) {
-                        const originDate = new Date(v.d);
-                        const originZero = new Date(originDate.getFullYear(), originDate.getMonth(), originDate.getDate());
-                        const diffMs = todayZero.getTime() - originZero.getTime();
-                        let diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                        
-                        const isAnniDay = (originDate.getMonth() === now.getMonth() && originDate.getDate() === now.getDate());
-                        const diffYears = now.getFullYear() - originDate.getFullYear();
-
-                        // 通常の記念日（当日）
-                        if (isAnniDay && diffYears >= 0) {
-                            let text = `${d.name} の ${v.n}`;
-                            if (v.type === 'welcome') text = `${d.name}お迎え${diffYears}周年`;
-                            else if (v.type === 'birth') text = `${d.name}の誕生日`;
-                            happyEvents.push({ text, img: d.image, dollIdx: idx });
-                        }
-
-                        // キリ番判定 (年月日が揃っている＝2000年ではない場合)
-                        if (originDate.getFullYear() !== 2000) {
-                            let calcDays = diffDays;
-                            if (includeFirstDay) {
-                                calcDays += 1;
-                            }
-                            if (calcDays > 0 && calcDays % 100 === 0) {
-                                let evText = "";
-                                if (v.type === 'welcome') evText = `${d.name}をお迎えして${calcDays}日！`;
-                                else if (v.type === 'birth') evText = `${d.name}の誕生から${calcDays}日！`;
-                                else evText = `${d.name}の${v.n}から${calcDays}日！`;
-                                
-                                happyEvents.push({ text: evText, img: d.image, dollIdx: idx });
-                            }
-                        }
-
-                        let next = new Date(now.getFullYear(), originDate.getMonth(), originDate.getDate());
-                        if (next < todayZero) next.setFullYear(now.getFullYear() + 1);
-                        const wait = Math.ceil((next - todayZero) / (1000 * 60 * 60 * 24));
-                        list.push({ doll: d.name, title: v.n, diff: wait, isToday: isAnniDay, color: d.cal_color || '#E11D48' });
-                    }
-                });
-            });
-
-            if (happyEvents.length > 0) {
-                happyArea.classList.remove('hidden');
-                happyEvents.forEach(ev => {
-                    const div = document.createElement('div');
-                    div.className = "bg-white p-3 rounded-2xl shadow-sm mb-3 animate-anni flex items-center gap-3 cursor-pointer";
-                    div.onclick = () => showDetail(ev.dollIdx);
-                    div.innerHTML = `<img src="${ev.img}" class="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-pink-200 clickable-img"><p class="font-bold text-stone-800 text-sm">${ev.text}</p><span class="ml-auto text-xl">🎉</span>`;
-                    happyListArea.appendChild(div);
-                });
-            }
-
-            if(list.length > 0) {
-                list.sort((a,b) => a.diff - b.diff);
-                const closest = list.filter(item => item.diff === list[0].diff);
-                let html = `<div class="space-y-3">`;
-                closest.forEach(b => {
-                    html += `<div class="bg-white p-5 border-l-4 rounded shadow-sm flex justify-between items-center" style="border-color:${b.color}"><div><p class="text-[10px] text-stone-400 font-bold">${b.doll}</p><p class="font-bold">${b.title}</p></div><b class="text-lg">${b.isToday ? "Today" : "あと "+b.diff+" 日"}</b></div>`;
-                });
-                area.innerHTML = html + `</div>`;
-            }
-        }
-
-        function renderCalendar() {
-            const now = new Date(), v = new Date(now.getFullYear(), now.getMonth() + calOffset, 1), y = v.getFullYear(), m = v.getMonth();
-            document.getElementById('cal-month').innerText = `${y} / ${m+1}`;
-            const firstDay = new Date(y, m, 1).getDay(), lastDate = new Date(y, m+1, 0).getDate(), area = document.getElementById('cal-days'), map = {};
-            area.innerHTML = '';
-            dolls.forEach((d, idx) => {
-                [{n: "誕生日", d: d.birthday}, {n: "お迎え日", d: d.welcome_day}, ...(d.anniversaries || [])].forEach(ev => {
-                    const dtVal = ev.d || ev.date;
-                    if(dtVal) {
-                        const dt = new Date(dtVal);
-                        if(dt.getMonth() === m) {
-                            const day = dt.getDate();
-                            if(!map[day]) map[day] = [];
-                            map[day].push({ dollName: d.name, eventName: ev.n || ev.name, calColor: d.cal_color || '#E11D48', dollIdx: idx, dollImg: d.image, dtVal: dtVal });
-                        }
-                    }
-                });
-            });
-            for(let i=0; i<firstDay; i++) area.innerHTML += '<div></div>';
-            for(let d=1; d<=lastDate; d++) {
-                const isToday = (calOffset === 0 && d === now.getDate());
-                const evs = map[d] || [];
-                const cell = document.createElement('div');
-                cell.className = `cal-day ${isToday ? 'cal-today' : ''}`;
-                cell.innerHTML = `<span>${d}</span>`;
-                if(evs.length > 0) {
-                    const dots = document.createElement('div'); dots.className = "cal-dots";
-                    evs.forEach(e => { dots.innerHTML += `<div class="cal-dot" style="background:${e.calColor}"></div>`; });
-                    cell.appendChild(dots);
-                    cell.onclick = () => {
-                        const dev = document.getElementById('day-events'); dev.innerHTML = '';
-                        evs.forEach(e => {
-                            const dt = new Date(e.dtVal);
-                            const dateStr = dt.getFullYear() === 2000 ? `${dt.getMonth()+1}/${dt.getDate()}` : `${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()}`;
-                            const imgHtml = e.dollImg ? `<img src="${e.dollImg}" class="w-14 h-14 rounded-full object-cover flex-shrink-0 border-2" style="border-color:${e.calColor}">` : `<div class="w-14 h-14 rounded-full flex-shrink-0 border-2 flex items-center justify-center bg-stone-50" style="border-color:${e.calColor}"><span class="text-[10px] text-stone-300">No Image</span></div>`;
-                            dev.innerHTML += `<div class="p-4 bg-white border rounded-xl shadow-sm flex items-center gap-4">
-                                ${imgHtml}
-                                <div class="flex-1">
-                                    <div class="font-bold text-lg text-stone-800 leading-tight mb-1">${e.dollName}</div>
-                                    <div class="font-bold text-base text-stone-600">${e.eventName}</div>
-                                </div>
-                                <div class="text-right self-start mt-1">
-                                    <span class="text-xs text-stone-400 font-bold">${dateStr}</span>
-                                </div>
-                            </div>`;
-                        });
-                    };
-                }
-                area.appendChild(cell);
-            }
-        }
-
-        function updateCrop(imgId, hId, vId) {
-            const img = document.getElementById(imgId);
-            if(!img) return;
-            img.style.objectPosition = `${document.getElementById(hId).value}% ${document.getElementById(vId).value}%`;
-        }
-
-        async function processImageToWebP(imgEl, size, cropH, cropV, isPost = false) {
-            return new Promise(resolve => {
-                const cvs = document.createElement('canvas'), ctx = cvs.getContext('2d');
-                if (isPost) {
-                    let w = imgEl.width, h = imgEl.height, max = size;
-                    if (w > h) { if (w > max) { h *= max / w; w = max; } }
-                    else { if (h > max) { w *= max / h; h = max; } }
-                    cvs.width = w; cvs.height = h;
-                    ctx.drawImage(imgEl, 0, 0, w, h);
-                } else {
-                    cvs.width = cvs.height = size;
-                    const s = Math.max(size/imgEl.width, size/imgEl.height);
-                    ctx.drawImage(imgEl, (size-imgEl.width*s)*(cropH/100), (size-imgEl.height*s)*(cropV/100), imgEl.width*s, imgEl.height*s);
-                }
-                resolve(cvs.toDataURL('image/webp', 0.8));
-            });
-        }
-
-        function toggleMenu(id) {
-            const el = document.getElementById(id);
-            el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'flex' : 'none';
-        }
-
-        function showHome() {
-            document.getElementById('home-content').classList.remove('hidden');
-            document.getElementById('doll-list-page').classList.add('hidden');
-            document.getElementById('post-list-page').classList.add('hidden');
-            document.getElementById('main-header').classList.remove('hidden');
-            closeArticle();
-            renderCalendar();
-        }
-
-        function showDollList() {
-            if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu');
-            document.getElementById('home-content').classList.add('hidden');
-            document.getElementById('post-list-page').classList.add('hidden');
-            document.getElementById('doll-list-page').classList.remove('hidden');
-            renderDollList();
-        }
-
-        function showPostListPage() {
-            if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu');
-            document.getElementById('home-content').classList.add('hidden');
-            document.getElementById('doll-list-page').classList.add('hidden');
-            document.getElementById('post-list-page').classList.remove('hidden');
-        }
-
-        function renderDollList() {
-            const area = document.getElementById('doll-display-area');
-            area.innerHTML = '';
-            if (dollViewMode === 'grid') {
-                area.className = "grid grid-cols-3 gap-2";
-                dolls.forEach((d, i) => {
-                    area.innerHTML += `<div onclick="showDetail(${i})" class="aspect-square bg-white border rounded-xl overflow-hidden cursor-pointer"><img src="${d.image}" class="w-full h-full object-cover clickable-img"></div>`;
-                });
-            } else {
-                area.className = "space-y-2";
-                dolls.forEach((d, i) => {
-                    area.innerHTML += `<div onclick="showDetail(${i})" class="flex items-center gap-4 bg-white p-3 border rounded-xl cursor-pointer"><img src="${d.image}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0 clickable-img"><div><p class="text-xs text-stone-400 font-bold">${d.kana||''}</p><p class="font-bold text-stone-800">${d.name}</p></div></div>`;
-                });
-            }
-        }
-
-        function toggleDollViewMode() {
-            dollViewMode = (dollViewMode === 'grid') ? 'list' : 'grid';
-            document.getElementById('toggle-list-view').innerText = (dollViewMode === 'grid') ? '名前を表示' : 'グリッド表示';
-            renderDollList();
-        }
-
-        function showDetail(idx) {
-            const d = dolls[idx], overlay = document.getElementById('profile-overlay'), bg = document.getElementById('profile-bg');
-            bg.style.backgroundColor = d.bg_color || '#ffffff';
-            bg.style.color = d.text_color || '#000000';
-            document.getElementById('view-img').src = d.image;
-            document.getElementById('view-name').innerText = d.name;
-            document.getElementById('view-kana').innerText = d.kana || '';
-            const b = document.getElementById('detail-box'); b.innerHTML = '';
-            let hasInfo = false;
-            const fmt = (v) => { if(!v) return ''; const dt = new Date(v); return dt.getFullYear() === 2000 ? `${dt.getMonth()+1}/${dt.getDate()}` : `${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()}`; };
-            [['SIZE', d.size_label], ['BODY', d.body_make], ['HEAD', d.head_info], ['BIRTH', fmt(d.birthday)], ['WELCOME', fmt(d.welcome_day)]].forEach(row => {
-                if(row[1]) { b.innerHTML += `<div class="flex justify-between border-b border-current/10 py-2"><span class="text-[10px] font-bold opacity-50 uppercase">${row[0]}</span><span class="font-bold text-sm">${row[1]}</span></div>`; hasInfo = true; }
-            });
-            (d.anniversaries || []).forEach(a => {
-                if(a.name && a.date) {
-                    b.innerHTML += `<div class="flex flex-col mb-4"><span>✨ ${a.name}</span><b>${fmt(a.date)}</b></div>`;
-                    hasInfo = true;
-                }
-            });
-            b.classList.toggle('hidden', !hasInfo);
-            document.getElementById('view-profile').innerText = d.profile || "";
-            document.getElementById('detail-edit-btn').onclick = () => editDoll(idx);
-            document.getElementById('detail-del-btn').onclick = () => showConfirm("このデータを削除しますか？", async () => {
-                await sbClient.from('dolls').delete().eq('id', d.id);
-                location.reload();
-            });
-            overlay.classList.remove('hidden');
-        }
-
-        function closeModal() { document.querySelectorAll('.modal-base').forEach(m => m.style.display='none'); }
-        function closeProfile() { document.getElementById('profile-overlay').classList.add('hidden'); }
-        function closeArticle() { document.getElementById('article-page').style.display = 'none'; }
-        function closeDialog() { document.getElementById('custom-dialog').style.display = 'none'; document.getElementById('dialog-input-container').classList.add('hidden'); }
-        function changeMonth(d) { calOffset += d; document.getElementById('day-events').innerHTML = ''; renderCalendar(); }
-
-        function getDateValue(mainId, mId, dId) {
-            const main = document.getElementById(mainId).value;
-            const m = document.getElementById(mId).value;
-            const d = document.getElementById(dId).value;
-            if(main) return main;
-            if(m && d) return `2000-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-            return null;
-        }
-
-        function setDateValue(val, mainId, mId, dId) {
-            if(!val) {
-                document.getElementById(mainId).value = "";
-                document.getElementById(mId).value = "";
-                document.getElementById(dId).value = "";
-                return;
-            }
-            const dt = new Date(val);
-            if(dt.getFullYear() === 2000) {
-                document.getElementById(mId).value = dt.getMonth() + 1;
-                document.getElementById(dId).value = dt.getDate();
-                document.getElementById(mainId).value = "";
-            } else {
-                document.getElementById(mainId).value = val;
-                document.getElementById(mId).value = "";
-                document.getElementById(dId).value = "";
-            }
-        }
-
-        function initDateSelectors(specificPrefix = null) {
-            const prefixes = specificPrefix ? [specificPrefix] : ["f-bday", "f-welcome"];
-            prefixes.forEach(p => {
-                const mId = p.includes('anni') ? p.replace('-date', '-m') : p+"-m";
-                const dId = p.includes('anni') ? p.replace('-date', '-d') : p+"-d";
-                const m = document.getElementById(mId), d = document.getElementById(dId);
-                if(m && m.options.length <= 1){for(let i=1; i<=12; i++) m.innerHTML += `<option value="${i}">${i}</option>`;}
-                if(d && d.options.length <= 1){for(let i=1; i<=31; i++) d.innerHTML += `<option value="${i}">${i}</option>`;}
-            });
-        }
-
-        function initColorPalettes() {
-            ["bg", "text", "cal"].forEach(t => {
-                const g = document.getElementById(t+"-color-grid"), def = (t==='bg'?'#ffffff':(t==='text'?'#000000':'#E11D48'));
-                palette100.forEach(c => {
-                    const chip = document.createElement('div');
-                    chip.className = `color-chip ${t}-chip`;
-                    chip.style.backgroundColor = c;
-                    if(c.toLowerCase() === def.toLowerCase()) chip.classList.add('selected');
-                    chip.onclick = e => {
-                        document.querySelectorAll(`.${t}-chip`).forEach(x => x.classList.remove('selected'));
-                        chip.classList.add('selected');
-                        document.getElementById('f-'+t+'-color').value = c;
-                        document.getElementById(t+'-select-icon').style.backgroundColor = c;
-                    };
-                    g.appendChild(chip);
-                });
-                document.getElementById(t+'-select-icon').style.backgroundColor = def;
-            });
-        }
-
-        function toggleColorGrid(type) { document.getElementById(type+'-color-grid').classList.toggle('grid-open'); }
-
-        function setupAutoExpand() {
-            document.querySelectorAll('textarea.auto-expand').forEach(el => {
-                el.addEventListener('input', () => {
-                    el.style.height = 'auto';
-                    el.style.height = el.scrollHeight + 'px';
-                });
-            });
-        }
-
-        function setupUnifiedProtection() {
-            document.addEventListener('contextmenu', e => { if(e.target.tagName === 'IMG') e.preventDefault(); }, false);
-        }
-
-        function openModalWithClear() {
-            document.getElementById('edit-id').value = "";
-            document.getElementById('modal-title').innerText = "うちの子登録";
-            document.getElementById('f-name').value = "";
-            document.getElementById('f-kana').value = "";
-            document.getElementById('f-size-label').value = "";
-            document.getElementById('f-body-make').value = "";
-            document.getElementById('f-head').value = "";
-            document.getElementById('f-bday').value = "";
-            document.getElementById('f-welcome').value = "";
-            document.getElementById('f-bday-m').value = ""; document.getElementById('f-bday-d').value = "";
-            document.getElementById('f-welcome-m').value = ""; document.getElementById('f-welcome-d').value = "";
-            document.querySelector('input[name="f-calc-method"][value="0"]').checked = true;
-            document.getElementById('f-profile').value = "";
-            document.getElementById('anniversary-inputs').innerHTML = '';
-            document.getElementById('crop-preview').classList.add('hidden');
-            document.getElementById('doll-hint').classList.remove('hidden');
-            currentRawImg.doll = null;
-
-            // カラー設定をリセット
-            const colorDefaults = { bg: '#ffffff', text: '#000000', cal: '#E11D48' };
-            ['bg', 'text', 'cal'].forEach(t => {
-                const def = colorDefaults[t];
-                document.getElementById('f-'+t+'-color').value = def;
-                document.getElementById(t+'-select-icon').style.backgroundColor = def;
-                // パレットの選択状態（枠線）もデフォルト位置にリセット
-                document.querySelectorAll(`.${t}-chip`).forEach(chip => {
-                    const chipColor = chip.style.backgroundColor;
-                    // 背景色のRGB値と比較するため、一時的にCanvas等で正規化が必要な場合もありますが、
-                    // ここでは簡易的に全選択を解除してから、デフォルトの色にselectedを付与します。
-                    chip.classList.remove('selected');
-                    // palette100生成時の定義に合わせ、16進数またはhsl等での比較
-                });
-                // 初期化時と同じロジックでデフォルト色に枠を付ける
-                const chips = document.querySelectorAll(`.${t}-chip`);
-                chips.forEach(c => {
-                    // 背景色から色を取得（ブラウザによりrgb形式になるため注意）
-                    if(c.style.backgroundColor.replace(/\s/g, '') === (t==='bg'?'rgb(255,255,255)':(t==='text'?'rgb(0,0,0)':'rgb(225,29,72)'))) {
-                        c.classList.add('selected');
-                    }
-                });
-            });
-
-            document.getElementById('modal').style.display = 'flex';
-            if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu');
-            updateAllTextareaHeights();
-        }
-
-        function updateAllTextareaHeights() {
-            document.querySelectorAll('textarea.auto-expand').forEach(el => {
-                el.style.height = 'auto';
-                el.style.height = el.scrollHeight + 'px';
-            });
-        }
-
-        function loadImg(e, type) {
-            const f = e.target.files[0]; if(!f) return;
-            const rd = new FileReader();
-            rd.onload = (re) => {
-                const img = new Image();
-                img.onload = () => {
-                    currentRawImg[type] = img;
-                    const el = document.getElementById(type==='doll'?'crop-preview':'owner-preview');
-                    el.src = img.src; el.classList.remove('hidden');
-                    document.getElementById(type==='doll'?'doll-hint':'owner-hint').classList.add('hidden');
+                    img.src = e.target.result;
                 };
-                img.src = re.target.result;
-            };
-            rd.readAsDataURL(f);
+                reader.readAsDataURL(file);
+            } else {
+                rowImages[index] = null;
+                rowFileNames[index] = null;
+                updateImageRowDisplay(index);
+                updateFittingImagePulldown();
+                renderPreview();
+            }
         }
 
-        function editDoll(idx) {
-            closeProfile();
-            const d = dolls[idx];
-            document.getElementById('edit-id').value = d.id;
-            document.getElementById('modal-title').innerText = "うちの子編集";
-            document.getElementById('f-name').value = d.name;
-            document.getElementById('f-kana').value = d.kana || "";
-            document.getElementById('f-size-label').value = d.size_label || "";
-            document.getElementById('f-body-make').value = d.body_make || "";
-            document.getElementById('f-head').value = d.head_info || "";
-            setDateValue(d.birthday, 'f-bday', 'f-bday-m', 'f-bday-d');
-            setDateValue(d.welcome_day, 'f-welcome', 'f-welcome-m', 'f-welcome-d');
-            
-            const calcVal = d.calc_include_first_day ? "1" : "0";
-            const calcEl = document.querySelector(`input[name="f-calc-method"][value="${calcVal}"]`);
-            if(calcEl) calcEl.checked = true;
+        function handleBulkUpload(input) {
+            const files = Array.from(input.files).slice(0, 10);
+            if (!files.length) return;
 
-            const anniA = document.getElementById('anniversary-inputs');
-            anniA.innerHTML = '';
-            (d.anniversaries || []).forEach(a => addAnniversaryInput(a));
-            document.getElementById('f-profile').value = d.profile || "";
-            ['bg', 'text', 'cal'].forEach(t => {
-                const color = d[t+'_color'] || (t==='bg'?'#ffffff':(t==='text'?'#000000':'#E11D48'));
-                document.getElementById('f-'+t+'-color').value = color;
-                document.getElementById(t+'-select-icon').style.backgroundColor = color;
-                // パレットの選択枠を更新
-                document.querySelectorAll(`.${t}-chip`).forEach(chip => {
-                    chip.classList.remove('selected');
-                    // 背景色が一致する場合にselected付与
-                    // rgb文字列同士で比較（ブラウザ依存対策としてreplaceで空白削除）
-                    const targetDiv = document.createElement('div');
-                    targetDiv.style.color = color;
-                    if(chip.style.backgroundColor.replace(/\s/g, '') === targetDiv.style.color.replace(/\s/g, '')) {
-                        chip.classList.add('selected');
-                    }
+            let loadedCount = 0;
+            files.forEach((file, idx) => {
+                rowFileNames[idx] = file.name;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        rowImages[idx] = img;
+                        loadedCount++;
+                        if (loadedCount === files.length) {
+                            renderImageRowsUI();
+                            renderPreview();
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+            input.value = '';
+        }
+
+        function clearSingleImage(index) {
+            rowImages[index] = null;
+            rowFileNames[index] = null;
+            const input = document.getElementById(`imageInput_${index}`);
+            if (input) input.value = '';
+            updateImageRowDisplay(index);
+            updateFittingImagePulldown();
+            renderPreview();
+        }
+
+        function clearAllImages() {
+            rowImages = new Array(10).fill(null);
+            rowFileNames = new Array(10).fill(null);
+            renderImageRowsUI();
+            renderPreview();
+        }
+
+        function updateFittingImagePulldown() {
+            const select = document.getElementById('fittingImageSelect');
+            const currentSelectedVal = select.value;
+            select.innerHTML = '';
+
+            const uploadedIndices = rowImages.map((img, i) => img !== null ? i : -1).filter(i => i !== -1);
+
+            if (uploadedIndices.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '0';
+                opt.textContent = 'サンプルカラー';
+                select.appendChild(opt);
+            } else {
+                uploadedIndices.forEach(idx => {
+                    const opt = document.createElement('option');
+                    opt.value = idx.toString();
+                    opt.textContent = rowFileNames[idx] ? `画像 ${idx + 1} (${rowFileNames[idx]})` : `画像 ${idx + 1}`;
+                    select.appendChild(opt);
                 });
-            });
-            if(d.image) {
-                const p = document.getElementById('crop-preview'); p.src = d.image; p.classList.remove('hidden');
-                document.getElementById('doll-hint').classList.add('hidden');
             }
-            document.getElementById('modal').style.display = 'flex';
-            updateAllTextareaHeights();
-        }
 
-        function addAnniversaryInput(v = {name:'', date:''}) {
-            const id = Date.now() + Math.random().toString(36).substring(2);
-            const div = document.createElement('div');
-            div.className = "anni-input-box p-4 bg-stone-100/50 rounded-2xl space-y-2 border";
-            div.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">記念日</span>
-                    <button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕ 削除</button>
-                </div>
-                <input type="text" class="f-anni-name w-full border-b bg-transparent py-2 text-sm outline-none" placeholder="記念日名(例:ハーフバースデー)" value="${v.name}">
-                <div class="flex gap-2 mb-2 items-center">
-                    <select id="f-anni-m-${id}" class="f-anni-m border rounded p-2 text-xs flex-1 outline-none"><option value="">月</option></select>
-                    <select id="f-anni-d-${id}" class="f-anni-d border rounded p-2 text-xs flex-1 outline-none"><option value="">日</option></select>
-                </div>
-                <input type="date" id="f-anni-date-${id}" class="f-anni-date date-input" value="${v.date || ''}">
-            `;
-            document.getElementById('anniversary-inputs').appendChild(div);
-            initDateSelectors(`f-anni-date-${id}`);
-            if (v.date) {
-                setDateValue(v.date, `f-anni-date-${id}`, `f-anni-m-${id}`, `f-anni-d-${id}`);
+            if (currentSelectedVal && select.querySelector(`option[value="${currentSelectedVal}"]`)) {
+                select.value = currentSelectedVal;
             }
         }
 
-        function openOwnerModal() {
-            document.getElementById('o-name').value = owner.name;
-            document.getElementById('o-bio').value = owner.bio || "";
-            const cont = document.getElementById('sns-inputs-container'); cont.innerHTML = '';
-            (owner.sns || []).forEach(s => addSnsInput(s));
-            if(owner.image) {
-                const p = document.getElementById('owner-preview'); p.src = owner.image; p.classList.remove('hidden');
-                document.getElementById('owner-hint').classList.add('hidden');
-            }
-            document.getElementById('owner-modal').style.display = 'flex';
-            if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu');
-            updateAllTextareaHeights();
+        function getActiveUploadedImages() {
+            return rowImages.filter(img => img !== null);
         }
 
-        function addSnsInput(v = {type:'X(旧Twitter)', val:'', label:''}) {
-            const id = Date.now() + Math.random(), div = document.createElement('div');
-            div.className = "p-4 bg-stone-50 rounded-xl border space-y-2";
-            div.innerHTML = `<div class="flex justify-between items-center"><select class="sns-type text-xs font-bold bg-transparent outline-none" onchange="toggleSnsLabel(this, '${id}')"><option ${v.type==='X(旧Twitter)'?'selected':''}>X(旧Twitter)</option><option ${v.type==='Instagram'?'selected':''}>Instagram</option><option ${v.type==='Bluesky'?'selected':''}>Bluesky</option><option ${v.type==='Threads'?'selected':''}>Threads</option><option ${v.type==='mixi2'?'selected':''}>mixi2</option><option ${v.type==='その他URL'?'selected':''}>その他URL</option></select><button onclick="this.parentElement.parentElement.remove()" class="text-stone-400 text-xs">✕</button></div><input type="text" class="sns-val w-full border-b bg-transparent py-1 text-sm outline-none" placeholder="ユーザーID または URL" value="${v.val}"><div id="sns-label-container-${id}" class="${v.type==='その他URL'?'':'hidden'}"><input type="text" class="sns-label w-full border-b bg-transparent py-1 text-xs outline-none" placeholder="表示名 (例: ほしい物リスト)" value="${v.label}"></div>`;
-            document.getElementById('sns-inputs-container').appendChild(div);
-        }
-
-        function toggleSnsLabel(select, id) {
-            const container = document.getElementById(`sns-label-container-${id}`);
-            if (select.value === 'その他URL') container.classList.remove('hidden'); else container.classList.add('hidden');
-        }
-
-        function openPostModal() {
-            document.getElementById('edit-post-id').value = "";
-            document.getElementById('post-modal-title').innerText = "投稿作成";
-            document.getElementById('p-title').value = "";
-            document.getElementById('post-blocks-container').innerHTML = '';
-            addPostBlock();
-            document.getElementById('post-modal').style.display='flex';
-            if(document.getElementById('side-menu').style.display === 'flex') toggleMenu('side-menu');
-            updateAllTextareaHeights();
-        }
-
-        function editPost(idx) {
-            const p = posts[idx];
-            document.getElementById('edit-post-id').value = p.id;
-            document.getElementById('post-modal-title').innerText = "投稿編集";
-            document.getElementById('p-title').value = p.title;
-            document.getElementById('post-blocks-container').innerHTML = '';
-            p.blocks.forEach(b => addPostBlock(b));
-            document.querySelector(`input[name="p-pos"][value="${p.pos}"]`).checked = true;
-            document.getElementById('post-modal').style.display = 'flex';
-            updateAllTextareaHeights();
-        }
-
-        function addPostBlock(data = {img: '', text: ''}) {
-            const id = Date.now() + Math.random(), div = document.createElement('div');
-            div.className = "post-block p-4 border rounded-xl mb-4 bg-stone-50";
-            div.innerHTML = `<div class="preview-post mb-2" onclick="document.getElementById('p-file-${id}').click()"><img id="p-img-${id}" src="${data.img}" class="${data.img?'':'hidden'} clickable-img"><span id="p-hint-${id}" class="text-xs text-stone-300 ${data.img?'hidden':''} absolute inset-0 flex items-center justify-center font-bold">画像選択</span></div><input type="file" id="p-file-${id}" accept="image/*" class="hidden" onchange="loadBlockImg(event, '${id}')"><div class="input-bordered mt-2"><textarea class="auto-expand" placeholder="文章を入力...">${data.text||''}</textarea></div><button onclick="this.parentElement.remove()" class="text-xs text-red-400 mt-2">削除</button>`;
-            document.getElementById('post-blocks-container').appendChild(div);
-            setTimeout(() => updateAllTextareaHeights(), 0);
-        }
-
-        async function loadBlockImg(e, id) {
-            const f = e.target.files[0]; if(!f) return;
-            const rd = new FileReader();
-            rd.onload = (re) => {
-                const img = document.getElementById(`p-img-${id}`);
-                img.src = re.target.result; img.classList.remove('hidden');
-                document.getElementById(`p-hint-${id}`).classList.add('hidden');
-            };
-            rd.readAsDataURL(f);
-        }
-
-        function viewPost(idx) {
-            const p = posts[idx], art = document.getElementById('article-page');
-            document.getElementById('art-title').innerText = p.title;
-            const cont = document.getElementById('art-content'); cont.innerHTML = '';
-            p.blocks.forEach(b => {
-                if(b.img) cont.innerHTML += `<img src="${b.img}" class="w-full rounded-2xl shadow-sm clickable-img">`;
-                if(b.text) cont.innerHTML += `<p class="wysiwyg-text text-stone-600 px-2">${b.text}</p>`;
-            });
-            document.getElementById('art-edit-btn').onclick = () => { closeArticle(); editPost(idx); };
-            document.getElementById('art-del-btn').onclick = () => showConfirm("この投稿を削除しますか？", async () => {
-                await sbClient.from('posts').delete().eq('id', p.id);
-                location.reload();
-            });
-            art.style.display = 'block';
-            history.pushState({page: 'article', index: idx}, "");
-        }
-
-        function closeArticle() { document.getElementById('article-page').style.display = 'none'; }
-
-        function copyURL() {
-            navigator.clipboard.writeText(window.location.href); showAlert("URLをコピーしました");
-        }
-
-        function shareSNS(type) {
-            const url = encodeURIComponent(window.location.href), txt = encodeURIComponent(owner.name + "のドールギャラリー");
-            if(type === 'x') window.open(`https://x.com/intent/tweet?url=${url}&text=${txt}`);
-            else window.open(`https://social-plugins.line.me/lineit/share?url=${url}`);
-        }
-
-        function showInputDialog(m, onY) {
-            const d = document.getElementById('custom-dialog');
-            document.getElementById('dialog-message').innerText = m;
-            document.getElementById('dialog-input-container').classList.remove('hidden');
-            const bA = document.getElementById('dialog-buttons'); bA.innerHTML = '';
-            const b1 = document.createElement('button');
-            b1.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold";
-            b1.innerText = "決定";
-            b1.onclick = () => { onY(document.getElementById('dialog-text-input').value); closeDialog(); };
-            const b2 = document.createElement('button');
-            b2.className = "w-full bg-stone-100 py-4 rounded-full font-bold";
-            b2.innerText = "キャンセル";
-            b2.onclick = closeDialog;
-            bA.append(b1, b2);
-            d.style.display = 'flex';
-        }
-
-        async function requestClearAll() {
-            showConfirm("全てのデータ(オーナー情報、うちの子、投稿)を完全に削除しますか？\nこの操作は取り消せません。", async () => {
-                const { data: ownerData } = await sbClient.from('owners').select('id').eq('custom_id', galleryId).single();
-                if(ownerData && ownerData.id === currentUser.id) {
-                    await Promise.all([
-                        sbClient.from('owners').delete().eq('id', currentUser.id),
-                        sbClient.from('dolls').delete().eq('owner_id', currentUser.id),
-                        sbClient.from('posts').delete().eq('owner_id', currentUser.id)
-                    ]);
-                    await sbClient.auth.signOut();
-                    location.href = window.location.origin + window.location.pathname;
+        function initSampleColorButtons() {
+            const btns = document.querySelectorAll('.sample-color-btn');
+            btns.forEach(btn => {
+                if (btn.getAttribute('data-color') === sampleColor) {
+                    btn.classList.add('ring-4', 'ring-antique-primary', 'scale-110');
                 }
-            }, "完全に削除して初期化する");
+            });
         }
 
-        function showConfirm(m, onY, yesText = "実行") {
-            const d = document.getElementById('custom-dialog');
-            document.getElementById('dialog-message').innerText = m;
-            const bA = document.getElementById('dialog-buttons'); bA.innerHTML = '';
-            const b1 = document.createElement('button');
-            b1.className = "w-full bg-red-400 text-white py-4 rounded-full font-bold shadow-lg";
-            b1.innerText = yesText;
-            b1.onclick = () => { onY(); closeDialog(); };
-            const b2 = document.createElement('button');
-            b2.className = "w-full bg-stone-100 py-4 rounded-full font-bold";
-            b2.innerText = "キャンセル";
-            b2.onclick = closeDialog;
-            bA.append(b1, b2);
-            d.style.display = 'flex';
+        function toggleLanguage() {
+            currentLang = currentLang === 'ja' ? 'en' : 'ja';
+            const jpTab = document.getElementById('langJpTab');
+            const enTab = document.getElementById('langEnTab');
+            
+            if (currentLang === 'en') {
+                jpTab.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 text-antique-subtext hover:text-antique-primary";
+                enTab.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 bg-antique-primary text-white shadow-sm";
+            } else {
+                jpTab.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 bg-antique-primary text-white shadow-sm";
+                enTab.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 text-antique-subtext hover:text-antique-primary";
+            }
+            updateUIStrings();
+            renderImageRowsUI();
+            renderTemplateCanvas();
+            renderPreview();
         }
 
-        function showAlert(msg) {
-            const d = document.getElementById('custom-dialog');
-            document.getElementById('dialog-message').innerText = msg;
-            const bA = document.getElementById('dialog-buttons'); bA.innerHTML = '';
-            const b1 = document.createElement('button');
-            b1.className = "w-full bg-stone-800 text-white py-4 rounded-full font-bold";
-            b1.innerText = "OK"; b1.onclick = closeDialog;
-            bA.appendChild(b1);
-            d.style.display = 'flex';
+        function updateUIStrings() {
+            const dict = i18n[currentLang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) {
+                    el.innerHTML = dict[key];
+                }
+            });
+            updateNoticeText();
         }
 
-        function setupBackButton() {
-            window.onpopstate = (event) => {
-                const article = document.getElementById('article-page');
-                const profile = document.getElementById('profile-overlay');
-                const sideMenu = document.getElementById('side-menu');
-                const modal = document.getElementById('modal');
-                const ownerModal = document.getElementById('owner-modal');
-                const postModal = document.getElementById('post-modal');
-                const dollList = document.getElementById('doll-list-page');
-                const postList = document.getElementById('post-list-page');
+        function updateNoticeText() {
+            const noticeEl = document.getElementById('previewNotice');
+            const dict = i18n[currentLang];
+            if (currentTab === 'print') noticeEl.innerHTML = dict.noticePrint;
+            else if (currentTab === 'fitting') noticeEl.textContent = dict.noticeFitting;
+        }
 
-                if (article.style.display === 'block') {
-                    closeArticle();
-                    history.pushState({page: 'base'}, "");
-                } else if (!profile.classList.contains('hidden')) {
-                    closeProfile();
-                    history.pushState({page: 'base'}, "");
-                } else if (sideMenu.style.display === 'flex') {
-                    toggleMenu('side-menu');
-                    history.pushState({page: 'base'}, "");
-                } else if (modal.style.display === 'flex' || ownerModal.style.display === 'flex' || postModal.style.display === 'flex') {
-                    closeModal();
-                    history.pushState({page: 'base'}, "");
-                } else if (!dollList.classList.contains('hidden') || !postList.classList.contains('hidden')) {
-                    showHome();
-                    history.pushState({page: 'base'}, "");
+        function setSampleColor(colorHex) {
+            sampleColor = colorHex;
+            document.querySelectorAll('.sample-color-btn').forEach(btn => {
+                if (btn.getAttribute('data-color') === colorHex) {
+                    btn.classList.add('ring-4', 'ring-antique-primary', 'scale-110');
                 } else {
-                    showConfirm("ログアウトしますか？", async () => {
-                        await handleLogout();
-                    }, "ログアウトする");
-                    history.pushState({page: 'base'}, "");
+                    btn.classList.remove('ring-4', 'ring-antique-primary', 'scale-110');
                 }
-            };
+            });
+            renderPreview();
+        }
+
+        function setShape(shape) {
+            currentShape = shape;
+            const roundBtn = document.getElementById('shapeRoundBtn');
+            const animeBtn = document.getElementById('shapeAnimeBtn');
+            const aspectGroup = document.getElementById('aspectRatioGroup');
+
+            if (shape === 'anime') {
+                animeBtn.className = "py-2.5 px-3 rounded-xl border border-antique-primary bg-antique-primary text-white text-xs font-bold transition-all shadow-sm";
+                roundBtn.className = "py-2.5 px-3 rounded-xl border border-antique-border bg-antique-bg text-antique-text text-xs font-bold transition-all hover:border-antique-primary";
+                aspectGroup.classList.remove('hidden');
+            } else {
+                roundBtn.className = "py-2.5 px-3 rounded-xl border border-antique-primary bg-antique-primary text-white text-xs font-bold transition-all shadow-sm";
+                animeBtn.className = "py-2.5 px-3 rounded-xl border border-antique-border bg-antique-bg text-antique-text text-xs font-bold transition-all hover:border-antique-primary";
+                aspectGroup.classList.add('hidden');
+            }
+            renderTemplateCanvas();
+            renderPreview();
+        }
+
+        function setScleraShape(shape) {
+            scleraShape = shape;
+            const roundBtn = document.getElementById('scleraRoundBtn');
+            const horizBtn = document.getElementById('scleraHorizontalBtn');
+
+            if (shape === 'round') {
+                roundBtn.className = "py-2 px-3 rounded-xl border border-antique-primary bg-antique-primary text-white text-xs font-bold transition-all shadow-sm";
+                horizBtn.className = "py-2 px-3 rounded-xl border border-antique-border bg-antique-bg text-antique-text text-xs font-bold transition-all hover:border-antique-primary";
+            } else {
+                horizBtn.className = "py-2 px-3 rounded-xl border border-antique-primary bg-antique-primary text-white text-xs font-bold transition-all shadow-sm";
+                roundBtn.className = "py-2 px-3 rounded-xl border border-antique-border bg-antique-bg text-antique-text text-xs font-bold transition-all hover:border-antique-primary";
+            }
+            renderPreview();
+        }
+
+        function setPaperSize(size) {
+            currentPaperSize = size;
+            const lBtn = document.getElementById('paperLBtn');
+            const hagakiBtn = document.getElementById('paperHagakiBtn');
+
+            if (size === 'L') {
+                lBtn.className = "py-2 px-3 rounded-xl border border-antique-primary bg-antique-primary text-white text-xs font-bold transition-all shadow-sm";
+                hagakiBtn.className = "py-2 px-3 rounded-xl border border-antique-border bg-antique-bg text-antique-text text-xs font-bold transition-all hover:border-antique-primary";
+            } else {
+                hagakiBtn.className = "py-2 px-3 rounded-xl border border-antique-primary bg-antique-primary text-white text-xs font-bold transition-all shadow-sm";
+                lBtn.className = "py-2 px-3 rounded-xl border border-antique-border bg-antique-bg text-antique-text text-xs font-bold transition-all hover:border-antique-primary";
+            }
+            if (currentTab === 'print') renderPreview();
+        }
+
+        function setDpi(dpi) {
+            currentDpi = parseInt(dpi);
+            const dpi300Btn = document.getElementById('dpi300Btn');
+            const dpi600Btn = document.getElementById('dpi600Btn');
+
+            if (currentDpi === 300) {
+                dpi300Btn.className = "py-2 px-3 rounded-xl border border-antique-primary bg-antique-primary text-white text-xs font-bold transition-all shadow-sm";
+                dpi600Btn.className = "py-2 px-3 rounded-xl border border-antique-border bg-antique-bg text-antique-text text-xs font-bold transition-all hover:border-antique-primary";
+            } else {
+                dpi600Btn.className = "py-2 px-3 rounded-xl border border-antique-primary bg-antique-primary text-white text-xs font-bold transition-all shadow-sm";
+                dpi300Btn.className = "py-2 px-3 rounded-xl border border-antique-border bg-antique-bg text-antique-text text-xs font-bold transition-all hover:border-antique-primary";
+            }
+            if (currentTab === 'print') renderPreview();
+        }
+
+        function updateEyeSize(val) {
+            eyeSizeMm = parseInt(val);
+            document.getElementById('eyeSizeVal').textContent = eyeSizeMm + " mm";
+            renderPreview();
+        }
+
+        function updateAspectRatio(val) {
+            aspectRatio = parseInt(val);
+            let labelText = `${aspectRatio}%`;
+            if (aspectRatio === 0) labelText += " (正円)";
+            else if (aspectRatio === 100) labelText += " (デフォルト)";
+            else if (aspectRatio === 200) labelText += " (2倍縦長)";
+            document.getElementById('aspectRatioVal').textContent = labelText;
+            renderTemplateCanvas();
+            renderPreview();
+        }
+
+        function updatePupilScale(val) {
+            pupilScale = parseInt(val);
+            document.getElementById('pupilScaleVal').textContent = pupilScale + "%";
+            renderPreview();
+        }
+
+        function updateCutMargin(val) {
+            cutMarginMm = parseFloat(val);
+            document.getElementById('cutMarginVal').textContent = cutMarginMm.toFixed(1) + " mm";
+            renderPreview();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const tFitting = document.getElementById('tabFittingBtn');
+            const tPrint = document.getElementById('tabPrintBtn');
+            const fittingSelectContainer = document.getElementById('fittingImageSelectContainer');
+
+            const activeClass = "px-3.5 py-2 rounded-xl text-xs font-bold bg-antique-primary text-white transition-all shadow-sm";
+            const inactiveClass = "px-3.5 py-2 rounded-xl text-xs font-bold bg-antique-bg text-antique-subtext border border-antique-border hover:text-antique-primary transition-all";
+
+            tFitting.className = tab === 'fitting' ? activeClass : inactiveClass;
+            tPrint.className = tab === 'print' ? activeClass : inactiveClass;
+
+            if (tab === 'fitting') {
+                fittingSelectContainer.classList.remove('hidden');
+            } else {
+                fittingSelectContainer.classList.add('hidden');
+            }
+
+            updateNoticeText();
+            renderPreview();
+        }
+
+        // --- 縦横比率スライダーの計算（p.html由来の縦横比ロジック） ---
+        function getEffectiveAspectFactor() {
+            const circleFactor = 0.868; 
+            const normalFactor = 1.085; 
+            const maxFactor = 1.35;       
+
+            if (aspectRatio <= 100) {
+                return circleFactor + (normalFactor - circleFactor) * (aspectRatio / 100);
+            } else {
+                return normalFactor + (maxFactor - normalFactor) * ((aspectRatio - 100) / 100);
+            }
+        }
+
+        // --- テンプレート専用の固定レンダラー ---
+        function renderTemplateCanvas() {
+            const canvas = document.getElementById('templateCanvas');
+            const size = 1000;
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, size, size);
+
+            const cx = size / 2;
+            const cy = size / 2;
+
+            let pupilRadiusX, pupilRadiusY;
+            const width = size;
+
+            if (currentShape === 'anime') {
+                pupilRadiusX = width * 0.28;
+                pupilRadiusY = pupilRadiusX * FIXED_ANIME_TEMPLATE_ASPECT;
+            } else {
+                pupilRadiusX = width * 0.30;
+                pupilRadiusY = pupilRadiusX;
+            }
+
+            let templateW = pupilRadiusX * 2;
+            let templateH = pupilRadiusY * 2;
+
+            if (templateH > size * 0.85) {
+                const scale = (size * 0.85) / templateH;
+                templateW *= scale;
+                templateH *= scale;
+            }
+
+            ctx.save();
+            ctx.strokeStyle = '#872f3e';
+            ctx.lineWidth = 6;
+            ctx.setLineDash([]); 
+
+            ctx.beginPath();
+            if (currentShape === 'anime') {
+                ctx.ellipse(cx, cy, templateW / 2, templateH / 2, 0, 0, Math.PI * 2);
+            } else {
+                ctx.arc(cx, cy, templateW / 2, 0, Math.PI * 2);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // --- Get Target Pupil Dimensions ---
+        function getPupilDimensions(outerW, outerH) {
+            const ratio = pupilScale / 100;
+            
+            if (currentShape === 'round') {
+                const maxPupilDiameter = Math.min(outerW, outerH) * ratio;
+                return { w: maxPupilDiameter, h: maxPupilDiameter };
+            } else {
+                let pW = outerW * ratio;
+                let aspectFactor = getEffectiveAspectFactor();
+                let pH = pW * aspectFactor;
+                
+                const maxPH = outerH * Math.min(ratio, 0.95);
+                if (pH > maxPH) {
+                    const scale = maxPH / pH;
+                    pW *= scale;
+                    pH *= scale;
+                }
+                return { w: pW, h: pH };
+            }
+        }
+
+        // --- Main Preview Renderer ---
+        function renderPreview() {
+            const canvas = document.getElementById('renderCanvas');
+            const ctx = canvas.getContext('2d');
+
+            if (currentTab === 'print') {
+                drawPrintSheet(ctx, canvas, currentDpi);
+            } else if (currentTab === 'fitting') {
+                drawFittingView(ctx, canvas);
+            }
+
+            const displayCanvas = document.getElementById('displayCanvas');
+            displayCanvas.width = canvas.width;
+            displayCanvas.height = canvas.height;
+            const dCtx = displayCanvas.getContext('2d');
+            dCtx.drawImage(canvas, 0, 0);
+        }
+
+        // --- Draw Single Pupil Graphic ---
+        function drawPupilGraphic(ctx, cx, cy, w, h, targetImageIndex = null) {
+            ctx.save();
+            ctx.beginPath();
+            
+            if (currentShape === 'round') {
+                ctx.arc(cx, cy, w / 2, 0, Math.PI * 2);
+            } else {
+                ctx.ellipse(cx, cy, w / 2, h / 2, 0, 0, Math.PI * 2);
+            }
+            ctx.clip();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(cx - w / 2, cy - h / 2, w, h);
+
+            let targetImg = (targetImageIndex !== null) ? rowImages[targetImageIndex] : null;
+
+            if (targetImg) {
+                const imgW = targetImg.width;
+                const imgH = targetImg.height;
+
+                if (currentShape === 'round') {
+                    const side = Math.min(imgW, imgH);
+                    const sx = (imgW - side) / 2;
+                    const sy = (imgH - side) / 2;
+                    ctx.drawImage(targetImg, sx, sy, side, side, cx - w / 2, cy - h / 2, w, w);
+                } else {
+                    const fitScale = 1.2;
+                    const dw = w * fitScale;
+                    const dh = h * fitScale;
+                    ctx.drawImage(targetImg, cx - dw / 2, cy - dh / 2, dw, dh);
+                }
+            } else {
+                // Sample color procedural graphic
+                ctx.save();
+                ctx.translate(cx, cy);
+
+                const sampleScaleFactor = 0.77;
+                const sampleW = w * sampleScaleFactor;
+                // アニメアイのサンプルデータのみさらに縦長にするため、高さを1.3倍に調整
+                const sampleH = currentShape === 'anime' ? h * sampleScaleFactor * 1.3 : h * sampleScaleFactor;
+
+                if (currentShape === 'round') {
+                    const maxR = sampleW / 2;
+                    const grad = ctx.createRadialGradient(0, 0, maxR * 0.2, 0, 0, maxR);
+                    grad.addColorStop(0, '#ffffff');
+                    grad.addColorStop(0.3, sampleColor);
+                    grad.addColorStop(0.85, adjustColorBrightness(sampleColor, -40));
+                    grad.addColorStop(1, '#1a1a1a');
+
+                    ctx.beginPath();
+                    ctx.arc(0, 0, maxR, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(0, 0, maxR * 0.35, 0, Math.PI * 2);
+                    ctx.fillStyle = '#111111';
+                    ctx.fill();
+
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                    ctx.beginPath();
+                    ctx.arc(-sampleW * 0.15, -sampleW * 0.15, maxR * 0.18, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    const grad = ctx.createLinearGradient(0, -sampleH / 2, 0, sampleH / 2);
+                    grad.addColorStop(0, adjustColorBrightness(sampleColor, 25));
+                    grad.addColorStop(0.5, sampleColor);
+                    grad.addColorStop(1, adjustColorBrightness(sampleColor, -40));
+
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, sampleW / 2, sampleH / 2, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, sampleW * 0.28, sampleH * 0.32, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = '#0a0a0a';
+                    ctx.fill();
+
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+                    ctx.beginPath();
+                    ctx.ellipse(-sampleW * 0.16, -sampleH * 0.20, sampleW * 0.14, sampleH * 0.11, -Math.PI / 6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+
+            ctx.restore();
+        }
+
+        function adjustColorBrightness(hex, percent) {
+            let num = parseInt(hex.replace("#",""), 16);
+            let r = (num >> 16) + percent;
+            let g = ((num >> 8) & 0x00ff) + percent;
+            let b = (num & 0x0000ff) + percent;
+            r = Math.min(255, Math.max(0, r));
+            g = Math.min(255, Math.max(0, g));
+            b = Math.min(255, Math.max(0, b));
+            return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1)}`;
+        }
+
+        // --- Print Sheet Generator ---
+        function drawPrintSheet(ctx, canvas, dpi) {
+            const mmToPx = dpi / 25.4;
+            const scaleRatio = dpi / 300;
+
+            let widthMm = currentPaperSize === 'hagaki' ? 100 : 89;
+            let heightMm = currentPaperSize === 'hagaki' ? 148 : 127;
+
+            canvas.width = Math.round(widthMm * mmToPx);
+            canvas.height = Math.round(heightMm * mmToPx);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 定規型スケール（1cm）を上部に配置
+            const rulerW = 10 * mmToPx;
+            const rulerH = 3 * mmToPx;
+            const rulerX = canvas.width - rulerW - 3 * mmToPx;
+            const rulerY = 3.5 * mmToPx;
+
+            ctx.save();
+            ctx.strokeStyle = '#4a3b32';
+            ctx.fillStyle = '#4a3b32';
+            ctx.lineWidth = 1 * scaleRatio;
+
+            // 定規の枠
+            ctx.strokeRect(rulerX, rulerY, rulerW, rulerH);
+
+            // 目盛り (0mm, 5mm, 10mm)
+            ctx.beginPath();
+            ctx.moveTo(rulerX, rulerY);
+            ctx.lineTo(rulerX, rulerY + rulerH * 0.6);
+            ctx.moveTo(rulerX + rulerW * 0.5, rulerY);
+            ctx.lineTo(rulerX + rulerW * 0.5, rulerY + rulerH * 0.4);
+            ctx.moveTo(rulerX + rulerW, rulerY);
+            ctx.lineTo(rulerX + rulerW, rulerY + rulerH * 0.6);
+            ctx.stroke();
+
+            // 「1cm」の文字
+            ctx.font = `${Math.round(2.5 * mmToPx)}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText('1cm', rulerX + rulerW / 2, rulerY + rulerH + 3.2 * mmToPx);
+            ctx.restore();
+
+            const outerW_px = eyeSizeMm * mmToPx;
+            const outerH_px = scleraShape === 'horizontal' ? outerW_px * HORIZONTAL_SCLERA_RATIO : outerW_px;
+
+            const activeImages = getActiveUploadedImages();
+            const totalUploaded = activeImages.length;
+
+            const minMarginX = 2 * mmToPx;
+            const minMarginTop = 10 * mmToPx; 
+            const minMarginBottom = 6 * mmToPx;
+            const spacing = 1.5 * mmToPx;
+            const cutMarginPx = cutMarginMm * mmToPx;
+
+            const { w: pupilW, h: pupilH } = getPupilDimensions(outerW_px, outerH_px);
+
+            const itemBoxW = pupilW + (cutMarginPx * 2);
+            const itemBoxH = pupilH + (cutMarginPx * 2);
+
+            const availWidth = canvas.width - (minMarginX * 2);
+            const availHeight = canvas.height - minMarginTop - minMarginBottom;
+
+            const cols = Math.floor((availWidth + spacing) / (itemBoxW + spacing));
+            const rows = Math.floor((availHeight + spacing) / (itemBoxH + spacing));
+
+            const totalGridW = cols * itemBoxW + (cols - 1) * spacing;
+            const totalGridH = rows * itemBoxH + (rows - 1) * spacing;
+
+            const startX = minMarginX + (availWidth - totalGridW) / 2;
+            const startY = minMarginTop + (availHeight - totalGridH) / 2;
+
+            for (let r = 0; r < rows; r++) {
+                let rowImageIndex = null;
+                if (totalUploaded === 1) {
+                    rowImageIndex = rowImages.findIndex(img => img !== null);
+                } else if (totalUploaded >= 2) {
+                    const activeIndices = rowImages.map((img, i) => img !== null ? i : -1).filter(i => i !== -1);
+                    rowImageIndex = activeIndices[r % activeIndices.length];
+                }
+
+                const targetImg = rowImageIndex !== null ? rowImages[rowImageIndex] : null;
+                const { w: rowPupilW, h: rowPupilH } = getPupilDimensions(outerW_px, outerH_px);
+                const rowCutRx = (rowPupilW / 2) + cutMarginPx;
+                const rowCutRy = (rowPupilH / 2) + cutMarginPx;
+
+                for (let c = 0; c < cols; c++) {
+                    const boxX = startX + c * (itemBoxW + spacing);
+                    const boxY = startY + r * (itemBoxH + spacing);
+
+                    const cx = boxX + itemBoxW / 2;
+                    const cy = boxY + itemBoxH / 2;
+
+                    const itemRight = boxX + itemBoxW;
+                    const rulerZoneLeft = rulerX - 2 * mmToPx;
+                    const rulerZoneBottom = rulerY + 10 * mmToPx;
+                    if (itemRight > rulerZoneLeft && boxY < rulerZoneBottom) {
+                        continue; 
+                    }
+
+                    ctx.save();
+                    drawPupilGraphic(ctx, cx, cy, rowPupilW, rowPupilH, rowImageIndex);
+
+                    // Cut guide line
+                    ctx.strokeStyle = '#872f3e';
+                    ctx.lineWidth = 2.5 * scaleRatio;
+                    ctx.setLineDash([6 * scaleRatio, 4 * scaleRatio]);
+                    ctx.beginPath();
+                    if (currentShape === 'round') {
+                        ctx.arc(cx, cy, rowCutRx, 0, Math.PI * 2);
+                    } else {
+                        ctx.ellipse(cx, cy, rowCutRx, rowCutRy, 0, 0, Math.PI * 2);
+                    }
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.restore();
+                }
+            }
+
+            ctx.fillStyle = '#7a6a5f';
+            ctx.font = `${Math.round(2.0 * mmToPx)}px sans-serif`;
+            ctx.textAlign = 'center';
+            const shapeStr = currentShape === 'round' ? 'Realistic' : 'Anime';
+            const paperStr = currentPaperSize === 'hagaki' ? 'Hagaki' : 'L-Size';
+            const infoText = `Doll Eye Print Studio  |  ${paperStr} Sheet (${shapeStr}) : ${eyeSizeMm}mm base [${dpi}DPI]`;
+            ctx.fillText(infoText, canvas.width / 2, canvas.height - (2 * mmToPx));
+        }
+
+        // --- Sclera Fitting View Renderer ---
+        function drawFittingView(ctx, canvas) {
+            const size = 2000;
+            canvas.width = size;
+            canvas.height = size;
+
+            ctx.fillStyle = '#fbf8f3';
+            ctx.fillRect(0, 0, size, size);
+
+            const cx = size / 2;
+            const cy = size / 2;
+            const scleraRadiusX = size * 0.32;
+            const scleraRadiusY = scleraShape === 'horizontal' ? scleraRadiusX * HORIZONTAL_SCLERA_RATIO : scleraRadiusX;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#dfbf97';
+            ctx.lineWidth = 12;
+            ctx.beginPath();
+            if (scleraShape === 'horizontal') {
+                ctx.ellipse(cx, cy, scleraRadiusX, scleraRadiusY, 0, 0, Math.PI * 2);
+            } else {
+                ctx.arc(cx, cy, scleraRadiusX, 0, Math.PI * 2);
+            }
+            ctx.fill();
+            ctx.stroke();
+
+            const outerW = scleraRadiusX * 2;
+            const outerH = scleraShape === 'horizontal' ? scleraRadiusY * 2 : scleraRadiusX * 2;
+
+            const selectEl = document.getElementById('fittingImageSelect');
+            let targetIdx = selectEl ? parseInt(selectEl.value) : null;
+            if (isNaN(targetIdx) || rowImages[targetIdx] === null) {
+                targetIdx = null;
+            }
+
+            const targetImg = targetIdx !== null ? rowImages[targetIdx] : null;
+            const { w: pupilW, h: pupilH } = getPupilDimensions(outerW, outerH);
+
+            drawPupilGraphic(ctx, cx, cy, pupilW, pupilH, targetIdx);
+
+            ctx.fillStyle = '#4a3b32';
+            ctx.font = 'bold 44px sans-serif';
+            ctx.textAlign = 'center';
+            const labelStr = currentLang === 'ja' ? `白目装着イメージ (${eyeSizeMm}mm)` : `Sclera Fitting View (${eyeSizeMm}mm)`;
+            ctx.fillText(labelStr, cx, 120);
+        }
+
+        // --- Save Confirmation Modal Controls ---
+        function openDownloadModal(type) {
+            pendingDownloadType = type;
+            const modalPreviewImg = document.getElementById('modalPreviewImg');
+
+            if (type === 'template') {
+                const templateCanvas = document.getElementById('templateCanvas');
+                document.getElementById('downloadFilenameInput').value = `doll-eye-template-${currentShape}.png`;
+                modalPreviewImg.src = templateCanvas.toDataURL('image/png');
+            } else {
+                const renderCanvas = document.getElementById('renderCanvas');
+                renderPreview();
+                const paperStr = currentTab === 'print' ? `${currentPaperSize}-` : '';
+                const dpiStr = currentTab === 'print' ? `${currentDpi}dpi-` : '';
+                document.getElementById('downloadFilenameInput').value = `doll-eye-${currentTab}-${paperStr}${dpiStr}${eyeSizeMm}mm.png`;
+                modalPreviewImg.src = renderCanvas.toDataURL('image/png');
+            }
+
+            document.getElementById('downloadModal').classList.remove('hidden');
+        }
+
+        function closeDownloadModal() {
+            document.getElementById('downloadModal').classList.add('hidden');
+        }
+
+        function confirmDownload() {
+            const filenameInput = document.getElementById('downloadFilenameInput').value.trim();
+            let sourceCanvas;
+            let defaultName;
+
+            if (pendingDownloadType === 'template') {
+                sourceCanvas = document.getElementById('templateCanvas');
+                defaultName = `doll-eye-template-${currentShape}.png`;
+            } else {
+                sourceCanvas = document.getElementById('renderCanvas');
+                const paperStr = currentTab === 'print' ? `${currentPaperSize}-` : '';
+                const dpiStr = currentTab === 'print' ? `${currentDpi}dpi-` : '';
+                defaultName = `doll-eye-${currentTab}-${paperStr}${dpiStr}${eyeSizeMm}mm.png`;
+            }
+
+            const finalFilename = filenameInput || defaultName;
+
+            const link = document.createElement('a');
+            link.download = finalFilename;
+            link.href = sourceCanvas.toDataURL('image/png');
+            link.click();
+
+            closeDownloadModal();
         }
     </script>
 </body>
