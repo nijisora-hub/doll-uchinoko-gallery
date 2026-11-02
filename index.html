@@ -108,6 +108,13 @@
         }
         .animate-anni { animation: pulse-anni 2s infinite ease-in-out; border: 2px solid #f472b6 !important; }
         
+        /* ローディングオーバーレイ（読み込み中は操作不可にする） */
+        #loading-overlay { position: fixed; inset: 0; background: #fcfaf8; z-index: 200000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity 0.4s ease; }
+        #loading-overlay.hide { opacity: 0; pointer-events: none; }
+        .loading-spinner { width: 44px; height: 44px; border-radius: 50%; border: 4px solid #e7e0d8; border-top-color: #78716c; animation: loading-spin 0.9s linear infinite; }
+        @keyframes loading-spin { to { transform: rotate(360deg); } }
+        body.is-loading { overflow: hidden; }
+
         .admin-only { display: none !important; }
         body.is-admin .admin-only { display: block !important; }
         body.is-admin .admin-only-flex { display: flex !important; }
@@ -115,7 +122,12 @@
         body.is-admin .viewer-only { display: none !important; }
     </style>
 </head>
-<body class="text-stone-800 pb-20">
+<body class="text-stone-800 pb-20 is-loading">
+
+    <div id="loading-overlay" role="status" aria-live="polite" aria-label="読み込み中">
+        <div class="loading-spinner"></div>
+        <p class="text-sm font-bold text-stone-500 tracking-widest">読み込み中…</p>
+    </div>
 
     <div class="app-container">
         <div id="custom-dialog">
@@ -358,6 +370,17 @@
             return colors.slice(0, 100);
         })();
 
+        function hideLoadingOverlay() {
+            document.body.classList.remove('is-loading');
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.classList.add('hide');
+                setTimeout(() => overlay.remove(), 500);
+            }
+        }
+        // 万が一読み込みが終わらない場合でも、操作できないままにしないための保険
+        setTimeout(hideLoadingOverlay, 15000);
+
         window.onload = async () => {
             initDateSelectors();
             initColorPalettes();
@@ -384,6 +407,7 @@
             }
 
             checkAdminStatus();
+            hideLoadingOverlay();
 
             sbClient.auth.onAuthStateChanged(async (_event, session) => {
                 currentUser = session?.user || null;
