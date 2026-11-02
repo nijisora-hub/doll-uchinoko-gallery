@@ -648,13 +648,13 @@
                     url = 'https://' + (base[s.type] || '') + s.val;
                 }
                 const snsStyle = {
-                    'X(旧Twitter)': 'background-color:#7DD3FC;color:#E11D48;',
-                    'Instagram': 'background-color:#EF4444;color:#FDE047;',
-                    'mixi2': 'background-color:#F97316;color:#1E40AF;',
-                    'Bluesky': 'background-color:#0085FF;color:#FDE047;',
+                    'X(旧Twitter)': 'background-color:#7DD3FC;color:#000000;',
+                    'Instagram': 'background-color:#F472B6;color:#000000;',
+                    'mixi2': 'background-color:#F97316;color:#000000;',
+                    'Bluesky': 'background-color:#0085FF;color:#000000;',
                     'Threads': 'background-color:#000000;color:#ffffff;',
-                    'その他URL': 'background-color:#FACC15;color:#DC2626;'
-                }[s.type] || 'background-color:#fafaf9;color:#E11D48;';
+                    'その他URL': 'background-color:#FACC15;color:#000000;'
+                }[s.type] || 'background-color:#fafaf9;color:#000000;';
                 snsArea.innerHTML += `<a href="${url}" target="_blank" style="${snsStyle}" class="w-full max-w-[240px] py-3 border border-black/10 rounded-full text-xs font-bold shadow-sm transition-opacity hover:opacity-90">${s.label || s.type}</a>`;
             });
 
